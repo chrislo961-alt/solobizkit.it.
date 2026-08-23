@@ -64,9 +64,31 @@ for (const page of pages) {
     twitterCard: /<meta[^>]+name=["']twitter:card["']/i,
     analytics: /<script[^>]+src=["']\/analytics\.js["']/i,
     consentStyles: /<link[^>]+href=["']\/analytics-consent\.css["']/i,
+    globalShell: /<link[^>]+href=["']\/global-shell\.css["']/i,
+    visualPolish: /<link[^>]+href=["']\/visual-polish\.css["']/i,
     structuredData: /<script[^>]+type=["']application\/ld\+json["']/i
   })) {
     if (!expression.test(page.html)) errors.push(`${label}: missing ${name}`);
+  }
+
+  const headers = page.structural.match(/<header\b[^>]*>[\s\S]*?<\/header>/gi) || [];
+  if (headers.length !== 1 || !/class=["'][^"']*sbk-global-header/.test(headers[0] || '')) {
+    errors.push(`${label}: must use exactly one shared global header`);
+  } else {
+    for (const href of ['/business-calculators/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/']) {
+      if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) {
+        errors.push(`${label}: shared header is missing ${href}`);
+      }
+    }
+    if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) {
+      errors.push(`${label}: shared header is missing the brand icon`);
+    }
+  }
+
+  if (['/', '/tools/'].includes(label)) {
+    for (const icon of page.structural.matchAll(/<div class=["']quick-icon["']>([\s\S]*?)<\/div>/gi)) {
+      if (!/<svg\b/.test(icon[1])) errors.push(`${label}: quick-card icon must be SVG`);
+    }
   }
 
   for (const json of page.html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
@@ -112,6 +134,9 @@ const allHtml = files.map((file) => fs.readFileSync(file, 'utf8')).join('\n');
 if (/analytics-consent\.js/.test(allHtml)) errors.push('obsolete analytics-consent.js reference remains');
 if (/href=["']\/#tools/.test(allHtml)) errors.push('obsolete /#tools link remains');
 if (/api\.qrserver\.com/i.test(allHtml)) errors.push('QR payloads must not be sent to a remote image endpoint');
+const visualCss = fs.readFileSync(path.join(ROOT, 'visual-polish.css'), 'utf8');
+if (!/@media\(max-width:600px\)/.test(visualCss)) errors.push('visual polish is missing its mobile breakpoint');
+if (!/#sbk-accept\{background:#2563eb!important/.test(visualCss)) errors.push('analytics consent button does not use the brand color');
 const ads = fs.readFileSync(path.join(ROOT, 'ads.txt'), 'utf8');
 if (!/google\.com\s*,\s*pub-9212084765206199\s*,\s*DIRECT\s*,\s*f08c47fec0942fa0/i.test(ads)) errors.push('ads.txt publisher line is incorrect');
 for (const manifest of ['site.webmanifest', 'manifest.webmanifest']) {
