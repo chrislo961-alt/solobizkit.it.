@@ -1,16 +1,15 @@
 {
-  "name": "SoloBizKit",
+  "name": "SoloBizKit – Free Business Tools",
   "short_name": "SoloBizKit",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbfcff",
-  "theme_color": "#6547e8",
-  "description": "Free tools for freelancers and small businesses.",
+  "scope": "/",
+  "background_color": "#f7faff",
+  "theme_color": "#2563eb",
+  "description": "Free calculators, invoice tools, PDF tools and practical utilities for solo businesses.",
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
-    }
+    {"src":"/favicon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"/favicon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"},
+    {"src":"/favicon.svg","sizes":"any","type":"image/svg+xml"}
   ]
 }

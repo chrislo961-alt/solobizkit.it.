@@ -1,0 +1,12 @@
+{
+  "name": "solobizkit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs && node scripts/site-audit.mjs",
+    "audit": "node scripts/site-audit.mjs",
+    "normalize:heads": "node scripts/normalize-heads.mjs",
+    "seo:overrides": "node scripts/apply-seo-overrides.mjs",
+    "sitemap": "node scripts/generate-sitemap.mjs"
+  }
+}

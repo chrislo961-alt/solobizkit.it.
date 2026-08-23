@@ -127,7 +127,16 @@
   }
 
   function isRequiredToolDependency(url){
-    return false;
+    return [
+      'pdf-lib',
+      'pdf.min.mjs',
+      'pdf.worker.min.mjs',
+      'pdf-decrypt',
+      'qrcode',
+      'docx',
+      'xlsx',
+      'jszip'
+    ].some(name=>url.toLowerCase().includes(name));
   }
 
   window.addEventListener('error',function(e){

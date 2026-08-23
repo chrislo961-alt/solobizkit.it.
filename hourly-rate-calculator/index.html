@@ -1,1 +1,204 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Freelance Hourly Rate Calculator – Sustainable Rate | SoloBizKit</title><meta name="description" content="Calculate a sustainable freelance or consulting hourly rate from income goals, expenses, billable time, time off and profit buffer. Free calculator."><link rel="canonical" href="https://solobizkit.it.com/hourly-rate-calculator/"><meta name="robots" content="index,follow"><link rel="stylesheet" href="/global-shell.css"><link rel="stylesheet" href="/pricing-suite.css"><link rel="stylesheet" href="/theme-warm-green.css"><script src="/analytics.js" defer></script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9212084765206199" crossorigin="anonymous"></script></head><body><header class="sbk-global-header"><div class="sbk-global-nav"><a class="sbk-global-brand" href="/">SoloBiz<span>Kit</span></a><nav class="sbk-global-links"><a href="/tools/">All Tools</a><a href="/invoice-generator/">Invoice</a><a href="/about/">About</a></nav></div></header><main><section class="p-hero"><div class="p-wrap"><div class="eyebrow">SoloBizKit pricing suite</div><h1>Hourly Rate Calculator</h1><p>Turn the money your business needs and the hours you can realistically bill into a sustainable freelance or consulting rate.</p><div class="p-tabs"><a href="/profit-margin-calculator/">Margin</a><a href="/break-even-calculator/">Break-even</a><a class="active" href="/hourly-rate-calculator/">Hourly rate</a><a href="/freelance-day-rate-calculator/">Day rate</a></div></div></section><section class="p-wrap p-app"><div class="p-card"><h2>Your annual plan</h2><div class="p-row"><div class="p-field"><label>Desired personal income</label><input id="income" type="number" value="80000" min="0"></div><div class="p-field"><label>Business expenses</label><input id="expenses" type="number" value="12000" min="0"></div></div><div class="p-row"><div class="p-field"><label>Hours worked / week</label><input id="hours" type="number" value="40" min="1" max="100"></div><div class="p-field"><label>Weeks off / year</label><input id="off" type="number" value="5" min="0" max="51"></div></div><div class="p-row"><div class="p-field"><label>Billable time %</label><input id="billable" type="number" value="60" min="1" max="100"></div><div class="p-field"><label>Profit / safety buffer %</label><input id="buffer" type="number" value="15" min="0" max="200"></div></div><div class="p-field"><label>Currency</label><select id="cur"><option>USD</option><option>EUR</option><option>GBP</option><option>NOK</option><option>SEK</option><option>DKK</option><option>CAD</option><option>AUD</option></select></div><p class="p-hint">Billable time matters because admin, sales, marketing, bookkeeping and gaps between projects still consume working hours.</p></div><div class="p-card"><div class="p-result"><small>Target hourly rate</small><div class="p-big" id="rate"></div><span class="p-hint" id="weekly"></span></div><div class="p-grid"><div class="p-metric"><small>Billable hours / year</small><b id="bh"></b></div><div class="p-metric"><small>Annual revenue target</small><b id="revenue"></b></div><div class="p-metric"><small>Monthly revenue target</small><b id="monthly"></b></div></div><div style="margin-top:14px"><div class="p-line"><span>Income goal</span><b id="i"></b></div><div class="p-line"><span>Business expenses</span><b id="e"></b></div><div class="p-line"><span>Profit / safety buffer</span><b id="b"></b></div><div class="p-line"><span>Equivalent 8-hour day rate</span><b id="day"></b></div></div><p class="p-hint">Planning estimate only. Taxes, insurance, benefits, local market rates and unpaid risks can require a different rate.</p></div></section><section class="p-suite"><div class="p-wrap"><h2>From rate to profitable work</h2><p>Your calculated rate is a business target, not a promise that every client will accept it. Compare it with your market, scope projects carefully, and check margin when you have direct project costs.</p><div class="p-links"><a href="/freelance-day-rate-calculator/"><strong>Day Rate Calculator</strong><span>Plan projects sold by the day.</span></a><a href="/profit-margin-calculator/"><strong>Profit Margin</strong><span>Check profit when a project has direct costs.</span></a><a href="/break-even-calculator/"><strong>Break-Even</strong><span>Understand how much volume covers fixed costs.</span></a><a href="/invoice-generator/"><strong>Invoice Generator</strong><span>Bill the client when the work is complete.</span></a></div><h3>Why not divide salary by 2,080 hours?</h3><p>A freelancer normally cannot bill every working hour. Time off, administration, marketing and business expenses all reduce the hours available to earn revenue. This calculator models those factors explicitly.</p></div></section></main><footer class="sbk-global-footer"><div class="sbk-global-footer-inner"><div class="sbk-global-bottom"><span>© 2026 SoloBizKit</span><span>Business planning estimates</span></div></div></footer><script>const $=x=>document.getElementById(x),money=n=>{try{return new Intl.NumberFormat(undefined,{style:'currency',currency:$('cur').value,maximumFractionDigits:2}).format(n)}catch(e){return Number(n||0).toFixed(2)}};function calc(){const i=+$('income').value||0,e=+$('expenses').value||0,h=+$('hours').value||0,off=+$('off').value||0,bl=(+$('billable').value||0)/100,buf=(+$('buffer').value||0)/100,weeks=Math.max(0,52-off),billHours=h*weeks*bl,base=i+e,buffer=base*buf,revenue=base+buffer,rate=billHours?revenue/billHours:0;$('rate').textContent=money(rate);$('bh').textContent=Math.round(billHours).toLocaleString();$('revenue').textContent=money(revenue);$('monthly').textContent=money(revenue/12);$('i').textContent=money(i);$('e').textContent=money(e);$('b').textContent=money(buffer);$('day').textContent=money(rate*8);$('weekly').textContent='About '+Math.round(h*bl)+' billable hours per working week at your current assumptions.'}document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',calc));calc();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Freelance Hourly Rate Calculator – Sustainable Rate | SoloBizKit</title>
+<meta name="description" content="Calculate a sustainable freelance or consulting hourly rate from income goals, expenses, billable time, time off and profit buffer. Free calculator.">
+<link rel="canonical" href="https://solobizkit.it.com/hourly-rate-calculator/">
+<meta name="robots" content="index,follow">
+<link rel="stylesheet" href="/global-shell.css">
+<link rel="stylesheet" href="/pricing-suite.css">
+<link rel="stylesheet" href="/theme-warm-green.css">
+<script src="/analytics.js" defer>
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9212084765206199" crossorigin="anonymous">
+</script>
+<meta property="og:title" content="Freelance Hourly Rate Calculator – Sustainable Rate | SoloBizKit">
+<meta property="og:description" content="Calculate a sustainable freelance or consulting hourly rate from income goals, expenses, billable time, time off and profit buffer. Free calculator.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://solobizkit.it.com/hourly-rate-calculator/">
+<meta name="twitter:title" content="Freelance Hourly Rate Calculator – Sustainable Rate | SoloBizKit">
+<meta name="twitter:description" content="Calculate a sustainable freelance or consulting hourly rate from income goals, expenses, billable time, time off and profit buffer. Free calculator.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Freelance Hourly Rate Calculator – Sustainable Rate","url":"https://solobizkit.it.com/hourly-rate-calculator/","description":"Calculate a sustainable freelance or consulting hourly rate from income goals, expenses, billable time, time off and profit buffer. Free calculator.","isPartOf":{"@type":"WebSite","name":"SoloBizKit","url":"https://solobizkit.it.com/"}}</script>
+<link rel="stylesheet" href="/analytics-consent.css">
+
+
+
+
+
+
+
+
+<meta name="theme-color" content="#2563eb"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="manifest" href="/site.webmanifest"><meta property="og:site_name" content="SoloBizKit"><meta property="og:image" content="https://solobizkit.it.com/assets/images/solobizkit-social-preview.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://solobizkit.it.com/assets/images/solobizkit-social-preview.png"></head>
+<body>
+<header class="sbk-global-header">
+<div class="sbk-global-nav">
+<a class="sbk-global-brand" href="/">SoloBiz<span>Kit</span>
+</a>
+<nav class="sbk-global-links">
+<a href="/business-calculators/">Calculators</a>
+<a href="/invoice-generator/">Invoice</a>
+<a href="/methodology/">Methodology</a>
+</nav>
+</div>
+</header>
+<main>
+<section class="p-hero">
+<div class="p-wrap">
+<div class="eyebrow">SoloBizKit pricing suite</div>
+<h1>Hourly Rate Calculator</h1>
+<p>Turn the money your business needs and the hours you can realistically bill into a sustainable freelance or consulting rate.</p>
+<div class="p-tabs">
+<a href="/profit-margin-calculator/">Margin</a>
+<a href="/break-even-calculator/">Break-even</a>
+<a class="active" href="/hourly-rate-calculator/">Hourly rate</a>
+<a href="/freelance-day-rate-calculator/">Day rate</a>
+</div>
+</div>
+</section>
+<section class="p-wrap p-app">
+<div class="p-card">
+<h2>Your annual plan</h2>
+<div class="p-row">
+<div class="p-field">
+<label>Desired personal income</label>
+<input id="income" type="number" value="80000" min="0">
+</div>
+<div class="p-field">
+<label>Business expenses</label>
+<input id="expenses" type="number" value="12000" min="0">
+</div>
+</div>
+<div class="p-row">
+<div class="p-field">
+<label>Hours worked / week</label>
+<input id="hours" type="number" value="40" min="1" max="100">
+</div>
+<div class="p-field">
+<label>Weeks off / year</label>
+<input id="off" type="number" value="5" min="0" max="51">
+</div>
+</div>
+<div class="p-row">
+<div class="p-field">
+<label>Billable time %</label>
+<input id="billable" type="number" value="60" min="1" max="100">
+</div>
+<div class="p-field">
+<label>Profit / safety buffer %</label>
+<input id="buffer" type="number" value="15" min="0" max="200">
+</div>
+</div>
+<div class="p-field">
+<label>Currency</label>
+<select id="cur">
+<option>USD</option>
+<option>EUR</option>
+<option>GBP</option>
+<option>NOK</option>
+<option>SEK</option>
+<option>DKK</option>
+<option>CAD</option>
+<option>AUD</option>
+</select>
+</div>
+<p class="p-hint">Billable time matters because admin, sales, marketing, bookkeeping and gaps between projects still consume working hours.</p>
+</div>
+<div class="p-card">
+<div class="p-result">
+<small>Target hourly rate</small>
+<div class="p-big" id="rate">
+</div>
+<span class="p-hint" id="weekly">
+</span>
+</div>
+<div class="p-grid">
+<div class="p-metric">
+<small>Billable hours / year</small>
+<b id="bh">
+</b>
+</div>
+<div class="p-metric">
+<small>Annual revenue target</small>
+<b id="revenue">
+</b>
+</div>
+<div class="p-metric">
+<small>Monthly revenue target</small>
+<b id="monthly">
+</b>
+</div>
+</div>
+<div style="margin-top:14px">
+<div class="p-line">
+<span>Income goal</span>
+<b id="i">
+</b>
+</div>
+<div class="p-line">
+<span>Business expenses</span>
+<b id="e">
+</b>
+</div>
+<div class="p-line">
+<span>Profit / safety buffer</span>
+<b id="b">
+</b>
+</div>
+<div class="p-line">
+<span>Equivalent 8-hour day rate</span>
+<b id="day">
+</b>
+</div>
+</div>
+<p class="p-hint">Planning estimate only. Taxes, insurance, benefits, local market rates and unpaid risks can require a different rate.</p>
+</div>
+</section>
+<section class="p-suite">
+<div class="p-wrap">
+<h2>From rate to profitable work</h2>
+<p>Your calculated rate is a business target, not a promise that every client will accept it. Compare it with your market, scope projects carefully, and check margin when you have direct project costs.</p>
+<div class="p-links">
+<a href="/freelance-day-rate-calculator/">
+<strong>Day Rate Calculator</strong>
+<span>Plan projects sold by the day.</span>
+</a>
+<a href="/profit-margin-calculator/">
+<strong>Profit Margin</strong>
+<span>Check profit when a project has direct costs.</span>
+</a>
+<a href="/break-even-calculator/">
+<strong>Break-Even</strong>
+<span>Understand how much volume covers fixed costs.</span>
+</a>
+<a href="/invoice-generator/">
+<strong>Invoice Generator</strong>
+<span>Bill the client when the work is complete.</span>
+</a>
+<a href="/cash-flow-calculator/">
+<strong>Cash Flow Calculator</strong>
+<span>See how revenue and business expenses affect cash.</span>
+</a>
+<a href="/business-calculators/">
+<strong>All Business Calculators</strong>
+<span>Continue with pricing, finance and profitability.</span>
+</a>
+</div>
+<h3>Why not divide salary by 2,080 hours?</h3>
+<p>A freelancer normally cannot bill every working hour. Time off, administration, marketing and business expenses all reduce the hours available to earn revenue. This calculator models those factors explicitly.</p>
+<p><a href="/methodology/">Review calculator assumptions and testing →</a></p>
+</div>
+</section>
+</main>
+<footer class="sbk-global-footer">
+<div class="sbk-global-footer-inner">
+<div class="sbk-global-bottom">
+<span>© 2026 SoloBizKit</span>
+<span>Business planning estimates</span>
+</div>
+</div>
+</footer>
+<script>const $=x=>document.getElementById(x),money=n=>{try{return new Intl.NumberFormat(undefined,{style:'currency',currency:$('cur').value,maximumFractionDigits:2}).format(n)}catch(e){return Number(n||0).toFixed(2)}};function calc(){const i=+$('income').value||0,e=+$('expenses').value||0,h=+$('hours').value||0,off=+$('off').value||0,bl=(+$('billable').value||0)/100,buf=(+$('buffer').value||0)/100,weeks=Math.max(0,52-off),billHours=h*weeks*bl,base=i+e,buffer=base*buf,revenue=base+buffer,rate=billHours?revenue/billHours:0;$('rate').textContent=money(rate);$('bh').textContent=Math.round(billHours).toLocaleString();$('revenue').textContent=money(revenue);$('monthly').textContent=money(revenue/12);$('i').textContent=money(i);$('e').textContent=money(e);$('b').textContent=money(buffer);$('day').textContent=money(rate*8);$('weekly').textContent='About '+Math.round(h*bl)+' billable hours per working week at your current assumptions.'}document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',calc));calc();</script>
+</body>
+</html>
