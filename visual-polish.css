@@ -1,0 +1,231 @@
+/* SoloBizKit visual polish: compact, consistent and product-led. */
+:root{
+  --sbk-focus:#2563eb;
+  --sbk-teal:#0f766e;
+  --sbk-violet:#7c3aed;
+  --sbk-amber:#b45309;
+  --sbk-rose:#be185d;
+}
+
+/* One stable navigation system across every tool and guide. */
+.sbk-global-header{
+  background:rgba(255,255,255,.96)!important;
+  border-bottom:1px solid #dfe7f2!important;
+  box-shadow:0 1px 0 rgba(20,33,61,.02);
+  position:sticky!important;
+  top:0;
+  z-index:1000!important;
+  backdrop-filter:blur(14px);
+}
+.sbk-global-header .sbk-global-nav{
+  width:min(1120px,calc(100% - 32px))!important;
+  height:68px!important;
+  min-height:68px!important;
+  margin:auto!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:24px!important;
+}
+.sbk-global-header .sbk-global-brand{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  color:#14213d!important;
+  font-size:21px!important;
+  font-weight:950!important;
+  letter-spacing:-.025em!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.sbk-global-header .sbk-brand-icon{width:29px;height:29px;display:block;flex:0 0 auto}
+.sbk-global-header .sbk-global-brand>span{color:#2563eb!important}
+.sbk-global-header .sbk-global-links{
+  width:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  margin:0 0 0 auto!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:20px!important;
+}
+.sbk-global-header .sbk-global-links a{
+  position:relative;
+  padding:25px 0 23px!important;
+  color:#526077!important;
+  font-size:13px!important;
+  font-weight:560;
+  line-height:1!important;
+  white-space:nowrap;
+}
+.sbk-global-header .sbk-global-links a:hover,
+.sbk-global-header .sbk-global-links a[aria-current="page"]{color:#1d4ed8!important}
+.sbk-global-header .sbk-global-links a[aria-current="page"]{font-weight:850}
+.sbk-global-header .sbk-global-links a[aria-current="page"]:after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:3px;
+  border-radius:3px 3px 0 0;
+  background:#2563eb;
+}
+.sbk-global-header .sbk-global-tools{
+  margin:0!important;
+  padding:10px 14px!important;
+  border:1px solid #dfe7f2!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  color:#14213d!important;
+  font-size:13px!important;
+  font-weight:850!important;
+  line-height:1.2!important;
+  white-space:nowrap;
+  box-shadow:0 3px 10px rgba(37,99,235,.04);
+}
+.sbk-global-header .sbk-global-tools:hover,
+.sbk-global-header .sbk-global-tools[aria-current="page"]{
+  border-color:#2563eb!important;
+  background:#2563eb!important;
+  color:#fff!important;
+  box-shadow:0 7px 18px rgba(37,99,235,.18);
+}
+
+/* Bring the product into view sooner. */
+.home-hero{padding:52px 0 30px!important;background:linear-gradient(180deg,#f2f7ff 0,#f7faff 78%)!important}
+.home-hero h1{max-width:960px!important;margin:13px auto 12px!important;font-size:clamp(42px,5vw,64px)!important;line-height:.98!important}
+.home-hero p{font-size:17px!important;line-height:1.62!important}
+.home-search{margin-top:22px!important}
+.home-search input{padding-top:15px!important;padding-bottom:15px!important;box-shadow:0 12px 32px rgba(37,99,235,.075)!important}
+.home-search span{top:15px!important}
+.home-actions{margin-top:12px!important}
+.home-actions a{transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
+.home-actions .primary:hover{transform:translateY(-1px);box-shadow:0 9px 22px rgba(37,99,235,.22)}
+
+.hero,.bc-hero,.pdf-hero,.p-hero,.growth-hero,.seo-hero,.pagehero,.contact-hero{padding-top:48px!important}
+.bc-hero{padding-bottom:30px!important}
+.bc-hero h1{font-size:clamp(42px,5.4vw,62px)!important}
+.bc-hero p{font-size:17px!important;line-height:1.62!important}
+.pdf-hero{padding-bottom:25px!important}
+.pdf-hero h1{font-size:clamp(40px,5.2vw,58px)!important}
+
+/* Clear section rhythm instead of one continuous pale-blue surface. */
+.quick{padding:42px 0!important;background:#fff;border-top:1px solid #e8eef7;border-bottom:1px solid #e8eef7}
+.browse{padding:54px 0 64px;background:#f7faff}
+
+/* Category-specific icon language. */
+.quick-icon{
+  width:43px!important;
+  height:43px!important;
+  border-radius:13px!important;
+  background:var(--icon-bg,#eaf2ff)!important;
+  color:var(--icon-fg,#2563eb)!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.quick-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.quick-card[data-category="money"]{--icon-bg:#e8f6f3;--icon-fg:var(--sbk-teal);--card-accent:var(--sbk-teal)}
+.quick-card[data-category="invoice"]{--icon-bg:#f1ebff;--icon-fg:var(--sbk-violet);--card-accent:var(--sbk-violet)}
+.quick-card[data-category="documents"]{--icon-bg:#fff4df;--icon-fg:var(--sbk-amber);--card-accent:var(--sbk-amber)}
+.quick-card[data-category="qr"]{--icon-bg:#eaf2ff;--icon-fg:#2563eb;--card-accent:#2563eb}
+.quick-card[data-category="names"]{--icon-bg:#fdebf4;--icon-fg:var(--sbk-rose);--card-accent:var(--sbk-rose)}
+.quick-card{border-top:3px solid var(--card-accent,#2563eb)!important}
+
+.tool-card{position:relative;overflow:hidden;border-top:3px solid var(--card-accent,#bfd4ff)!important}
+.tool-card[data-category="money"]{--card-accent:var(--sbk-teal)}
+.tool-card[data-category="invoice"]{--card-accent:var(--sbk-violet)}
+.tool-card[data-category="documents"]{--card-accent:var(--sbk-amber)}
+.tool-card[data-category="qr"]{--card-accent:#2563eb}
+.tool-card[data-category="names"]{--card-accent:var(--sbk-rose)}
+.tool-card small{color:var(--card-accent,#1d4ed8)!important}
+
+/* Stronger interaction feedback without decorative motion. */
+.quick-card,.tool-card,.bc-tool,.pdf-related a,.bc-related a,.p-links a,.related a,.sbk-flow-card{
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background-color .16s ease!important;
+}
+@media(hover:hover){
+  .quick-card:hover,.tool-card:hover,.bc-tool:hover,.pdf-related a:hover,.bc-related a:hover,.p-links a:hover,.related a:hover,.sbk-flow-card:hover{
+    transform:translateY(-3px)!important;
+    border-color:#a9c2ec!important;
+    box-shadow:0 16px 36px rgba(37,99,235,.11)!important;
+  }
+}
+:focus-visible{outline:3px solid rgba(37,99,235,.55)!important;outline-offset:3px!important}
+.quick-card:focus-visible,.tool-card:focus-visible,.bc-tool:focus-visible,.sbk-global-tools:focus-visible{border-color:#2563eb!important}
+
+/* Make live calculator output look like the main payoff. */
+.bc-app>.bc-card[aria-live]{
+  border-color:#c7d8f5!important;
+  background:linear-gradient(180deg,#fff 0,#f9fbff 100%)!important;
+  box-shadow:0 18px 44px rgba(37,99,235,.095)!important;
+}
+.bc-app>.bc-card[aria-live] .bc-result{
+  border-color:#bcd1f4!important;
+  background:linear-gradient(135deg,#edf5ff 0,#f7fbff 100%)!important;
+  box-shadow:inset 4px 0 0 #2563eb;
+}
+.bc-live{display:flex;align-items:center;gap:7px;margin:0 0 12px;color:#526077;font-size:11px;font-weight:800}
+.bc-live-dot{width:8px;height:8px;border-radius:50%;background:#0f9f6e;box-shadow:0 0 0 4px rgba(15,159,110,.11)}
+
+/* Analytics consent now belongs to the same product. */
+#sbk-consent{left:12px!important;right:12px!important;bottom:12px!important}
+.sbk-consent-inner{max-width:900px!important;padding:14px 15px!important;border-color:#dfe7f2!important;box-shadow:0 16px 44px rgba(20,33,61,.16)!important}
+.sbk-consent-inner p{max-width:620px!important}
+#sbk-accept{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
+#sbk-accept:hover{background:#1d4ed8!important;border-color:#1d4ed8!important}
+
+/* Keep legacy page footers in the same visual family. */
+body>footer,.sbk-global-footer{background:#f1f6fd!important;color:#526077!important;border-top:1px solid #dfe7f2!important}
+body>footer a,.sbk-global-footer a{color:#526077!important}
+
+@media(max-width:850px){
+  .sbk-global-header .sbk-global-links{display:none!important}
+  .sbk-global-header .sbk-global-tools{margin-left:auto!important}
+}
+
+@media(max-width:600px){
+  .sbk-global-header .sbk-global-nav{width:min(100% - 24px,1120px)!important;height:62px!important;min-height:62px!important}
+  .sbk-global-header .sbk-brand-icon{width:27px;height:27px}
+  .sbk-global-header .sbk-global-brand{font-size:19px!important;gap:8px!important}
+  .sbk-global-header .sbk-global-tools{padding:9px 11px!important;font-size:12px!important}
+  .home-hero{padding:36px 0 25px!important}
+  .home-hero h1,.bc-hero h1,.pdf-hero h1,.p-hero h1,.growth-hero h1,.seo-hero h1,.pagehero h1,.contact-hero h1,.hero h1{
+    font-size:clamp(35px,10.4vw,39px)!important;
+    line-height:1.02!important;
+    letter-spacing:-.045em!important;
+  }
+  .home-hero p,.bc-hero p,.pdf-hero p{font-size:15.5px!important;line-height:1.58!important}
+  .home-search{margin-top:18px!important}
+  .home-search input{padding:14px 14px 14px 43px!important;font-size:14px!important}
+  .home-search span{left:16px!important;top:14px!important}
+  .category-chips{
+    justify-content:flex-start!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto;
+    margin-left:-16px!important;
+    margin-right:-16px!important;
+    padding:0 16px 5px!important;
+    scrollbar-width:none;
+  }
+  .category-chips::-webkit-scrollbar{display:none}
+  .category-chips button{flex:0 0 auto}
+  .home-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+  .home-actions a{width:100%;text-align:center}
+  .quick{padding:34px 0!important}
+  .browse{padding:42px 0 50px!important}
+  .quick h2,.browse h2{font-size:27px!important}
+  .bc-hero,.pdf-hero,.p-hero,.growth-hero,.seo-hero,.pagehero,.contact-hero,.hero{padding-top:36px!important}
+  .bc-app{padding-top:20px!important}
+  .bc-card{padding:18px!important}
+  .bc-app>.bc-card[aria-live]{order:2}
+  .sbk-consent-inner{padding:13px!important;border-radius:14px!important}
+  .sbk-consent-inner p{font-size:11.5px!important;line-height:1.45!important}
+  .sbk-consent-actions{margin-top:11px!important}
+  .sbk-consent-actions button{padding:9px 11px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .quick-card,.tool-card,.bc-tool,.pdf-related a,.bc-related a,.p-links a,.related a,.sbk-flow-card,.home-actions a{transition:none!important}
+}
