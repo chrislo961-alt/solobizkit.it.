@@ -30,7 +30,7 @@
 .sbk-global-header .sbk-global-brand{
   display:inline-flex!important;
   align-items:center!important;
-  gap:9px!important;
+  gap:0!important;
   color:#14213d!important;
   font-size:21px!important;
   font-weight:950!important;
@@ -38,7 +38,7 @@
   line-height:1!important;
   white-space:nowrap;
 }
-.sbk-global-header .sbk-brand-icon{width:29px;height:29px;display:block;flex:0 0 auto}
+.sbk-global-header .sbk-brand-icon{width:29px;height:29px;display:block;flex:0 0 auto;margin-right:9px}
 .sbk-global-header .sbk-global-brand>span{color:#2563eb!important}
 .sbk-global-header .sbk-global-links{
   width:auto!important;
@@ -187,8 +187,8 @@ body>footer a,.sbk-global-footer a{color:#526077!important}
 
 @media(max-width:600px){
   .sbk-global-header .sbk-global-nav{width:min(100% - 24px,1120px)!important;height:62px!important;min-height:62px!important}
-  .sbk-global-header .sbk-brand-icon{width:27px;height:27px}
-  .sbk-global-header .sbk-global-brand{font-size:19px!important;gap:8px!important}
+  .sbk-global-header .sbk-brand-icon{width:27px;height:27px;margin-right:8px}
+  .sbk-global-header .sbk-global-brand{font-size:19px!important;gap:0!important}
   .sbk-global-header .sbk-global-tools{padding:9px 11px!important;font-size:12px!important}
   .home-hero{padding:36px 0 25px!important}
   .home-hero h1,.bc-hero h1,.pdf-hero h1,.p-hero h1,.growth-hero h1,.seo-hero h1,.pagehero h1,.contact-hero h1,.hero h1{
