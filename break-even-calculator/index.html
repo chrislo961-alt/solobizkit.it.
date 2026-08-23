@@ -1,1 +1,115 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Break-Even Calculator – Units & Revenue | SoloBizKit</title><meta name="description" content="Calculate break-even units and break-even sales revenue from fixed costs, price and variable cost per unit. Free small business calculator."><link rel="canonical" href="https://solobizkit.it.com/break-even-calculator/"><meta name="robots" content="index,follow"><link rel="stylesheet" href="/global-shell.css"><link rel="stylesheet" href="/growth-cluster.css"><link rel="stylesheet" href="/theme-warm-green.css"><link rel="stylesheet" href="/analytics-consent.css"><script src="/analytics.js" defer></script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9212084765206199" crossorigin="anonymous"></script><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Break-Even Calculator","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script></head><body><header class="sbk-global-header"><div class="sbk-global-nav"><a class="sbk-global-brand" href="/">SoloBiz<span>Kit</span></a><nav class="sbk-global-links"><a href="/profit-margin-calculator/">Profit Margin</a><a href="/hourly-rate-calculator/">Hourly Rate</a><a href="/tools/">All Tools</a></nav></div></header><main><section class="growth-hero"><div class="growth-wrap"><div class="eyebrow">Free business calculator</div><h1>Break-Even Calculator</h1><p>See how many units you need to sell to cover fixed and variable costs, plus the approximate sales revenue at break-even.</p></div></section><section class="growth-wrap growth-app"><div class="growth-card"><h2>Your numbers</h2><div class="field"><label>Fixed costs</label><input id="fixed" type="number" min="0" value="5000"></div><div class="field"><label>Selling price per unit</label><input id="price" type="number" min="0" step="0.01" value="50"></div><div class="field"><label>Variable cost per unit</label><input id="variable" type="number" min="0" step="0.01" value="20"></div><p class="muted">Use the same currency for all amounts.</p></div><div class="growth-card result-box" aria-live="polite"><span class="muted">Break-even point</span><div class="result-big" id="units">167 units</div><strong id="revenue">Revenue at break-even: 8,350.00</strong><p class="muted" id="margin">Contribution per unit: 30.00</p></div></section><section class="growth-info"><div class="growth-wrap"><article><h2>What does break-even mean?</h2><p>The break-even point is where estimated sales cover the costs included in the calculation. Below it, those costs are not fully covered; above it, the model begins to show a surplus.</p><h3>Formula</h3><p>Break-even units = fixed costs ÷ (selling price per unit − variable cost per unit). Real businesses can have taxes, changing costs, discounts and other factors that this simple planning calculator does not model.</p><div class="related"><a href="/profit-margin-calculator/">Profit margin calculator →</a><a href="/markup-calculator/">Markup calculator →</a><a href="/target-profit-margin-calculator/">Target margin calculator →</a></div></article></div></section></main><footer class="sbk-global-footer"><div class="sbk-global-footer-inner"><div class="sbk-global-bottom"><span>© 2026 SoloBizKit</span><span>Planning estimates only</span></div></div></footer><script>const fixedEl=document.getElementById('fixed'),priceEl=document.getElementById('price'),variableEl=document.getElementById('variable'),unitsEl=document.getElementById('units'),revenueEl=document.getElementById('revenue'),marginEl=document.getElementById('margin');function calc(){const fixed=+fixedEl.value||0,price=+priceEl.value||0,variable=+variableEl.value||0,contribution=price-variable;if(contribution<=0){unitsEl.textContent='No break-even';revenueEl.textContent='Price must be higher than variable cost';marginEl.textContent='Contribution per unit: '+contribution.toFixed(2);return}const units=Math.ceil(fixed/contribution);unitsEl.textContent=units.toLocaleString()+' units';revenueEl.textContent='Revenue at break-even: '+(units*price).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});marginEl.textContent='Contribution per unit: '+contribution.toFixed(2)}[fixedEl,priceEl,variableEl].forEach(el=>el.addEventListener('input',calc));calc();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Break-Even Calculator – Units & Revenue | SoloBizKit</title>
+<meta name="description" content="Calculate break-even units and break-even sales revenue from fixed costs, price and variable cost per unit. Free small business calculator.">
+<link rel="canonical" href="https://solobizkit.it.com/break-even-calculator/">
+<meta name="robots" content="index,follow">
+<link rel="stylesheet" href="/global-shell.css">
+<link rel="stylesheet" href="/growth-cluster.css">
+<link rel="stylesheet" href="/theme-warm-green.css">
+<link rel="stylesheet" href="/analytics-consent.css">
+<script src="/analytics.js" defer>
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9212084765206199" crossorigin="anonymous">
+</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Break-Even Calculator","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<meta property="og:title" content="Break-Even Calculator – Units &amp; Revenue | SoloBizKit">
+<meta property="og:description" content="Calculate break-even units and break-even sales revenue from fixed costs, price and variable cost per unit. Free small business calculator.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://solobizkit.it.com/break-even-calculator/">
+<meta name="twitter:title" content="Break-Even Calculator – Units &amp; Revenue | SoloBizKit">
+<meta name="twitter:description" content="Calculate break-even units and break-even sales revenue from fixed costs, price and variable cost per unit. Free small business calculator.">
+
+
+
+
+
+
+
+
+<meta name="theme-color" content="#2563eb"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="manifest" href="/site.webmanifest"><meta property="og:site_name" content="SoloBizKit"><meta property="og:image" content="https://solobizkit.it.com/assets/images/solobizkit-social-preview.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://solobizkit.it.com/assets/images/solobizkit-social-preview.png"></head>
+<body>
+<header class="sbk-global-header">
+<div class="sbk-global-nav">
+<a class="sbk-global-brand" href="/">SoloBiz<span>Kit</span>
+</a>
+<nav class="sbk-global-links">
+<a href="/business-calculators/">Calculators</a>
+<a href="/profit-margin-calculator/">Profit Margin</a>
+<a href="/cash-flow-calculator/">Cash Flow</a>
+<a href="/methodology/">Methodology</a>
+</nav>
+</div>
+</header>
+<main>
+<section class="growth-hero">
+<div class="growth-wrap">
+<div class="eyebrow">Free business calculator</div>
+<h1>Break-Even Calculator</h1>
+<p>See how many units you need to sell to cover fixed and variable costs, plus the approximate sales revenue at break-even.</p>
+</div>
+</section>
+<section class="growth-wrap growth-app">
+<div class="growth-card">
+<h2>Your numbers</h2>
+<div class="field">
+<label>Fixed costs</label>
+<input id="fixed" type="number" min="0" value="5000">
+</div>
+<div class="field">
+<label>Selling price per unit</label>
+<input id="price" type="number" min="0" step="0.01" value="50">
+</div>
+<div class="field">
+<label>Variable cost per unit</label>
+<input id="variable" type="number" min="0" step="0.01" value="20">
+</div>
+<p class="muted">Use the same currency for all amounts.</p>
+</div>
+<div class="growth-card result-box" aria-live="polite">
+<span class="muted">Break-even point</span>
+<div class="result-big" id="units">167 units</div>
+<strong id="revenue">Revenue at break-even: 8,350.00</strong>
+<p class="muted" id="margin">Contribution per unit: 30.00</p>
+</div>
+</section>
+<section class="growth-info">
+<div class="growth-wrap">
+<article>
+<h2>What does break-even mean?</h2>
+<p>The break-even point is where estimated sales cover the costs included in the calculation. Below it, those costs are not fully covered; above it, the model begins to show a surplus.</p>
+<h3>Formula</h3>
+<p>Break-even units = fixed costs ÷ (selling price per unit − variable cost per unit). Real businesses can have taxes, changing costs, discounts and other factors that this simple planning calculator does not model.</p>
+<h2>How to use the break-even result</h2>
+<p>Compare the required units with a realistic sales forecast and available capacity. Then test a cautious scenario with a lower selling price or higher variable cost. A result that works only under the most optimistic assumptions is a warning to revisit price, costs or fixed commitments.</p>
+<h2>Which costs belong in the calculation?</h2>
+<p>Fixed costs do not change directly with each unit sold, such as rent or a recurring software plan. Variable costs rise with each unit, such as materials, packaging, transaction fees or direct fulfillment. Classifying mixed costs carefully makes the estimate more useful.</p>
+<h3>Example</h3>
+<p>With fixed costs of 5,000, a selling price of 50 and variable cost of 20, contribution is 30 per unit. Dividing 5,000 by 30 gives 166.67, so the business must sell 167 whole units to cover the costs in this simplified model.</p>
+<div class="related">
+<a href="/profit-margin-calculator/">Profit margin calculator →</a>
+<a href="/markup-calculator/">Markup calculator →</a>
+<a href="/target-profit-margin-calculator/">Target margin calculator →</a>
+<a href="/cash-flow-calculator/">Cash flow calculator →</a>
+<a href="/business-calculators/">All business calculators →</a>
+<a href="/methodology/">Methodology →</a>
+</div>
+<p class="muted">Formula and content reviewed August 23, 2026.</p>
+</article>
+</div>
+</section>
+</main>
+<footer class="sbk-global-footer">
+<div class="sbk-global-footer-inner">
+<div class="sbk-global-bottom">
+<span>© 2026 SoloBizKit</span>
+<span>Planning estimates only</span>
+</div>
+</div>
+</footer>
+<script>const fixedEl=document.getElementById('fixed'),priceEl=document.getElementById('price'),variableEl=document.getElementById('variable'),unitsEl=document.getElementById('units'),revenueEl=document.getElementById('revenue'),marginEl=document.getElementById('margin');function calc(){const fixed=+fixedEl.value||0,price=+priceEl.value||0,variable=+variableEl.value||0,contribution=price-variable;if(contribution<=0){unitsEl.textContent='No break-even';revenueEl.textContent='Price must be higher than variable cost';marginEl.textContent='Contribution per unit: '+contribution.toFixed(2);return}const units=Math.ceil(fixed/contribution);unitsEl.textContent=units.toLocaleString()+' units';revenueEl.textContent='Revenue at break-even: '+(units*price).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});marginEl.textContent='Contribution per unit: '+contribution.toFixed(2)}[fixedEl,priceEl,variableEl].forEach(el=>el.addEventListener('input',calc));calc();</script>
+</body>
+</html>
