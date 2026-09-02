@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const root = process.cwd();
 const site = 'https://solobizkit.it.com';
-const lastModified = '2026-08-23';
+const lastModified = '2026-09-02';
 const leading = ['/', '/tools/', '/business-calculators/', '/small-business-toolkit/', '/freelancer-toolkit/', '/pdf-tools/'];
 
 function walk(directory) {
