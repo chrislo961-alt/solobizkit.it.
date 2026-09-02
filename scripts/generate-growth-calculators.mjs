@@ -196,7 +196,7 @@ function render(page) {
 <div class="card" aria-live="polite"><div class="result"><small>${esc(page.resultLabel)}</small><div class="big" id="main">—</div></div>${outputs}<p class="hint">Planning estimate only. Confirm assumptions before making financial or advertising decisions.</p></div>
 </section>
 <section class="content"><article class="wrap">
-<h2>How to use this ${esc(page.title.toLowerCase())}</h2>
+<h2>How to use the ${esc(page.title)}</h2>
 <p>${esc(page.guidance)}</p>
 <h3>The formula</h3><p>${esc(page.formula)}</p>
 <div class="example"><strong>Example</strong><p>${esc(page.example)}</p></div>

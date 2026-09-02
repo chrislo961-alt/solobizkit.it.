@@ -133,32 +133,32 @@ textarea{resize:vertical;min-height:90px}
       </div>
 
       <div class="typepanel" data-panel="url">
-        <div class="field"><label>Website address</label><input id="url" value="https://solobizkit.it.com" placeholder="https://example.com"><div class="helper">Paste the full web address, including https://</div></div>
+        <div class="field"><label for="url">Website address</label><input id="url" value="https://solobizkit.it.com" placeholder="https://example.com"><div class="helper">Paste the full web address, including https://</div></div>
       </div>
 
       <div class="typepanel hidden" data-panel="text">
-        <div class="field"><label>Text</label><textarea id="text" placeholder="Type the text you want inside the QR code"></textarea></div>
+        <div class="field"><label for="text">Text</label><textarea id="text" placeholder="Type the text you want inside the QR code"></textarea></div>
       </div>
 
       <div class="typepanel hidden" data-panel="email">
-        <div class="field"><label>Email address</label><input id="email" type="email" placeholder="hello@example.com"></div>
-        <div class="field"><label>Subject <span class="helper">(optional)</span></label><input id="subject" placeholder="Hello"></div>
+        <div class="field"><label for="email">Email address</label><input id="email" type="email" placeholder="hello@example.com"></div>
+        <div class="field"><label for="subject">Subject <span class="helper">(optional)</span></label><input id="subject" placeholder="Hello"></div>
       </div>
 
       <div class="typepanel hidden" data-panel="phone">
-        <div class="field"><label>Phone number</label><input id="phone" placeholder="+1 555 123 4567"></div>
+        <div class="field"><label for="phone">Phone number</label><input id="phone" placeholder="+1 555 123 4567"></div>
       </div>
 
       <div class="typepanel hidden" data-panel="sms">
-        <div class="field"><label>Phone number</label><input id="smsPhone" placeholder="+1 555 123 4567"></div>
-        <div class="field"><label>Message <span class="helper">(optional)</span></label><textarea id="smsBody" placeholder="Pre-filled message"></textarea></div>
+        <div class="field"><label for="smsPhone">Phone number</label><input id="smsPhone" placeholder="+1 555 123 4567"></div>
+        <div class="field"><label for="smsBody">Message <span class="helper">(optional)</span></label><textarea id="smsBody" placeholder="Pre-filled message"></textarea></div>
       </div>
 
       <div class="typepanel hidden" data-panel="wifi">
-        <div class="field"><label>Wi-Fi name</label><input id="ssid" placeholder="My Wi-Fi"></div>
+        <div class="field"><label for="ssid">Wi-Fi name</label><input id="ssid" placeholder="My Wi-Fi"></div>
         <div class="row">
-          <div class="field"><label>Password</label><input id="wifiPass" placeholder="Password"></div>
-          <div class="field"><label>Security</label><select id="security"><option value="WPA">WPA / WPA2</option><option value="WEP">WEP</option><option value="nopass">No password</option></select></div>
+          <div class="field"><label for="wifiPass">Password</label><input id="wifiPass" placeholder="Password"></div>
+          <div class="field"><label for="security">Security</label><select id="security"><option value="WPA">WPA / WPA2</option><option value="WEP">WEP</option><option value="nopass">No password</option></select></div>
         </div>
       </div>
     </div>
@@ -168,12 +168,12 @@ textarea{resize:vertical;min-height:90px}
 
       <div class="colors">
         <div>
-          <label>QR color</label>
-          <div class="color-control"><input id="fg" type="color" value="#111827"><input id="fgText" value="#111827"></div>
+          <label for="fgText">QR color</label>
+          <div class="color-control"><input id="fg" type="color" value="#111827" aria-label="QR color picker"><input id="fgText" value="#111827" aria-label="QR color hex value"></div>
         </div>
         <div>
-          <label>Background</label>
-          <div class="color-control"><input id="bg" type="color" value="#ffffff"><input id="bgText" value="#ffffff"></div>
+          <label for="bgText">Background</label>
+          <div class="color-control"><input id="bg" type="color" value="#ffffff" aria-label="Background color picker"><input id="bgText" value="#ffffff" aria-label="Background color hex value"></div>
         </div>
       </div>
 
@@ -188,10 +188,10 @@ textarea{resize:vertical;min-height:90px}
         <summary>Advanced options</summary>
         <div class="advanced-body">
           <div class="row">
-            <div class="field"><label>Error correction</label><select id="level"><option value="M">Standard</option><option value="Q">Strong</option><option value="H" selected>Very strong</option></select></div>
-            <div class="field"><label>Margin</label><select id="margin"><option value="1">Small</option><option value="2" selected>Normal</option><option value="4">Large</option></select></div>
+            <div class="field"><label for="level">Error correction</label><select id="level"><option value="M">Standard</option><option value="Q">Strong</option><option value="H" selected>Very strong</option></select></div>
+            <div class="field"><label for="margin">Margin</label><select id="margin"><option value="1">Small</option><option value="2" selected>Normal</option><option value="4">Large</option></select></div>
           </div>
-          <div class="field"><label>Logo <span class="helper">(optional)</span></label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><div class="helper">Square logos work best.</div></div>
+          <div class="field"><label for="logo">Logo <span class="helper">(optional)</span></label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><div class="helper">Square logos work best.</div></div>
         </div>
       </details>
     </div>
