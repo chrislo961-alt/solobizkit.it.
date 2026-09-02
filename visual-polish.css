@@ -7,6 +7,9 @@
   --sbk-rose:#be185d;
 }
 
+/* Keep filtered cards out of the layout even when component CSS sets display. */
+[hidden]{display:none!important}
+
 /* One stable navigation system across every tool and guide. */
 .sbk-global-header{
   background:rgba(255,255,255,.96)!important;
@@ -96,6 +99,7 @@
 /* Bring the product into view sooner. */
 .home-hero{padding:40px 0 26px!important;background:linear-gradient(180deg,#f2f7ff 0,#f7faff 78%)!important}
 .home-hero h1{max-width:820px!important;margin:12px auto 11px!important;font-size:clamp(40px,4.5vw,56px)!important;line-height:1.02!important}
+.browse{scroll-margin-top:72px}
 .home-hero p{font-size:16px!important;line-height:1.58!important}
 .home-search{margin-top:18px!important}
 .home-search input{padding-top:15px!important;padding-bottom:15px!important;box-shadow:0 12px 32px rgba(37,99,235,.075)!important}
@@ -215,7 +219,7 @@ body>footer a,.sbk-global-footer a{color:#526077!important}
     scrollbar-width:none;
   }
   .category-chips::-webkit-scrollbar{display:none}
-  .category-chips button{flex:0 0 auto}
+  .category-chips a{flex:0 0 auto}
   .home-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
   .home-actions a{width:100%;text-align:center}
   .quick{padding:34px 0!important}
