@@ -20,10 +20,61 @@
     return `<div class="field"><label for="${id}">${label}</label><input id="${id}" value="${String(value).replace(/"/g,'&quot;')}" placeholder="${placeholder}"></div>`;
   }
 
+  function setText(selector, text) {
+    const el = document.querySelector(selector);
+    if (el && el.textContent !== text) el.textContent = text;
+  }
+
+  function applyLanguage() {
+    const t = labels[state.language] || labels.en;
+    setText('.inv-title h2', t.invoice);
+    const heads = document.querySelectorAll('.bill-grid > div > strong');
+    if (heads[0] && heads[0].textContent !== t.billTo) heads[0].textContent = t.billTo;
+    if (heads[1] && heads[1].textContent !== t.details) heads[1].textContent = t.details;
+    const th = document.querySelectorAll('.inv-items th');
+    [t.description,t.qty,t.rate,t.amount].forEach((value,i)=>{ if(th[i] && th[i].textContent !== value) th[i].textContent=value; });
+    const totals = document.querySelectorAll('.totals .total-line span');
+    [t.subtotal,t.discount,t.tax,t.total].forEach((value,i)=>{ if(totals[i] && totals[i].textContent !== value) totals[i].textContent=value; });
+    const notesStrong = document.querySelector('.invoice .notes strong');
+    if (notesStrong && notesStrong.textContent !== t.notes) notesStrong.textContent = t.notes;
+
+    const dates = document.querySelector('#pDates');
+    if (dates) {
+      const date = document.querySelector('#date')?.value || '';
+      const due = document.querySelector('#due')?.value || '';
+      const terms = document.querySelector('#terms')?.value || '';
+      const next = `${t.issued}: ${date || '—'}\n${t.due}: ${due || '—'}\n${t.terms}: ${terms}`;
+      if (dates.textContent !== next) dates.textContent = next;
+    }
+  }
+
+  function renderPayment() {
+    const t = labels[state.language] || labels.en;
+    const block = document.querySelector('#pPaymentV2');
+    if (!block) return;
+    const lines = [state.bankAccount && `Bank: ${state.bankAccount}`, state.iban && `IBAN: ${state.iban}`, state.bic && `SWIFT / BIC: ${state.bic}`, state.reference && `Reference: ${state.reference}`, state.paymentDetails].filter(Boolean);
+    block.hidden = !lines.length;
+    const html = lines.length ? `<strong>${t.payment}</strong><div class="muted">${lines.map(v=>String(v).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))).join('<br>')}</div>` : '';
+    if (block.innerHTML !== html) block.innerHTML = html;
+  }
+
+  function sync() {
+    state.language = document.querySelector('#invoiceLanguage')?.value || state.language;
+    state.bankAccount = document.querySelector('#bankAccountV2')?.value.trim() || '';
+    state.iban = document.querySelector('#ibanV2')?.value.trim() || '';
+    state.bic = document.querySelector('#bicV2')?.value.trim() || '';
+    state.reference = document.querySelector('#referenceV2')?.value.trim() || '';
+    state.paymentDetails = document.querySelector('#paymentNotesV2')?.value.trim() || '';
+    save(state);
+    applyLanguage();
+    renderPayment();
+  }
+
   function install() {
+    if (document.querySelector('#invoiceLanguage')) return true;
     const clientSection = [...document.querySelectorAll('.editor .section')].find(s => s.querySelector('#currency'));
     const notesSection = document.querySelector('#notes')?.closest('.section');
-    if (!clientSection || !notesSection || document.querySelector('#invoiceLanguage')) return;
+    if (!clientSection || !notesSection) return false;
 
     const currencyRow = document.querySelector('#currency')?.closest('.row');
     if (currencyRow) {
@@ -55,53 +106,18 @@
       el.addEventListener('change', sync);
     });
     sync();
+    return true;
   }
 
-  function sync() {
-    state.language = document.querySelector('#invoiceLanguage')?.value || state.language;
-    state.bankAccount = document.querySelector('#bankAccountV2')?.value.trim() || '';
-    state.iban = document.querySelector('#ibanV2')?.value.trim() || '';
-    state.bic = document.querySelector('#bicV2')?.value.trim() || '';
-    state.reference = document.querySelector('#referenceV2')?.value.trim() || '';
-    state.paymentDetails = document.querySelector('#paymentNotesV2')?.value.trim() || '';
-    save(state);
-    applyLanguage();
-    renderPayment();
+  function boot() {
+    if (install()) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries += 1;
+      if (install() || tries >= 20) clearInterval(timer);
+    }, 100);
   }
 
-  function setText(selector, text) { const el = document.querySelector(selector); if (el) el.textContent = text; }
-  function applyLanguage() {
-    const t = labels[state.language] || labels.en;
-    setText('.inv-title h2', t.invoice);
-    const heads = document.querySelectorAll('.bill-grid > div > strong');
-    if (heads[0]) heads[0].textContent = t.billTo;
-    if (heads[1]) heads[1].textContent = t.details;
-    const th = document.querySelectorAll('.inv-items th');
-    [t.description,t.qty,t.rate,t.amount].forEach((value,i)=>{ if(th[i]) th[i].textContent=value; });
-    const totals = document.querySelectorAll('.totals .total-line span');
-    [t.subtotal,t.discount,t.tax,t.total].forEach((value,i)=>{ if(totals[i]) totals[i].textContent=value; });
-    const notesStrong = document.querySelector('.invoice .notes strong');
-    if (notesStrong) notesStrong.textContent = t.notes;
-
-    const dates = document.querySelector('#pDates');
-    if (dates) {
-      const date = document.querySelector('#date')?.value || '';
-      const due = document.querySelector('#due')?.value || '';
-      const terms = document.querySelector('#terms')?.value || '';
-      dates.textContent = `${t.issued}: ${date || '—'}\n${t.due}: ${due || '—'}\n${t.terms}: ${terms}`;
-    }
-  }
-
-  function renderPayment() {
-    const t = labels[state.language] || labels.en;
-    const block = document.querySelector('#pPaymentV2');
-    if (!block) return;
-    const lines = [state.bankAccount && `Bank: ${state.bankAccount}`, state.iban && `IBAN: ${state.iban}`, state.bic && `SWIFT / BIC: ${state.bic}`, state.reference && `Reference: ${state.reference}`, state.paymentDetails].filter(Boolean);
-    block.hidden = !lines.length;
-    block.innerHTML = lines.length ? `<strong>${t.payment}</strong><div class="muted">${lines.map(v=>String(v).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))).join('<br>')}</div>` : '';
-  }
-
-  const observer = new MutationObserver(() => { install(); applyLanguage(); renderPayment(); });
-  observer.observe(document.documentElement, { childList:true, subtree:true });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
 })();
