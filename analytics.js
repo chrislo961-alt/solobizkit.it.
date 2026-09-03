@@ -87,8 +87,12 @@
     const nav=document.querySelector('.sbk-global-nav');if(!nav||nav.querySelector('[data-pro-entry]'))return;
     const existing=nav.querySelector('.sbk-global-tools');
     const link=document.createElement('a');link.href='/pro-pricing/';link.dataset.proEntry='true';link.textContent='Pro';link.setAttribute('aria-label','Learn about SoloBizKit Pro');
-    link.style.cssText='display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:9px;background:#183c2b;color:#fff;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap';
+    link.style.cssText='display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:9px;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:800;white-space:nowrap';
     if(existing)nav.insertBefore(link,existing);else nav.appendChild(link);
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){banner();installProEntry()});else{banner();installProEntry()}
+  function installHomepageV2(){
+    if(location.pathname!=='/'||document.querySelector('script[data-home-conversion-v2]'))return;
+    const script=document.createElement('script');script.src='/home-conversion-v2.js';script.defer=true;script.dataset.homeConversionV2='1';document.head.appendChild(script);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){banner();installProEntry();installHomepageV2()});else{banner();installProEntry();installHomepageV2()}
 })();
