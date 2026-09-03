@@ -223,3 +223,22 @@ export async function saveEstimate(userId, estimate) {
   if (itemsError) throw itemsError;
   return { ...estimate, id: saved.id, persisted: true, createdAt: saved.created_at, updatedAt: saved.updated_at };
 }
+
+export async function convertEstimateToInvoice(userId, estimate, invoiceNumber) {
+  if (estimate.convertedInvoiceId || estimate.status === 'converted') throw new Error('Estimate has already been converted.');
+  const settings = await getCompanySettings(userId);
+  const issueDate = new Date().toISOString().slice(0, 10);
+  const invoice = await saveInvoice(userId, {
+    customerId: estimate.customerId, number: invoiceNumber, issueDate,
+    dueDate: addDaysISO(issueDate, settings.paymentTermsDays ?? 14), status: 'draft',
+    currency: estimate.currency, taxRate: estimate.taxRate, lines: estimate.lines, notes: estimate.notes || '', persisted: false,
+  });
+  const { error } = await supabase.from('estimates').update({ status: 'converted', converted_invoice_id: invoice.id, updated_at: new Date().toISOString() }).eq('id', estimate.id).eq('user_id', userId);
+  if (error) throw error;
+  return invoice;
+}
+
+export async function markInvoicePaid(userId, invoiceId) {
+  const { error } = await supabase.from('invoices').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10), updated_at: new Date().toISOString() }).eq('id', invoiceId).eq('user_id', userId);
+  if (error) throw error;
+}
