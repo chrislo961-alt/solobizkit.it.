@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>Estimates · SoloBizKit Pro</title>
+  <title>Catalog · SoloBizKit Pro</title>
   <link rel="icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/pro/pro.css" />
   <link rel="stylesheet" href="/pro/pro-auth.css" />
-  <link rel="stylesheet" href="/pro/estimates/estimates.css" />
+  <link rel="stylesheet" href="/pro/catalog/catalog.css" />
 </head>
 <body>
   <div class="app-shell signed-out" id="shell">
@@ -18,32 +18,26 @@
         <a class="nav-item" href="/pro/?view=dashboard">Dashboard</a>
         <a class="nav-item" href="/pro/?view=customers">Customers</a>
         <a class="nav-item" href="/pro/?view=invoices">Invoices</a>
-        <a class="nav-item active" href="/pro/estimates/">Estimates</a>
+        <a class="nav-item" href="/pro/estimates/">Estimates</a>
         <a class="nav-item" href="/pro/recurring/">Recurring</a>
-        <a class="nav-item" href="/pro/catalog/">Catalog</a>
+        <a class="nav-item active" href="/pro/catalog/">Catalog</a>
         <a class="nav-item" href="/pro/settings/">Settings</a>
       </nav>
-      <div class="sidebar-footer"><span class="pro-pill">Pro workspace</span><p>CRM, estimates and invoicing for solo businesses.</p></div>
+      <div class="sidebar-footer"><span class="pro-pill">Pro workspace</span><p>Reusable products and services for faster documents.</p></div>
     </aside>
     <main class="main">
-      <header class="topbar">
-        <div><p class="eyebrow">SOLOBIZKIT PRO</p><h1 id="pageTitle">Estimates</h1></div>
-        <div class="top-actions"><div id="authActions"></div><button class="btn primary" id="newEstimate">+ Estimate</button></div>
-      </header>
+      <header class="topbar"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h1>Products & services</h1></div><div class="top-actions"><div id="authActions"></div><button class="btn primary" id="newProduct">+ Item</button></div></header>
       <section id="app" class="content" aria-live="polite"></section>
     </main>
   </div>
 
   <dialog id="modal" class="modal">
     <form method="dialog" class="modal-card" id="modalForm">
-      <div class="modal-head"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h2 id="modalTitle">New estimate</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div>
+      <div class="modal-head"><div><p class="eyebrow">CATALOG</p><h2 id="modalTitle">New item</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div>
       <div id="modalBody"></div>
       <div class="modal-actions"><button class="btn secondary" value="cancel">Cancel</button><button class="btn primary" value="default">Save</button></div>
     </form>
   </dialog>
-  <script type="module" src="/pro/estimates/estimates.js"></script>
-  <script type="module" src="/pro/document-defaults.js"></script>
-  <script type="module" src="/pro/email-actions-v2.js"></script>
-  <script type="module" src="/pro/catalog/catalog-picker.js"></script>
+  <script type="module" src="/pro/catalog/catalog.js"></script>
 </body>
 </html>
