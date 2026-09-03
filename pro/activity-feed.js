@@ -1,12 +1,14 @@
 import { supabase } from './backend.js';
 
 const app = document.querySelector('#app');
-const STORAGE_KEY = 'solobizkit_activity_last_seen';
+const STORAGE_PREFIX = 'solobizkit_activity_last_seen';
 let loading = false;
 let lastSignature = '';
+let activeUserId = '';
 
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 const money = (value, currency = 'USD') => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(Number(value || 0)); } catch { return `${Number(value || 0).toFixed(2)} ${currency}`; } };
+const storageKey = () => activeUserId ? `${STORAGE_PREFIX}:${activeUserId}` : STORAGE_PREFIX;
 
 function relativeTime(value) {
   if (!value) return '';
@@ -90,6 +92,10 @@ async function loadActivity() {
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData?.user?.id;
     if (!userId) return;
+    if (activeUserId !== userId) {
+      activeUserId = userId;
+      lastSignature = '';
+    }
     const [invoiceRes, estimateRes, recurringRes, customerRes] = await Promise.all([
       supabase.from('invoices').select('id,customer_id,invoice_number,status,currency,total,paid_date,created_at,updated_at').eq('user_id', userId).in('status', ['paid', 'overdue']).order('updated_at', { ascending: false }).limit(20),
       supabase.from('estimates').select('id,customer_id,estimate_number,status,currency,total,responded_at').eq('user_id', userId).in('status', ['accepted', 'declined']).not('responded_at', 'is', null).order('responded_at', { ascending: false }).limit(20),
@@ -109,9 +115,9 @@ async function loadActivity() {
 function renderActivity(items) {
   const dashboard = app.querySelector('.dashboard-grid');
   if (!dashboard) return;
-  const lastSeen = Number(localStorage.getItem(STORAGE_KEY) || 0);
+  const lastSeen = Number(localStorage.getItem(storageKey()) || 0);
   const unread = items.filter((item) => new Date(item.at).getTime() > lastSeen).length;
-  const signature = `${items.map((item) => item.id).join('|')}|unread:${unread}`;
+  const signature = `${activeUserId}|${items.map((item) => item.id).join('|')}|unread:${unread}`;
   if (signature === lastSignature && app.querySelector('#businessActivity')) return;
   lastSignature = signature;
   document.querySelector('#businessActivity')?.remove();
@@ -126,7 +132,7 @@ function renderActivity(items) {
   dashboard.insertAdjacentHTML('afterend', `<section class="card business-activity-card" id="businessActivity"><div class="card-head"><div><h2>Business activity ${unread ? `<span class="activity-count">${unread} new</span>` : ''}</h2><p class="muted activity-subtitle">Payments, customer responses, overdue invoices and automation.</p></div><button class="mini-btn" type="button" id="markActivityRead" ${unread ? '' : 'disabled'}>Mark read</button></div><div class="business-activity-list">${rows}</div></section>`);
 
   app.querySelector('#markActivityRead')?.addEventListener('click', () => {
-    localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    localStorage.setItem(storageKey(), String(Date.now()));
     renderActivity(items);
   });
 }
