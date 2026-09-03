@@ -16,7 +16,9 @@ export function nextInvoiceNumber(invoices = []) {
     const match = String(invoice.number || '').match(/(\d+)$/);
     return match ? Math.max(max, Number(match[1])) : max;
   }, 1000);
-  return `INV-${highest + 1}`;
+  const rawPrefix = typeof window !== 'undefined' && window.__solobizkitInvoicePrefix ? String(window.__solobizkitInvoicePrefix) : 'INV-';
+  const prefix = rawPrefix.endsWith('-') ? rawPrefix : `${rawPrefix}-`;
+  return `${prefix}${highest + 1}`;
 }
 
 export function normalizeInvoiceStatus(invoice, today = new Date()) {
