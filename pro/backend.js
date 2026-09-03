@@ -4,11 +4,7 @@ const SUPABASE_URL = 'https://eaqddwqprhofpizbpziq.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9PpiWr0duM-ve-mcqkCysg_BpX58a9O';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
 const crmToDb = { lead: 'lead', active: 'contacted', client: 'won' };
@@ -47,107 +43,69 @@ export async function signOut() {
 }
 
 export async function loadWorkspace(userId) {
-  const [customersResult, invoicesResult, profileResult, subscriptionResult] = await Promise.all([
+  const [customersResult, invoicesResult, estimatesResult, profileResult, subscriptionResult] = await Promise.all([
     supabase.from('customers').select('*').eq('user_id', userId).eq('crm_archived', false).order('crm_updated_at', { ascending: false }),
     supabase.from('invoices').select('*, invoice_items(*)').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabase.from('estimates').select('*, estimate_items(*)').eq('user_id', userId).order('created_at', { ascending: false }),
     supabase.from('profiles').select('id,email,full_name,plan').eq('id', userId).maybeSingle(),
     supabase.from('subscriptions').select('status,plan,current_period_end,cancel_at_period_end').eq('user_id', userId).maybeSingle(),
   ]);
 
-  for (const result of [customersResult, invoicesResult, profileResult, subscriptionResult]) {
+  for (const result of [customersResult, invoicesResult, estimatesResult, profileResult, subscriptionResult]) {
     if (result.error) throw result.error;
   }
 
   const customers = (customersResult.data || []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    company: row.company || '',
-    email: row.email || '',
-    phone: row.phone || '',
-    status: crmFromDb[row.crm_status] || 'lead',
-    notes: row.crm_notes || row.notes || '',
-    createdAt: row.created_at,
+    id: row.id, name: row.name, company: row.company || '', email: row.email || '', phone: row.phone || '',
+    status: crmFromDb[row.crm_status] || 'lead', notes: row.crm_notes || row.notes || '', createdAt: row.created_at,
     updatedAt: row.crm_updated_at || row.created_at,
   }));
 
   const invoices = (invoicesResult.data || []).map((row) => ({
-    id: row.id,
-    customerId: row.customer_id,
-    number: row.invoice_number,
-    issueDate: row.issue_date,
-    dueDate: row.due_date || '',
-    status: row.status,
-    currency: row.currency,
-    taxRate: Number(row.invoice_items?.[0]?.tax_rate || 0),
-    lines: [...(row.invoice_items || [])]
-      .sort((a, b) => a.position - b.position)
-      .map((item) => ({ description: item.description, qty: Number(item.quantity), rate: Number(item.unit_price) })),
-    notes: row.notes || '',
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: row.id, customerId: row.customer_id, number: row.invoice_number, issueDate: row.issue_date, dueDate: row.due_date || '',
+    status: row.status, currency: row.currency, taxRate: Number(row.invoice_items?.[0]?.tax_rate || 0),
+    lines: [...(row.invoice_items || [])].sort((a, b) => a.position - b.position).map((item) => ({ description: item.description, qty: Number(item.quantity), rate: Number(item.unit_price) })),
+    notes: row.notes || '', createdAt: row.created_at, updatedAt: row.updated_at,
   }));
 
-  return {
-    customers,
-    invoices,
-    profile: profileResult.data || null,
-    subscription: subscriptionResult.data || null,
-  };
+  const estimates = (estimatesResult.data || []).map((row) => ({
+    id: row.id, customerId: row.customer_id, number: row.estimate_number, issueDate: row.issue_date, validUntil: row.valid_until || '',
+    status: row.status, currency: row.currency, taxRate: Number(row.estimate_items?.[0]?.tax_rate || 0), convertedInvoiceId: row.converted_invoice_id,
+    lines: [...(row.estimate_items || [])].sort((a, b) => a.position - b.position).map((item) => ({ description: item.description, qty: Number(item.quantity), rate: Number(item.unit_price) })),
+    notes: row.notes || '', createdAt: row.created_at, updatedAt: row.updated_at,
+  }));
+
+  return { customers, invoices, estimates, profile: profileResult.data || null, subscription: subscriptionResult.data || null };
 }
 
 export async function saveCustomer(userId, customer) {
   const payload = {
-    user_id: userId,
-    name: customer.name,
-    company: customer.company || null,
-    email: customer.email || null,
-    phone: customer.phone || null,
-    notes: customer.notes || null,
-    crm_enabled: true,
-    crm_status: crmToDb[customer.status] || 'lead',
-    crm_notes: customer.notes || null,
+    user_id: userId, name: customer.name, company: customer.company || null, email: customer.email || null, phone: customer.phone || null,
+    notes: customer.notes || null, crm_enabled: true, crm_status: crmToDb[customer.status] || 'lead', crm_notes: customer.notes || null,
     crm_updated_at: new Date().toISOString(),
   };
-
   const query = customer.persisted
     ? supabase.from('customers').update(payload).eq('id', customer.id).eq('user_id', userId)
     : supabase.from('customers').insert(payload);
   const { data, error } = await query.select('*').single();
   if (error) throw error;
-  return {
-    ...customer,
-    id: data.id,
-    persisted: true,
-    createdAt: data.created_at,
-    updatedAt: data.crm_updated_at || data.created_at,
-  };
+  return { ...customer, id: data.id, persisted: true, createdAt: data.created_at, updatedAt: data.crm_updated_at || data.created_at };
+}
+
+function totalsFromLines(lines, taxRate) {
+  const subtotal = lines.reduce((sum, line) => sum + Number(line.qty || 0) * Number(line.rate || 0), 0);
+  const taxTotal = subtotal * (Number(taxRate || 0) / 100);
+  return { subtotal, taxTotal, total: subtotal + taxTotal };
 }
 
 export async function saveInvoice(userId, invoice) {
-  const subtotal = invoice.lines.reduce((sum, line) => sum + Number(line.qty || 0) * Number(line.rate || 0), 0);
-  const taxTotal = subtotal * (Number(invoice.taxRate || 0) / 100);
-  const total = subtotal + taxTotal;
+  const { subtotal, taxTotal, total } = totalsFromLines(invoice.lines, invoice.taxRate);
   const payload = {
-    user_id: userId,
-    customer_id: invoice.customerId || null,
-    invoice_number: invoice.number,
-    status: invoice.status,
-    currency: invoice.currency,
-    issue_date: invoice.issueDate,
-    due_date: invoice.dueDate || null,
-    subtotal,
-    tax_total: taxTotal,
-    discount_total: 0,
-    discount_rate: 0,
-    total,
-    notes: invoice.notes || null,
-    language: 'en',
-    document_type: 'invoice',
-    vat_mode: 'standard',
-    updated_at: new Date().toISOString(),
-    paid_date: invoice.status === 'paid' ? new Date().toISOString().slice(0, 10) : null,
+    user_id: userId, customer_id: invoice.customerId || null, invoice_number: invoice.number, status: invoice.status,
+    currency: invoice.currency, issue_date: invoice.issueDate, due_date: invoice.dueDate || null, subtotal, tax_total: taxTotal,
+    discount_total: 0, discount_rate: 0, total, notes: invoice.notes || null, language: 'en', document_type: 'invoice', vat_mode: 'standard',
+    updated_at: new Date().toISOString(), paid_date: invoice.status === 'paid' ? new Date().toISOString().slice(0, 10) : null,
   };
-
   let saved;
   if (invoice.persisted) {
     const { data, error } = await supabase.from('invoices').update(payload).eq('id', invoice.id).eq('user_id', userId).select('*').single();
@@ -160,28 +118,50 @@ export async function saveInvoice(userId, invoice) {
     if (error) throw error;
     saved = data;
   }
-
-  const items = invoice.lines.map((line, position) => ({
-    invoice_id: saved.id,
-    user_id: userId,
-    description: line.description || 'Service',
-    quantity: Number(line.qty || 1),
-    unit_price: Number(line.rate || 0),
-    tax_rate: Number(invoice.taxRate || 0),
-    discount: 0,
-    position,
-  }));
+  const items = invoice.lines.map((line, position) => ({ invoice_id: saved.id, user_id: userId, description: line.description || 'Service', quantity: Number(line.qty || 1), unit_price: Number(line.rate || 0), tax_rate: Number(invoice.taxRate || 0), discount: 0, position }));
   const { error: itemsError } = await supabase.from('invoice_items').insert(items);
   if (itemsError) throw itemsError;
-
   return { ...invoice, id: saved.id, persisted: true, createdAt: saved.created_at, updatedAt: saved.updated_at };
 }
 
+export async function saveEstimate(userId, estimate) {
+  const { subtotal, taxTotal, total } = totalsFromLines(estimate.lines, estimate.taxRate);
+  const payload = {
+    user_id: userId, customer_id: estimate.customerId || null, estimate_number: estimate.number, status: estimate.status,
+    currency: estimate.currency, language: 'en', issue_date: estimate.issueDate, valid_until: estimate.validUntil || null,
+    subtotal, tax_total: taxTotal, discount_total: 0, discount_rate: 0, total, notes: estimate.notes || null,
+    vat_mode: 'standard', updated_at: new Date().toISOString(),
+  };
+  let saved;
+  if (estimate.persisted) {
+    const { data, error } = await supabase.from('estimates').update(payload).eq('id', estimate.id).eq('user_id', userId).select('*').single();
+    if (error) throw error;
+    saved = data;
+    const { error: deleteError } = await supabase.from('estimate_items').delete().eq('estimate_id', estimate.id).eq('user_id', userId);
+    if (deleteError) throw deleteError;
+  } else {
+    const { data, error } = await supabase.from('estimates').insert(payload).select('*').single();
+    if (error) throw error;
+    saved = data;
+  }
+  const items = estimate.lines.map((line, position) => ({ estimate_id: saved.id, user_id: userId, description: line.description || 'Service', quantity: Number(line.qty || 1), unit_price: Number(line.rate || 0), tax_rate: Number(estimate.taxRate || 0), position }));
+  const { error: itemsError } = await supabase.from('estimate_items').insert(items);
+  if (itemsError) throw itemsError;
+  return { ...estimate, id: saved.id, persisted: true, createdAt: saved.created_at, updatedAt: saved.updated_at };
+}
+
+export async function convertEstimateToInvoice(userId, estimate, invoiceNumber) {
+  if (estimate.convertedInvoiceId || estimate.status === 'converted') throw new Error('Estimate has already been converted.');
+  const invoice = await saveInvoice(userId, {
+    customerId: estimate.customerId, number: invoiceNumber, issueDate: new Date().toISOString().slice(0, 10), dueDate: '', status: 'draft',
+    currency: estimate.currency, taxRate: estimate.taxRate, lines: estimate.lines, notes: estimate.notes || '', persisted: false,
+  });
+  const { error } = await supabase.from('estimates').update({ status: 'converted', converted_invoice_id: invoice.id, updated_at: new Date().toISOString() }).eq('id', estimate.id).eq('user_id', userId);
+  if (error) throw error;
+  return invoice;
+}
+
 export async function markInvoicePaid(userId, invoiceId) {
-  const { error } = await supabase
-    .from('invoices')
-    .update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10), updated_at: new Date().toISOString() })
-    .eq('id', invoiceId)
-    .eq('user_id', userId);
+  const { error } = await supabase.from('invoices').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10), updated_at: new Date().toISOString() }).eq('id', invoiceId).eq('user_id', userId);
   if (error) throw error;
 }
