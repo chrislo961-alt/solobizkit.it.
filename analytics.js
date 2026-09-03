@@ -94,5 +94,10 @@
     if(location.pathname!=='/'||document.querySelector('script[data-home-conversion-v2]'))return;
     const script=document.createElement('script');script.src='/home-conversion-v2.js';script.defer=true;script.dataset.homeConversionV2='1';document.head.appendChild(script);
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){banner();installProEntry();installHomepageV2()});else{banner();installProEntry();installHomepageV2()}
+  function installFreeInvoiceOptionsV2(){
+    if(location.pathname!=='/invoice-generator/'||document.querySelector('script[data-free-invoice-options-v2]'))return;
+    const script=document.createElement('script');script.src='/invoice-generator/document-options-v2.js';script.defer=true;script.dataset.freeInvoiceOptionsV2='1';document.head.appendChild(script);
+  }
+  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
