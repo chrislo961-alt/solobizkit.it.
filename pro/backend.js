@@ -78,6 +78,67 @@ export async function loadWorkspace(userId) {
   return { customers, invoices, estimates, profile: profileResult.data || null, subscription: subscriptionResult.data || null };
 }
 
+export async function getCompanySettings(userId) {
+  const { data, error } = await supabase.from('company_settings').select('*').eq('user_id', userId).maybeSingle();
+  if (error) throw error;
+  if (!data) return {
+    companyName: '', companyEmail: '', phone: '', address: '', city: '', postalCode: '', country: '', taxNumber: '',
+    defaultCurrency: 'USD', defaultTax: 0, invoicePrefix: 'INV', estimatePrefix: 'EST-', paymentTermsDays: 14,
+    bankAccount: '', iban: '', bicSwift: '', paymentReference: '', paymentDetails: '',
+  };
+  return {
+    id: data.id,
+    companyName: data.business_name || data.company_name || '',
+    companyEmail: data.business_email || data.company_email || '',
+    phone: data.phone || '',
+    address: data.business_address || data.address || '',
+    city: data.city || '',
+    postalCode: data.postal_code || '',
+    country: data.country || '',
+    taxNumber: data.business_tax_id || data.tax_number || '',
+    defaultCurrency: data.default_currency || 'USD',
+    defaultTax: Number(data.default_tax || 0),
+    invoicePrefix: data.invoice_prefix || 'INV',
+    estimatePrefix: data.estimate_prefix || 'EST-',
+    paymentTermsDays: Number(data.payment_terms_days || 14),
+    bankAccount: data.bank_account || '', iban: data.iban || '', bicSwift: data.bic_swift || '',
+    paymentReference: data.payment_reference || '', paymentDetails: data.payment_details || '',
+  };
+}
+
+export async function saveCompanySettings(userId, settings) {
+  const payload = {
+    user_id: userId,
+    company_name: settings.companyName || null,
+    business_name: settings.companyName || null,
+    company_email: settings.companyEmail || null,
+    business_email: settings.companyEmail || null,
+    phone: settings.phone || null,
+    address: settings.address || null,
+    business_address: settings.address || null,
+    city: settings.city || null,
+    postal_code: settings.postalCode || null,
+    country: settings.country || null,
+    tax_number: settings.taxNumber || null,
+    business_tax_id: settings.taxNumber || null,
+    default_currency: settings.defaultCurrency || 'USD',
+    default_tax: Number(settings.defaultTax || 0),
+    invoice_prefix: settings.invoicePrefix || 'INV',
+    estimate_prefix: settings.estimatePrefix || 'EST-',
+    payment_terms_days: Math.max(0, Number(settings.paymentTermsDays || 14)),
+    bank_account: settings.bankAccount || null,
+    iban: settings.iban || null,
+    bic_swift: settings.bicSwift || null,
+    payment_reference: settings.paymentReference || null,
+    payment_details: settings.paymentDetails || null,
+    invoice_onboarding_completed: true,
+    onboarding_completed_at: new Date().toISOString(),
+  };
+  const { data, error } = await supabase.from('company_settings').upsert(payload, { onConflict: 'user_id' }).select('*').single();
+  if (error) throw error;
+  return data;
+}
+
 export async function saveCustomer(userId, customer) {
   const payload = {
     user_id: userId, name: customer.name, company: customer.company || null, email: customer.email || null, phone: customer.phone || null,
