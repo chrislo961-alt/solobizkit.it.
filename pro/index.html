@@ -12,78 +12,18 @@
   <link rel="stylesheet" href="/pro/document-ux-v2.css" />
   <link rel="stylesheet" href="/pro/onboarding-v2.css" />
   <link rel="stylesheet" href="/pro/crm-ux-v3.css" />
+  <link rel="stylesheet" href="/pro/document-editor-v3.css" />
 </head>
 <body>
   <div class="app-shell signed-out">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="SoloBizKit home">
-        <span class="brand-mark">SB</span>
-        <span><strong>SoloBizKit</strong><small>PRO</small></span>
-      </a>
-      <nav class="nav" aria-label="Pro navigation">
-        <button class="nav-item active" data-view="dashboard">Dashboard</button>
-        <button class="nav-item" data-view="customers">Customers</button>
-        <button class="nav-item" data-view="invoices">Invoices</button>
-        <a class="nav-item" href="/pro/estimates/">Estimates</a>
-        <a class="nav-item" href="/pro/recurring/">Recurring</a>
-        <a class="nav-item" href="/pro/catalog/">Catalog</a>
-        <a class="nav-item" href="/pro/settings/">Settings</a>
-      </nav>
-      <div class="sidebar-footer">
-        <span class="pro-pill">Pro workspace</span>
-        <p>CRM, estimates and invoicing for solo businesses.</p>
-        <a class="signout" href="/pro-pricing/">About SoloBizKit Pro</a>
-      </div>
+      <a class="brand" href="/" aria-label="SoloBizKit home"><span class="brand-mark">SB</span><span><strong>SoloBizKit</strong><small>PRO</small></span></a>
+      <nav class="nav" aria-label="Pro navigation"><button class="nav-item active" data-view="dashboard">Dashboard</button><button class="nav-item" data-view="customers">Customers</button><button class="nav-item" data-view="invoices">Invoices</button><a class="nav-item" href="/pro/estimates/">Estimates</a><a class="nav-item" href="/pro/recurring/">Recurring</a><a class="nav-item" href="/pro/catalog/">Catalog</a><a class="nav-item" href="/pro/settings/">Settings</a></nav>
+      <div class="sidebar-footer"><span class="pro-pill">Pro workspace</span><p>CRM, estimates and invoicing for solo businesses.</p><a class="signout" href="/pro-pricing/">About SoloBizKit Pro</a></div>
     </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">SOLOBIZKIT PRO</p>
-          <h1 id="pageTitle">Pro workspace</h1>
-        </div>
-        <div class="top-actions">
-          <div id="authActions"></div>
-          <button class="btn secondary" id="newCustomerTop">+ Customer</button>
-          <button class="btn primary" id="newInvoiceTop">+ Invoice</button>
-        </div>
-      </header>
-      <section id="app" class="content" aria-live="polite"></section>
-    </main>
+    <main class="main"><header class="topbar"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h1 id="pageTitle">Pro workspace</h1></div><div class="top-actions"><div id="authActions"></div><button class="btn secondary" id="newCustomerTop">+ Customer</button><button class="btn primary" id="newInvoiceTop">+ Invoice</button></div></header><section id="app" class="content" aria-live="polite"></section></main>
   </div>
-
-  <dialog id="modal" class="modal">
-    <form method="dialog" class="modal-card" id="modalForm">
-      <div class="modal-head">
-        <div><p class="eyebrow">SOLOBIZKIT PRO</p><h2 id="modalTitle">New item</h2></div>
-        <button class="icon-btn" value="cancel" aria-label="Close">×</button>
-      </div>
-      <div id="modalBody"></div>
-      <div class="modal-actions">
-        <button class="btn secondary" value="cancel">Cancel</button>
-        <button class="btn primary" value="default">Save</button>
-      </div>
-    </form>
-  </dialog>
-
-  <script type="module" src="/pro/pro-app.js"></script>
-  <script type="module" src="/pro/deep-links.js"></script>
-  <script type="module" src="/pro/document-print-v2.js"></script>
-  <script type="module" src="/pro/document-defaults.js"></script>
-  <script type="module" src="/pro/document-options-v2.js"></script>
-  <script type="module" src="/pro/reminder-actions.js"></script>
-  <script type="module" src="/pro/payment-actions.js"></script>
-  <script type="module" src="/pro/email-actions-v2.js"></script>
-  <script type="module" src="/pro/customer-history.js"></script>
-  <script type="module" src="/pro/customer-portal-actions.js"></script>
-  <script type="module" src="/pro/customer-workspace-actions.js"></script>
-  <script type="module" src="/pro/catalog/catalog-picker.js"></script>
-  <script type="module" src="/pro/document-attachments.js"></script>
-  <script type="module" src="/pro/activity-feed.js"></script>
-  <script type="module" src="/pro/onboarding.js"></script>
-  <script type="module" src="/pro/trial-ui.js"></script>
-  <script type="module" src="/pro/crm-dashboard-v2.js"></script>
-  <script type="module" src="/pro/crm-ux-v3.js"></script>
-  <script type="module" src="/pro/document-ux-v2.js"></script>
+  <dialog id="modal" class="modal"><form method="dialog" class="modal-card" id="modalForm"><div class="modal-head"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h2 id="modalTitle">New item</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div><div id="modalBody"></div><div class="modal-actions"><button class="btn secondary" value="cancel">Cancel</button><button class="btn primary" value="default">Save</button></div></form></dialog>
+  <script type="module" src="/pro/pro-app.js"></script><script type="module" src="/pro/deep-links.js"></script><script type="module" src="/pro/document-print-v2.js"></script><script type="module" src="/pro/document-defaults.js"></script><script type="module" src="/pro/document-options-v2.js"></script><script type="module" src="/pro/reminder-actions.js"></script><script type="module" src="/pro/payment-actions.js"></script><script type="module" src="/pro/email-actions-v2.js"></script><script type="module" src="/pro/customer-history.js"></script><script type="module" src="/pro/customer-portal-actions.js"></script><script type="module" src="/pro/customer-workspace-actions.js"></script><script type="module" src="/pro/catalog/catalog-picker.js"></script><script type="module" src="/pro/document-attachments.js"></script><script type="module" src="/pro/activity-feed.js"></script><script type="module" src="/pro/onboarding.js"></script><script type="module" src="/pro/trial-ui.js"></script><script type="module" src="/pro/crm-dashboard-v2.js"></script><script type="module" src="/pro/crm-ux-v3.js"></script><script type="module" src="/pro/document-ux-v2.js"></script><script type="module" src="/pro/document-editor-v3.js"></script>
 </body>
 </html>
