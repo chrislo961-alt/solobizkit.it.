@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Invoice payment · SoloBizKit</title>
+  <link rel="icon" href="/favicon.svg" />
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111;background:#f5f6f8}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(560px,100%);background:#fff;border:1px solid #e3e6ea;border-radius:20px;padding:34px;box-shadow:0 20px 55px rgba(17,24,39,.08)}.brand{font-weight:800;letter-spacing:-.03em;margin-bottom:28px}.brand span{display:inline-grid;place-items:center;width:32px;height:32px;background:#111;color:#fff;border-radius:8px;margin-right:9px;font-size:13px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;color:#69717c;margin:0 0 8px}h1{font-size:30px;line-height:1.1;margin:0 0 14px}p{color:#59616b;line-height:1.6}.status{margin:22px 0;padding:16px;border-radius:12px;background:#f4f5f7}.status strong{display:block;color:#111;margin-bottom:4px}.btn{display:inline-block;margin-top:12px;padding:12px 17px;background:#111;color:#fff;text-decoration:none;border-radius:9px;font-weight:700}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand"><span>SB</span>SoloBizKit</div>
+    <p class="eyebrow">INVOICE PAYMENT</p>
+    <h1 id="title">Payment status</h1>
+    <div class="status"><strong id="statusTitle">Checking payment result…</strong><span id="statusText">Your payment provider has returned you to SoloBizKit.</span></div>
+    <p>If payment was completed, the invoice owner will see the invoice update to Paid automatically after Stripe confirms the payment.</p>
+    <a class="btn" href="/">Back to SoloBizKit</a>
+  </main>
+  <script>
+    const result=new URLSearchParams(location.search).get('payment');
+    const title=document.querySelector('#title'),statusTitle=document.querySelector('#statusTitle'),statusText=document.querySelector('#statusText');
+    if(result==='success'){title.textContent='Payment received';statusTitle.textContent='Thank you — payment completed.';statusText.textContent='Stripe is confirming the payment. The invoice will be marked Paid automatically.'}
+    else if(result==='cancelled'){title.textContent='Payment cancelled';statusTitle.textContent='No payment was completed.';statusText.textContent='You can return to the payment link later if you still need to pay the invoice.'}
+    else{statusTitle.textContent='Payment page';statusText.textContent='Use the secure payment link from your invoice email to make a payment.'}
+  </script>
+</body>
+</html>
