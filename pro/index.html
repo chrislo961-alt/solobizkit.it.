@@ -7,9 +7,10 @@
   <title>SoloBizKit Pro</title>
   <link rel="icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/pro/pro.css" />
+  <link rel="stylesheet" href="/pro/pro-auth.css" />
 </head>
 <body>
-  <div class="app-shell">
+  <div class="app-shell signed-out">
     <aside class="sidebar">
       <a class="brand" href="/" aria-label="SoloBizKit home">
         <span class="brand-mark">SB</span>
@@ -30,9 +31,10 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">SOLOBIZKIT PRO</p>
-          <h1 id="pageTitle">Dashboard</h1>
+          <h1 id="pageTitle">Pro workspace</h1>
         </div>
         <div class="top-actions">
+          <div id="authActions"></div>
           <button class="btn secondary" id="newCustomerTop">+ Customer</button>
           <button class="btn primary" id="newInvoiceTop">+ Invoice</button>
         </div>
@@ -44,17 +46,17 @@
   <dialog id="modal" class="modal">
     <form method="dialog" class="modal-card" id="modalForm">
       <div class="modal-head">
-        <div><p class="eyebrow" id="modalEyebrow">SOLOBIZKIT PRO</p><h2 id="modalTitle">New item</h2></div>
+        <div><p class="eyebrow">SOLOBIZKIT PRO</p><h2 id="modalTitle">New item</h2></div>
         <button class="icon-btn" value="cancel" aria-label="Close">×</button>
       </div>
       <div id="modalBody"></div>
       <div class="modal-actions">
         <button class="btn secondary" value="cancel">Cancel</button>
-        <button class="btn primary" id="modalSave" value="default">Save</button>
+        <button class="btn primary" value="default">Save</button>
       </div>
     </form>
   </dialog>
 
-  <script type="module" src="/pro/pro.js"></script>
+  <script type="module" src="/pro/pro-app.js"></script>
 </body>
 </html>
