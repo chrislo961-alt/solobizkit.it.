@@ -27,11 +27,14 @@ const pages = files.map((file) => {
     .replace(/<style\b[\s\S]*?<\/style>/gi, '')
     .replace(/<textarea\b[\s\S]*?<\/textarea>/gi, '')
     .replace(/<template\b[\s\S]*?<\/template>/gi, '');
+  const robots = match(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i);
   return {
     file,
     html,
     structural,
     route,
+    robots,
+    privateApp: /(?:^|,)\s*noindex\b/i.test(robots),
     title: match(html, /<title>([^<]+)<\/title>/i),
     description: match(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i),
     canonical: match(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i),
@@ -39,50 +42,57 @@ const pages = files.map((file) => {
   };
 });
 
+const publicPages = pages.filter((page) => !page.privateApp);
 const routes = new Set(pages.map((page) => page.route));
-const inbound = new Map(pages.map((page) => [page.route, 0]));
+const publicRoutes = new Set(publicPages.map((page) => page.route));
+const inbound = new Map(publicPages.map((page) => [page.route, 0]));
 const titleOwners = new Map();
 const descriptionOwners = new Map();
 
 for (const page of pages) {
   const label = page.route;
   if (!page.title) errors.push(`${label}: missing title`);
-  if (!page.description) errors.push(`${label}: missing meta description`);
-  if (page.title.length > 80) errors.push(`${label}: title exceeds 80 characters`);
-  if (page.description.length > 220) errors.push(`${label}: meta description exceeds 220 characters`);
-  if (page.canonical !== `${SITE}${page.route}`) errors.push(`${label}: incorrect canonical URL`);
   if ((page.structural.match(/<h1\b/gi) || []).length !== 1) errors.push(`${label}: must contain exactly one structural H1`);
 
-  for (const [name, expression] of Object.entries({
-    robots: /<meta[^>]+name=["']robots["']/i,
-    themeColor: /<meta[^>]+name=["']theme-color["']/i,
-    favicon: /<link[^>]+rel=["']icon["']/i,
-    manifest: /<link[^>]+rel=["']manifest["']/i,
-    ogTitle: /<meta[^>]+property=["']og:title["']/i,
-    ogDescription: /<meta[^>]+property=["']og:description["']/i,
-    ogImage: /<meta[^>]+property=["']og:image["']/i,
-    twitterCard: /<meta[^>]+name=["']twitter:card["']/i,
-    analytics: /<script[^>]+src=["']\/analytics\.js["']/i,
-    consentStyles: /<link[^>]+href=["']\/analytics-consent\.css["']/i,
-    globalShell: /<link[^>]+href=["']\/global-shell\.css["']/i,
-    visualPolish: /<link[^>]+href=["']\/visual-polish\.css["']/i,
-    structuredData: /<script[^>]+type=["']application\/ld\+json["']/i
-  })) {
-    if (!expression.test(page.html)) errors.push(`${label}: missing ${name}`);
-  }
+  if (!page.privateApp) {
+    if (!page.description) errors.push(`${label}: missing meta description`);
+    if (page.title.length > 80) errors.push(`${label}: title exceeds 80 characters`);
+    if (page.description.length > 220) errors.push(`${label}: meta description exceeds 220 characters`);
+    if (page.canonical !== `${SITE}${page.route}`) errors.push(`${label}: incorrect canonical URL`);
 
-  const headers = page.structural.match(/<header\b[^>]*>[\s\S]*?<\/header>/gi) || [];
-  if (headers.length !== 1 || !/class=["'][^"']*sbk-global-header/.test(headers[0] || '')) {
-    errors.push(`${label}: must use exactly one shared global header`);
-  } else {
-    for (const href of ['/business-calculators/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/']) {
-      if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) {
-        errors.push(`${label}: shared header is missing ${href}`);
+    for (const [name, expression] of Object.entries({
+      robots: /<meta[^>]+name=["']robots["']/i,
+      themeColor: /<meta[^>]+name=["']theme-color["']/i,
+      favicon: /<link[^>]+rel=["']icon["']/i,
+      manifest: /<link[^>]+rel=["']manifest["']/i,
+      ogTitle: /<meta[^>]+property=["']og:title["']/i,
+      ogDescription: /<meta[^>]+property=["']og:description["']/i,
+      ogImage: /<meta[^>]+property=["']og:image["']/i,
+      twitterCard: /<meta[^>]+name=["']twitter:card["']/i,
+      analytics: /<script[^>]+src=["']\/analytics\.js["']/i,
+      consentStyles: /<link[^>]+href=["']\/analytics-consent\.css["']/i,
+      globalShell: /<link[^>]+href=["']\/global-shell\.css["']/i,
+      visualPolish: /<link[^>]+href=["']\/visual-polish\.css["']/i,
+      structuredData: /<script[^>]+type=["']application\/ld\+json["']/i
+    })) {
+      if (!expression.test(page.html)) errors.push(`${label}: missing ${name}`);
+    }
+
+    const headers = page.structural.match(/<header\b[^>]*>[\s\S]*?<\/header>/gi) || [];
+    if (headers.length !== 1 || !/class=["'][^"']*sbk-global-header/.test(headers[0] || '')) {
+      errors.push(`${label}: must use exactly one shared global header`);
+    } else {
+      for (const href of ['/business-calculators/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/']) {
+        if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) {
+          errors.push(`${label}: shared header is missing ${href}`);
+        }
+      }
+      if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) {
+        errors.push(`${label}: shared header is missing the brand icon`);
       }
     }
-    if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) {
-      errors.push(`${label}: shared header is missing the brand icon`);
-    }
+  } else if (!/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(page.html)) {
+    errors.push(`${label}: private app route must explicitly declare noindex`);
   }
 
   if (['/', '/tools/'].includes(label)) {
@@ -95,13 +105,16 @@ for (const page of pages) {
     try { JSON.parse(json[1]); } catch { errors.push(`${label}: invalid JSON-LD`); }
   }
 
-  titleOwners.set(page.title, [...(titleOwners.get(page.title) || []), label]);
-  descriptionOwners.set(page.description, [...(descriptionOwners.get(page.description) || []), label]);
+  if (!page.privateApp) {
+    titleOwners.set(page.title, [...(titleOwners.get(page.title) || []), label]);
+    descriptionOwners.set(page.description, [...(descriptionOwners.get(page.description) || []), label]);
+  }
 
   for (const url of page.links) {
     if (!url.startsWith('/') || url.startsWith('//')) continue;
     const target = url.endsWith('/') ? url : url.replace(/\.html$/, '/');
-    if (routes.has(target)) inbound.set(target, inbound.get(target) + 1);
+    if (publicRoutes.has(target)) inbound.set(target, inbound.get(target) + 1);
+    else if (routes.has(target)) continue;
     else if (!fs.existsSync(path.join(ROOT, url)) && !fs.existsSync(path.join(ROOT, url, 'index.html'))) {
       errors.push(`${label}: broken internal link ${url}`);
     }
@@ -121,8 +134,8 @@ for (const [route, count] of inbound) if (route !== '/' && count === 0) errors.p
 const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
 const sitemapRoutes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) => new URL(item[1]).pathname);
 if (new Set(sitemapRoutes).size !== sitemapRoutes.length) errors.push('sitemap contains duplicate URLs');
-for (const route of routes) if (!sitemapRoutes.includes(route)) errors.push(`${route}: missing from sitemap`);
-for (const route of sitemapRoutes) if (!routes.has(route)) errors.push(`${route}: sitemap URL has no HTML route`);
+for (const route of publicRoutes) if (!sitemapRoutes.includes(route)) errors.push(`${route}: missing from sitemap`);
+for (const route of sitemapRoutes) if (!publicRoutes.has(route)) errors.push(`${route}: sitemap URL has no public HTML route`);
 
 for (const required of ['favicon.svg', 'favicon.ico', 'favicon-192.png', 'favicon-512.png', 'site.webmanifest', 'robots.txt', 'ads.txt']) {
   if (!fs.existsSync(path.join(ROOT, required))) errors.push(`missing required root asset ${required}`);
@@ -149,4 +162,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Verified ${pages.length} routes, ${sitemapRoutes.length} sitemap URLs, metadata, structured data, local assets and internal links.`);
+console.log(`Verified ${publicPages.length} public routes, ${pages.length - publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, metadata, structured data, local assets and internal links.`);
