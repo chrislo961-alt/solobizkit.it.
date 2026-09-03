@@ -1,6 +1,6 @@
 const params = new URLSearchParams(window.location.search);
-const requestedView = params.get('view');
 const requestedInvoice = params.get('invoice');
+const requestedView = requestedInvoice ? 'invoices' : params.get('view');
 const validViews = new Set(['dashboard', 'customers', 'invoices']);
 let appliedView = false;
 let appliedInvoice = false;
@@ -14,8 +14,7 @@ function syncView() {
 }
 
 function syncInvoice() {
-  if (appliedInvoice || !requestedInvoice) return;
-  if (!appliedView && requestedView && requestedView !== 'invoices') return;
+  if (appliedInvoice || !requestedInvoice || !appliedView) return;
   const button = document.querySelector(`[data-edit-invoice="${CSS.escape(requestedInvoice)}"]`);
   if (!button) return;
   button.click();
