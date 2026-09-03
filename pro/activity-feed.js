@@ -109,13 +109,13 @@ async function loadActivity() {
 function renderActivity(items) {
   const dashboard = app.querySelector('.dashboard-grid');
   if (!dashboard) return;
-  const signature = items.map((item) => item.id).join('|');
+  const lastSeen = Number(localStorage.getItem(STORAGE_KEY) || 0);
+  const unread = items.filter((item) => new Date(item.at).getTime() > lastSeen).length;
+  const signature = `${items.map((item) => item.id).join('|')}|unread:${unread}`;
   if (signature === lastSignature && app.querySelector('#businessActivity')) return;
   lastSignature = signature;
   document.querySelector('#businessActivity')?.remove();
 
-  const lastSeen = Number(localStorage.getItem(STORAGE_KEY) || 0);
-  const unread = items.filter((item) => new Date(item.at).getTime() > lastSeen).length;
   const rows = items.length ? items.map((item) => `
     <a class="business-activity-item" href="${esc(item.href)}">
       <span class="activity-icon ${esc(item.type)}" aria-hidden="true"></span>
