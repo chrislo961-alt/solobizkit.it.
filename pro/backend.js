@@ -85,6 +85,7 @@ export async function getCompanySettings(userId) {
     companyName: '', companyEmail: '', phone: '', address: '', city: '', postalCode: '', country: '', taxNumber: '',
     defaultCurrency: 'USD', defaultTax: 0, invoicePrefix: 'INV', estimatePrefix: 'EST-', paymentTermsDays: 14,
     reminderScheduleDays: [0, 7, 14], bankAccount: '', iban: '', bicSwift: '', paymentReference: '', paymentDetails: '',
+    notifyEstimateResponses: true, notifyInvoicePaid: true,
   };
   return {
     id: data.id,
@@ -104,6 +105,8 @@ export async function getCompanySettings(userId) {
     reminderScheduleDays: Array.isArray(data.reminder_schedule_days) ? data.reminder_schedule_days : [0, 7, 14],
     bankAccount: data.bank_account || '', iban: data.iban || '', bicSwift: data.bic_swift || '',
     paymentReference: data.payment_reference || '', paymentDetails: data.payment_details || '',
+    notifyEstimateResponses: data.notify_estimate_responses !== false,
+    notifyInvoicePaid: data.notify_invoice_paid !== false,
   };
 }
 
@@ -133,6 +136,8 @@ export async function saveCompanySettings(userId, settings) {
     bic_swift: settings.bicSwift || null,
     payment_reference: settings.paymentReference || null,
     payment_details: settings.paymentDetails || null,
+    notify_estimate_responses: settings.notifyEstimateResponses !== false,
+    notify_invoice_paid: settings.notifyInvoicePaid !== false,
     invoice_onboarding_completed: true,
     onboarding_completed_at: new Date().toISOString(),
   };
@@ -217,23 +222,4 @@ export async function saveEstimate(userId, estimate) {
   const { error: itemsError } = await supabase.from('estimate_items').insert(items);
   if (itemsError) throw itemsError;
   return { ...estimate, id: saved.id, persisted: true, createdAt: saved.created_at, updatedAt: saved.updated_at };
-}
-
-export async function convertEstimateToInvoice(userId, estimate, invoiceNumber) {
-  if (estimate.convertedInvoiceId || estimate.status === 'converted') throw new Error('Estimate has already been converted.');
-  const settings = await getCompanySettings(userId);
-  const issueDate = new Date().toISOString().slice(0, 10);
-  const invoice = await saveInvoice(userId, {
-    customerId: estimate.customerId, number: invoiceNumber, issueDate,
-    dueDate: addDaysISO(issueDate, settings.paymentTermsDays ?? 14), status: 'draft',
-    currency: estimate.currency, taxRate: estimate.taxRate, lines: estimate.lines, notes: estimate.notes || '', persisted: false,
-  });
-  const { error } = await supabase.from('estimates').update({ status: 'converted', converted_invoice_id: invoice.id, updated_at: new Date().toISOString() }).eq('id', estimate.id).eq('user_id', userId);
-  if (error) throw error;
-  return invoice;
-}
-
-export async function markInvoicePaid(userId, invoiceId) {
-  const { error } = await supabase.from('invoices').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10), updated_at: new Date().toISOString() }).eq('id', invoiceId).eq('user_id', userId);
-  if (error) throw error;
 }
