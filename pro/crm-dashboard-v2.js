@@ -8,7 +8,7 @@ let cacheUserId = null;
 let loading = null;
 
 function esc(value = '') {
-  return String(value).replace(/[&<>'\"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '\"': '&quot;' })[char]);
+  return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
 }
 
 function invoiceTotal(invoice) {
@@ -77,8 +77,7 @@ function injectDashboard(data) {
   const baseStats = app.querySelector('.stats');
   if (!baseStats) return;
 
-  const now = new Date();
-  const thisMonth = now.toISOString().slice(0, 7);
+  const thisMonth = new Date().toISOString().slice(0, 7);
   const paidThisMonth = data.invoices.filter((invoice) => normalizedInvoiceStatus(invoice) === 'paid' && monthKey(invoice.updatedAt || invoice.issueDate) === thisMonth);
   const overdue = data.invoices.filter((invoice) => normalizedInvoiceStatus(invoice) === 'overdue');
   const openEstimates = data.estimates.filter((estimate) => ['draft', 'sent', 'viewed'].includes(String(estimate.status || '').toLowerCase()));
@@ -103,7 +102,7 @@ function injectDashboard(data) {
       tone: 'neutral',
       title: `Follow up with ${customer.name}`,
       detail: `${customer.company || customer.email || 'CRM lead'} · ${daysSince(customer.updatedAt || customer.createdAt)} days since update`,
-      href: `/pro/?view=customers&customer=${encodeURIComponent(customer.id)}`,
+      href: '/pro/?view=customers',
       action: 'Open CRM',
     })),
   ].slice(0, 5);
@@ -209,12 +208,6 @@ function injectCustomerInsights(data) {
   statusSelect.addEventListener('change', () => { staleOnly = false; syncChips(); setTimeout(sortRows, 0); });
   searchInput.addEventListener('input', () => { if (staleOnly) setTimeout(applyStaleFilter, 0); else setTimeout(sortRows, 0); });
   sort.addEventListener('change', () => staleOnly ? applyStaleFilter() : sortRows());
-
-  const observer = new MutationObserver(() => {
-    if (staleOnly) applyStaleFilter();
-    else sortRows();
-  });
-  observer.observe(results, { childList: true, subtree: true });
   sortRows();
 }
 
