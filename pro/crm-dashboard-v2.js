@@ -198,14 +198,14 @@ function injectCustomerInsights(data) {
     setTimeout(sortRows, 0);
   }));
   staleButton?.addEventListener('click', () => {
-    staleOnly = true;
     statusSelect.value = '';
     searchInput.value = '';
     statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    staleOnly = true;
     syncChips();
     setTimeout(applyStaleFilter, 0);
   });
-  statusSelect.addEventListener('change', () => { staleOnly = false; syncChips(); setTimeout(sortRows, 0); });
+  statusSelect.addEventListener('change', () => { if (!staleOnly) syncChips(); setTimeout(() => staleOnly ? applyStaleFilter() : sortRows(), 0); });
   searchInput.addEventListener('input', () => { if (staleOnly) setTimeout(applyStaleFilter, 0); else setTimeout(sortRows, 0); });
   sort.addEventListener('change', () => staleOnly ? applyStaleFilter() : sortRows());
   sortRows();
