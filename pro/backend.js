@@ -84,7 +84,7 @@ export async function getCompanySettings(userId) {
   if (!data) return {
     companyName: '', companyEmail: '', phone: '', address: '', city: '', postalCode: '', country: '', taxNumber: '',
     defaultCurrency: 'USD', defaultTax: 0, invoicePrefix: 'INV', estimatePrefix: 'EST-', paymentTermsDays: 14,
-    bankAccount: '', iban: '', bicSwift: '', paymentReference: '', paymentDetails: '',
+    reminderScheduleDays: [0, 7, 14], bankAccount: '', iban: '', bicSwift: '', paymentReference: '', paymentDetails: '',
   };
   return {
     id: data.id,
@@ -100,7 +100,8 @@ export async function getCompanySettings(userId) {
     defaultTax: Number(data.default_tax || 0),
     invoicePrefix: data.invoice_prefix || 'INV',
     estimatePrefix: data.estimate_prefix || 'EST-',
-    paymentTermsDays: Number(data.payment_terms_days || 14),
+    paymentTermsDays: Number(data.payment_terms_days ?? 14),
+    reminderScheduleDays: Array.isArray(data.reminder_schedule_days) ? data.reminder_schedule_days : [0, 7, 14],
     bankAccount: data.bank_account || '', iban: data.iban || '', bicSwift: data.bic_swift || '',
     paymentReference: data.payment_reference || '', paymentDetails: data.payment_details || '',
   };
@@ -125,7 +126,8 @@ export async function saveCompanySettings(userId, settings) {
     default_tax: Number(settings.defaultTax || 0),
     invoice_prefix: settings.invoicePrefix || 'INV',
     estimate_prefix: settings.estimatePrefix || 'EST-',
-    payment_terms_days: Math.max(0, Number(settings.paymentTermsDays || 14)),
+    payment_terms_days: Math.max(0, Number(settings.paymentTermsDays ?? 14)),
+    ...(Array.isArray(settings.reminderScheduleDays) ? { reminder_schedule_days: settings.reminderScheduleDays } : {}),
     bank_account: settings.bankAccount || null,
     iban: settings.iban || null,
     bic_swift: settings.bicSwift || null,
@@ -157,6 +159,12 @@ function totalsFromLines(lines, taxRate) {
   const subtotal = lines.reduce((sum, line) => sum + Number(line.qty || 0) * Number(line.rate || 0), 0);
   const taxTotal = subtotal * (Number(taxRate || 0) / 100);
   return { subtotal, taxTotal, total: subtotal + taxTotal };
+}
+
+function addDaysISO(dateString, days) {
+  const date = new Date(`${dateString}T12:00:00`);
+  date.setDate(date.getDate() + Math.max(0, Number(days ?? 0)));
+  return date.toISOString().slice(0, 10);
 }
 
 export async function saveInvoice(userId, invoice) {
@@ -213,8 +221,11 @@ export async function saveEstimate(userId, estimate) {
 
 export async function convertEstimateToInvoice(userId, estimate, invoiceNumber) {
   if (estimate.convertedInvoiceId || estimate.status === 'converted') throw new Error('Estimate has already been converted.');
+  const settings = await getCompanySettings(userId);
+  const issueDate = new Date().toISOString().slice(0, 10);
   const invoice = await saveInvoice(userId, {
-    customerId: estimate.customerId, number: invoiceNumber, issueDate: new Date().toISOString().slice(0, 10), dueDate: '', status: 'draft',
+    customerId: estimate.customerId, number: invoiceNumber, issueDate,
+    dueDate: addDaysISO(issueDate, settings.paymentTermsDays ?? 14), status: 'draft',
     currency: estimate.currency, taxRate: estimate.taxRate, lines: estimate.lines, notes: estimate.notes || '', persisted: false,
   });
   const { error } = await supabase.from('estimates').update({ status: 'converted', converted_invoice_id: invoice.id, updated_at: new Date().toISOString() }).eq('id', estimate.id).eq('user_id', userId);
