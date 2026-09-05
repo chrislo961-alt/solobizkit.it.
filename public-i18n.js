@@ -990,6 +990,32 @@
     "Worksheet layout": "Mise en page de la feuille de calcul"
   });
 
+  Object.assign(dictionaries.no,{
+    'Extracted PDF text':'Uthentet PDF-tekst','Generated HTML source':'Generert HTML-kilde','HTML source':'HTML-kilde',
+    'Background color hex value':'Bakgrunnsfargens heksadesimalverdi','Background color picker':'Fargevelger for bakgrunn',
+    'QR color hex value':'QR-fargens heksadesimalverdi','QR color picker':'Fargevelger for QR-kode'
+  });
+  Object.assign(dictionaries.sv,{
+    'Extracted PDF text':'Extraherad PDF-text','Generated HTML source':'Genererad HTML-källa','HTML source':'HTML-källa',
+    'Background color hex value':'Bakgrundsfärgens hexvärde','Background color picker':'Färgväljare för bakgrund',
+    'QR color hex value':'QR-färgens hexvärde','QR color picker':'Färgväljare för QR-kod'
+  });
+  Object.assign(dictionaries.de,{
+    'Extracted PDF text':'Extrahierter PDF-Text','Generated HTML source':'Generierter HTML-Quelltext','HTML source':'HTML-Quelltext',
+    'Background color hex value':'Hexadezimalwert der Hintergrundfarbe','Background color picker':'Farbauswahl für den Hintergrund',
+    'QR color hex value':'Hexadezimalwert der QR-Farbe','QR color picker':'Farbauswahl für den QR-Code'
+  });
+  Object.assign(dictionaries.es,{
+    'Extracted PDF text':'Texto extraído del PDF','Generated HTML source':'Código fuente HTML generado','HTML source':'Código fuente HTML',
+    'Background color hex value':'Valor hexadecimal del color de fondo','Background color picker':'Selector de color de fondo',
+    'QR color hex value':'Valor hexadecimal del color del QR','QR color picker':'Selector de color del QR'
+  });
+  Object.assign(dictionaries.fr,{
+    'Extracted PDF text':'Texte extrait du PDF','Generated HTML source':'Code source HTML généré','HTML source':'Code source HTML',
+    'Background color hex value':'Valeur hexadécimale de la couleur d’arrière-plan','Background color picker':'Sélecteur de couleur d’arrière-plan',
+    'QR color hex value':'Valeur hexadécimale de la couleur du QR code','QR color picker':'Sélecteur de couleur du QR code'
+  });
+
   const nodeSource=new WeakMap();
   const attrSource=new WeakMap();
   let applying=false;
