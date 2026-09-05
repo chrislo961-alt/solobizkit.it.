@@ -1,15 +1,23 @@
 import { supabase } from './backend.js';
 
 const app = document.querySelector('#app');
-const LOADING_TEXT = 'Loading your workspace';
+const LOADING_TEXTS = [
+  'Loading your workspace',
+  'Laster arbeidsområdet',
+  'Laddar arbetsytan',
+  'Arbeitsbereich wird geladen',
+  'Cargando tu espacio',
+  'Chargement de votre espace',
+];
 const STALL_MS = 8000;
 
-// Supabase currently documents a deadlock risk when async Supabase calls are
-// awaited directly inside onAuthStateChange callbacks. Defer every consumer
-// callback so the auth callback itself returns immediately.
+// The Pro app already performs one explicit getSession() + hydrate() on boot.
+// Suppress INITIAL_SESSION/TOKEN_REFRESHED callbacks here so they cannot start
+// duplicate workspace hydrations and leave the UI stuck on the loading state.
 if (!supabase.auth.__sbkDeferredAuthCallbacks) {
   const originalOnAuthStateChange = supabase.auth.onAuthStateChange.bind(supabase.auth);
   supabase.auth.onAuthStateChange = (callback) => originalOnAuthStateChange((event, session) => {
+    if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
     setTimeout(() => {
       Promise.resolve(callback(event, session)).catch((error) => {
         console.error('[SoloBizKit Pro auth callback]', error);
@@ -23,7 +31,8 @@ let stallTimer = null;
 let loadingStartedAt = 0;
 
 function isWorkspaceLoading() {
-  return Boolean(app && (app.textContent || '').includes(LOADING_TEXT));
+  const text = app?.textContent || '';
+  return Boolean(app && LOADING_TEXTS.some((label) => text.includes(label)));
 }
 
 function clearStallTimer() {
@@ -103,7 +112,8 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 window.sbkProRuntimeGuard = {
-  version: 1,
+  version: 2,
   retryTimeoutMs: STALL_MS,
   deferredAuthCallbacks: true,
+  suppressedAuthEvents: ['INITIAL_SESSION', 'TOKEN_REFRESHED'],
 };
