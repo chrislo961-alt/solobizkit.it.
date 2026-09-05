@@ -33,6 +33,8 @@
       .sbk-trust-links,.sbk-priority-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
       .sbk-trust-links a,.sbk-priority-grid a{display:block;border:1px solid #e3e1da;border-radius:12px;padding:13px 14px;text-decoration:none;background:#fff;color:#3f6b55;font-weight:850}
       .sbk-priority-grid a span{display:block;color:#6f746c;font-size:12px;font-weight:500;line-height:1.45;margin-top:4px}
+      .sbk-guides-cta{margin:22px 0 0;padding:17px 18px;border:1px solid #d7e4d8;border-radius:14px;background:#f4f8f4;color:#59645a;line-height:1.65}
+      .sbk-guides-cta a{color:#3f6b55;font-weight:900}
       .sbk-reviewed{font-size:12px;color:#74796f;margin-top:14px}
       .sbk-footer-trust{display:flex;flex-wrap:wrap;gap:8px 13px;align-items:center;justify-content:center;margin-top:10px;font-size:12px}
       .sbk-footer-trust a{color:inherit;text-decoration:none;font-weight:750}
@@ -54,6 +56,7 @@
         <div class="sbk-priority-grid">
           ${PRIORITY.map(([href, name, description]) => `<a href="${href}">${name}<span>${description}</span></a>`).join('')}
         </div>
+        <div class="sbk-guides-cta"><strong>New to freelancing or running a small business?</strong> Visit the <a href="/guides/">SoloBizKit Guides</a> for practical help with starting up, building a low-cost website, finding clients, pricing, invoicing, CRM and cash flow.</div>
         <p class="sbk-reviewed">Priority set reviewed ${REVIEWED}. Browse <a href="/tools/">all tools</a> for the complete directory.</p>
       </div>`;
     return section;
@@ -75,11 +78,13 @@
         </div>
         <div class="sbk-trust-links">
           <a href="/methodology/">Calculator methodology →</a>
+          <a href="/guides/">Small business guides →</a>
           <a href="/about/">How SoloBizKit works →</a>
           <a href="/privacy/">Privacy policy →</a>
           <a href="/security/">Security & data processing →</a>
           <a href="/contact/">Report a problem →</a>
           <a href="/terms/">Terms & limitations →</a>
+          <a href="/tools/">Browse all tools →</a>
         </div>
         <p class="sbk-reviewed">Trust and landing-page review updated ${REVIEWED}.</p>
       </div>`;
@@ -109,7 +114,7 @@
     const nav = document.createElement('nav');
     nav.className = 'sbk-footer-trust';
     nav.setAttribute('aria-label', 'Trust and site information');
-    nav.innerHTML = '<a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/security/">Security</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/contact/">Contact</a>';
+    nav.innerHTML = '<a href="/guides/">Guides</a><a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/security/">Security</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/contact/">Contact</a>';
     inner.appendChild(nav);
   }
 
