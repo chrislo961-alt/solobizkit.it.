@@ -6,20 +6,19 @@ const SITE = 'https://solobizkit.it.com';
 const SOCIAL_IMAGE = `${SITE}/assets/images/solobizkit-social-preview.png`;
 const ROOT_LANGUAGE_ROUTES = { en: '/', no: '/no/', sv: '/sv/', de: '/de/', es: '/es/', fr: '/fr/' };
 const LANGUAGE_GROUPS = [
+  { en:'/business-calculators/', no:'/no/kalkulatorer/', sv:'/sv/kalkylatorer/', de:'/de/rechner/', es:'/es/calculadoras/', fr:'/fr/calculateurs/' },
   { en:'/profit-margin-calculator/', no:'/no/fortjenestemargin-kalkulator/', sv:'/sv/vinstmarginal-kalkylator/', de:'/de/gewinnmargen-rechner/', es:'/es/calculadora-margen-beneficio/', fr:'/fr/calculateur-marge-beneficiaire/' },
   { en:'/break-even-calculator/', no:'/no/nullpunkt-kalkulator/', sv:'/sv/nollpunkts-kalkylator/', de:'/de/break-even-rechner/', es:'/es/calculadora-punto-equilibrio/', fr:'/fr/calculateur-seuil-rentabilite/' },
   { en:'/hourly-rate-calculator/', no:'/no/timepris-kalkulator/', sv:'/sv/timpris-kalkylator/', de:'/de/stundensatz-rechner/', es:'/es/calculadora-tarifa-hora/', fr:'/fr/calculateur-taux-horaire/' }
 ];
-const LANGUAGE_PAIRS = new Map([
-  ['/business-calculators/', '/no/kalkulatorer/']
-]);
-const REVERSE_LANGUAGE_PAIRS = new Map([...LANGUAGE_PAIRS].map(([en, no]) => [no, en]));
+const LANGUAGE_PAIRS = new Map();
+const REVERSE_LANGUAGE_PAIRS = new Map();
 const PUBLIC_LANGUAGE_HEADERS = {
   no: { home: '/no/', homeLabel: 'SoloBizKit hjem', navLabel: 'Hovedmeny', tools: 'Alle verktøy', links: [['/no/kalkulatorer/','Kalkulatorer'],['/invoice-generator/','Faktura'],['/pdf-tools/','PDF-verktøy'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
-  sv: { home: '/sv/', homeLabel: 'SoloBizKit hem', navLabel: 'Huvudmeny', tools: 'Alla verktyg', links: [['/business-calculators/','Kalkylatorer'],['/invoice-generator/','Fakturor'],['/pdf-tools/','PDF-verktyg'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
-  de: { home: '/de/', homeLabel: 'SoloBizKit Startseite', navLabel: 'Hauptnavigation', tools: 'Alle Tools', links: [['/business-calculators/','Rechner'],['/invoice-generator/','Rechnungen'],['/pdf-tools/','PDF-Tools'],['/qr-code-generator/','QR-Codes'],['/guides/','Guides'],['/about/','Über uns']] },
-  es: { home: '/es/', homeLabel: 'Inicio de SoloBizKit', navLabel: 'Navegación principal', tools: 'Todas las herramientas', links: [['/business-calculators/','Calculadoras'],['/invoice-generator/','Facturas'],['/pdf-tools/','PDF'],['/qr-code-generator/','Códigos QR'],['/guides/','Guías'],['/about/','Acerca de']] },
-  fr: { home: '/fr/', homeLabel: 'Accueil SoloBizKit', navLabel: 'Navigation principale', tools: 'Tous les outils', links: [['/business-calculators/','Calculateurs'],['/invoice-generator/','Factures'],['/pdf-tools/','Outils PDF'],['/qr-code-generator/','Codes QR'],['/guides/','Guides'],['/about/','À propos']] }
+  sv: { home: '/sv/', homeLabel: 'SoloBizKit hem', navLabel: 'Huvudmeny', tools: 'Alla verktyg', links: [['/sv/kalkylatorer/','Kalkylatorer'],['/invoice-generator/','Fakturor'],['/pdf-tools/','PDF-verktyg'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
+  de: { home: '/de/', homeLabel: 'SoloBizKit Startseite', navLabel: 'Hauptnavigation', tools: 'Alle Tools', links: [['/de/rechner/','Rechner'],['/invoice-generator/','Rechnungen'],['/pdf-tools/','PDF-Tools'],['/qr-code-generator/','QR-Codes'],['/guides/','Guides'],['/about/','Über uns']] },
+  es: { home: '/es/', homeLabel: 'Inicio de SoloBizKit', navLabel: 'Navegación principal', tools: 'Todas las herramientas', links: [['/es/calculadoras/','Calculadoras'],['/invoice-generator/','Facturas'],['/pdf-tools/','PDF'],['/qr-code-generator/','Códigos QR'],['/guides/','Guías'],['/about/','Acerca de']] },
+  fr: { home: '/fr/', homeLabel: 'Accueil SoloBizKit', navLabel: 'Navigation principale', tools: 'Tous les outils', links: [['/fr/calculateurs/','Calculateurs'],['/invoice-generator/','Factures'],['/pdf-tools/','Outils PDF'],['/qr-code-generator/','Codes QR'],['/guides/','Guides'],['/about/','À propos']] }
 };
 
 function walk(directory) {
