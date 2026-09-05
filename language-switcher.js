@@ -26,7 +26,10 @@
     no:{
       '/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/'
     },
-    sv:{'/':'/sv/'},de:{'/':'/de/'},es:{'/':'/es/'},fr:{'/':'/fr/'}
+    sv:{'/':'/sv/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/'},
+    de:{'/':'/de/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/'},
+    es:{'/':'/es/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/'},
+    fr:{'/':'/fr/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/'}
   };
   const reverse={};
   for(const [code,map] of Object.entries(maps))for(const [en,local] of Object.entries(map))reverse[local]={code,en};
