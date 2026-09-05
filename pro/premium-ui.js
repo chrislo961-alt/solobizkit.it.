@@ -13,26 +13,36 @@
     fr:{secure:'Compte sécurisé',stripe:'Paiement via Stripe',trial:'Annulation pendant l’essai',loading:'Chargement de votre espace',loadingSub:'Synchronisation sécurisée de vos données…',errorTitle:'Un problème est survenu',successTitle:'Terminé'}
   }[lang];
 
-  const stack=document.createElement('div');
-  stack.className='sbk-toast-stack';
-  stack.setAttribute('aria-live','polite');
-  document.body.appendChild(stack);
+  let stack=null;
+  const pending=[];
+
+  function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+
+  function ensureStack(){
+    if(stack&&stack.isConnected)return stack;
+    if(!document.body)return null;
+    stack=document.createElement('div');
+    stack.className='sbk-toast-stack';
+    stack.setAttribute('aria-live','polite');
+    document.body.appendChild(stack);
+    return stack;
+  }
 
   function toast(message,type='error'){
+    const target=ensureStack();
+    if(!target){pending.push([message,type]);return}
     const el=document.createElement('div');
     el.className=`sbk-toast ${type}`;
     const title=type==='success'?copy.successTitle:copy.errorTitle;
     el.innerHTML=`<div><strong>${escapeHtml(title)}</strong><p>${escapeHtml(String(message||''))}</p></div><button type="button" aria-label="Close">×</button>`;
     el.querySelector('button').onclick=()=>el.remove();
-    stack.appendChild(el);
+    target.appendChild(el);
     setTimeout(()=>el.remove(),7000);
   }
 
-  const originalAlert=window.alert.bind(window);
-  window.alert=(message)=>{try{toast(message,'error')}catch{originalAlert(message)}};
+  // Install this immediately so Pro never falls back to the browser's native alert UI.
+  window.alert=(message)=>toast(message,'error');
   window.sbkToast=(message,type='success')=>toast(message,type);
-
-  function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
 
   function decoratePaywall(){
     const card=document.querySelector('.paywall-card');
@@ -48,11 +58,19 @@
     const app=document.querySelector('#app');
     if(!app||app.querySelector('.sbk-loading-shell'))return;
     const text=(app.textContent||'').toLowerCase();
-    if(!text.includes('loading your workspace')&&!text.includes('laster arbeidsområdet')&&!text.includes('laddar arbetsytan')&&!text.includes('arbeitsbereich'))return;
+    if(!text.includes('loading your workspace')&&!text.includes('laster arbeidsområdet')&&!text.includes('laddar arbetsytan')&&!text.includes('arbeitsbereich')&&!text.includes('cargando tu espacio')&&!text.includes('chargement de votre espace'))return;
     app.innerHTML=`<div class="auth-stage"><section class="auth-card sbk-loading-shell"><p class="eyebrow">SOLOBIZKIT PRO</p><div class="sbk-loading-head"><span class="sbk-spinner" aria-hidden="true"></span><div class="sbk-loading-copy"><strong>${escapeHtml(copy.loading)}…</strong><span>${escapeHtml(copy.loadingSub)}</span></div></div><div class="sbk-skeleton" aria-hidden="true"><span></span><span></span><span></span></div></section></div>`;
   }
 
   function apply(){decoratePaywall();decorateLoading()}
-  new MutationObserver(apply).observe(document.body,{childList:true,subtree:true});
-  apply();
+
+  function boot(){
+    ensureStack();
+    while(pending.length){const [message,type]=pending.shift();toast(message,type)}
+    new MutationObserver(apply).observe(document.body,{childList:true,subtree:true});
+    apply();
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
 })();
