@@ -4,6 +4,14 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const SITE = 'https://solobizkit.it.com';
 const errors = [];
+const languagePairs = new Map([
+  ['/', '/no/'],
+  ['/business-calculators/', '/no/kalkulatorer/'],
+  ['/profit-margin-calculator/', '/no/fortjenestemargin-kalkulator/'],
+  ['/break-even-calculator/', '/no/nullpunkt-kalkulator/'],
+  ['/hourly-rate-calculator/', '/no/timepris-kalkulator/']
+]);
+const reverseLanguagePairs = new Map([...languagePairs].map(([en, no]) => [no, en]));
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -29,11 +37,7 @@ const pages = files.map((file) => {
     .replace(/<template\b[\s\S]*?<\/template>/gi, '');
   const robots = match(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i);
   return {
-    file,
-    html,
-    structural,
-    route,
-    robots,
+    file, html, structural, route, robots,
     privateApp: /(?:^|,)\s*noindex\b/i.test(robots),
     title: match(html, /<title>([^<]+)<\/title>/i),
     description: match(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i),
@@ -82,13 +86,28 @@ for (const page of pages) {
     if (headers.length !== 1 || !/class=["'][^"']*sbk-global-header/.test(headers[0] || '')) {
       errors.push(`${label}: must use exactly one shared global header`);
     } else {
-      for (const href of ['/business-calculators/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/']) {
-        if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) {
-          errors.push(`${label}: shared header is missing ${href}`);
-        }
+      const norwegian = label === '/no/' || label.startsWith('/no/');
+      const requiredLinks = norwegian
+        ? ['/no/kalkulatorer/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/']
+        : ['/business-calculators/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/'];
+      for (const href of requiredLinks) {
+        if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) errors.push(`${label}: shared header is missing ${href}`);
       }
-      if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) {
-        errors.push(`${label}: shared header is missing the brand icon`);
+      if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) errors.push(`${label}: shared header is missing the brand icon`);
+    }
+
+    const enRoute = languagePairs.has(label) ? label : reverseLanguagePairs.get(label);
+    const noRoute = languagePairs.get(label) || (reverseLanguagePairs.has(label) ? label : null);
+    if (enRoute && noRoute) {
+      const requiredAlternates = [
+        ['en', `${SITE}${enRoute}`],
+        ['no', `${SITE}${noRoute}`],
+        ['x-default', `${SITE}${enRoute}`]
+      ];
+      for (const [lang, href] of requiredAlternates) {
+        const re = new RegExp(`<link[^>]+rel=["']alternate["'][^>]+hreflang=["']${lang}["'][^>]+href=["']${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`, 'i');
+        const reverseRe = new RegExp(`<link[^>]+rel=["']alternate["'][^>]+href=["']${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]+hreflang=["']${lang}["']`, 'i');
+        if (!re.test(page.html) && !reverseRe.test(page.html)) errors.push(`${label}: missing hreflang ${lang} -> ${href}`);
       }
     }
   } else if (!/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(page.html)) {
@@ -115,9 +134,7 @@ for (const page of pages) {
     const target = url.endsWith('/') ? url : url.replace(/\.html$/, '/');
     if (publicRoutes.has(target)) inbound.set(target, inbound.get(target) + 1);
     else if (routes.has(target)) continue;
-    else if (!fs.existsSync(path.join(ROOT, url)) && !fs.existsSync(path.join(ROOT, url, 'index.html'))) {
-      errors.push(`${label}: broken internal link ${url}`);
-    }
+    else if (!fs.existsSync(path.join(ROOT, url)) && !fs.existsSync(path.join(ROOT, url, 'index.html'))) errors.push(`${label}: broken internal link ${url}`);
   }
 
   for (const asset of page.html.matchAll(/(?:src|href)=["'](\/[^"'#?]+)["']/gi)) {
@@ -136,6 +153,14 @@ const sitemapRoutes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) =
 if (new Set(sitemapRoutes).size !== sitemapRoutes.length) errors.push('sitemap contains duplicate URLs');
 for (const route of publicRoutes) if (!sitemapRoutes.includes(route)) errors.push(`${route}: missing from sitemap`);
 for (const route of sitemapRoutes) if (!publicRoutes.has(route)) errors.push(`${route}: sitemap URL has no public HTML route`);
+
+if (fs.existsSync(path.join(ROOT, 'sitemap-no.xml'))) {
+  const noSitemap = fs.readFileSync(path.join(ROOT, 'sitemap-no.xml'), 'utf8');
+  const noRoutes = [...noSitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) => new URL(item[1]).pathname);
+  const expectedNoRoutes = [...publicRoutes].filter((route) => route === '/no/' || route.startsWith('/no/'));
+  for (const route of expectedNoRoutes) if (!noRoutes.includes(route)) errors.push(`${route}: missing from sitemap-no.xml`);
+  for (const route of noRoutes) if (!expectedNoRoutes.includes(route)) errors.push(`${route}: non-Norwegian URL in sitemap-no.xml`);
+}
 
 for (const required of ['favicon.svg', 'favicon.ico', 'favicon-192.png', 'favicon-512.png', 'site.webmanifest', 'robots.txt', 'ads.txt']) {
   if (!fs.existsSync(path.join(ROOT, required))) errors.push(`missing required root asset ${required}`);
@@ -162,4 +187,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Verified ${publicPages.length} public routes, ${pages.length - publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, metadata, structured data, local assets and internal links.`);
+console.log(`Verified ${publicPages.length} public routes, ${pages.length - publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, localized hreflang, metadata, structured data, local assets and internal links.`);
