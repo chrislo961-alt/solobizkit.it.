@@ -77,9 +77,9 @@
           <a href="/methodology/">Calculator methodology →</a>
           <a href="/about/">How SoloBizKit works →</a>
           <a href="/privacy/">Privacy policy →</a>
+          <a href="/security/">Security & data processing →</a>
           <a href="/contact/">Report a problem →</a>
           <a href="/terms/">Terms & limitations →</a>
-          <a href="/tools/">Browse all tools →</a>
         </div>
         <p class="sbk-reviewed">Trust and landing-page review updated ${REVIEWED}.</p>
       </div>`;
@@ -109,7 +109,7 @@
     const nav = document.createElement('nav');
     nav.className = 'sbk-footer-trust';
     nav.setAttribute('aria-label', 'Trust and site information');
-    nav.innerHTML = '<a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/contact/">Contact</a>';
+    nav.innerHTML = '<a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/security/">Security</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/contact/">Contact</a>';
     inner.appendChild(nav);
   }
 
