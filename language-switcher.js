@@ -11,6 +11,9 @@
     '/es/','/es/calculadoras/','/es/calculadora-margen-beneficio/','/es/calculadora-punto-equilibrio/','/es/calculadora-tarifa-hora/','/es/generador-facturas/',
     '/fr/','/fr/calculateurs/','/fr/calculateur-marge-beneficiaire/','/fr/calculateur-seuil-rentabilite/','/fr/calculateur-taux-horaire/','/fr/generateur-factures/'
   ]);
+  const localizedInvoiceRoutes=new Set([
+    '/no/fakturagenerator/','/sv/fakturagenerator/','/de/rechnungsgenerator/','/es/generador-facturas/','/fr/generateur-factures/'
+  ]);
   if(parityRoutes.has(location.pathname))document.documentElement.classList.add('sbk-parity-loading');
 
   function loadScript(src,marker){
@@ -22,6 +25,7 @@
     await loadScript('/public-i18n-extra.js?v=20260905-1','data-sbk-public-i18n-extra');
     await loadScript('/public-i18n.js?v=20260905-4','data-sbk-public-i18n');
     await loadScript('/site-parity.js?v=20260905-2','data-sbk-site-parity');
+    if(localizedInvoiceRoutes.has(location.pathname))await loadScript('/invoice-payment-details.js?v=20260905-1','data-sbk-invoice-payment-details');
   })();
 
   const nav=document.querySelector('.sbk-global-nav');
