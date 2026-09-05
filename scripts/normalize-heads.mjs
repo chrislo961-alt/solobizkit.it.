@@ -21,6 +21,39 @@ function attr(text) {
   return text.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
 }
 
+function routeForFile(file) {
+  const relative = path.relative(ROOT, file);
+  return relative === 'index.html' ? '/' : `/${path.dirname(relative).split(path.sep).join('/')}/`;
+}
+
+function isPrivate(html) {
+  const robots = value(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i);
+  return /(?:^|,)\s*noindex\b/i.test(robots);
+}
+
+function currentAttr(route, href) {
+  if (href === '/guides/' && route.startsWith('/guides/')) return ' aria-current="page"';
+  if (href === '/about/' && route === '/about/') return ' aria-current="page"';
+  if (href === '/invoice-generator/' && route === '/invoice-generator/') return ' aria-current="page"';
+  if (href === '/pdf-tools/' && route === '/pdf-tools/') return ' aria-current="page"';
+  if (href === '/qr-code-generator/' && route === '/qr-code-generator/') return ' aria-current="page"';
+  if (href === '/business-calculators/' && route === '/business-calculators/') return ' aria-current="page"';
+  return '';
+}
+
+function sharedHeader(route) {
+  const links = [
+    ['/business-calculators/', 'Calculators'],
+    ['/invoice-generator/', 'Invoices'],
+    ['/pdf-tools/', 'PDF Tools'],
+    ['/qr-code-generator/', 'QR Codes'],
+    ['/guides/', 'Guides'],
+    ['/about/', 'About']
+  ].map(([href, label]) => `<a href="${href}"${currentAttr(route, href)}>${label}</a>`).join('');
+  const toolsCurrent = route === '/tools/' ? ' aria-current="page"' : '';
+  return `<header class="sbk-global-header"><div class="sbk-global-nav"><a class="sbk-global-brand" href="/" aria-label="SoloBizKit home"><img class="sbk-brand-icon" src="/favicon.svg" width="29" height="29" alt="">SoloBiz<span>Kit</span></a><nav class="sbk-global-links" aria-label="Primary navigation">${links}</nav><a class="sbk-global-tools" href="/tools/"${toolsCurrent}>All Tools</a></div></header>`;
+}
+
 for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.html') || name.endsWith(`${path.sep}index.html`))) {
   let html = fs.readFileSync(file, 'utf8');
   const title = value(html, /<title>([^<]+)<\/title>/i);
@@ -81,7 +114,17 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
     html = html.replace('</head>', '<script src="/analytics.js" defer></script></head>');
   }
 
+  if (!isPrivate(html)) {
+    const route = routeForFile(file);
+    const header = sharedHeader(route);
+    if (/<header\b[^>]*class=["'][^"']*sbk-global-header[^"']*["'][^>]*>[\s\S]*?<\/header>/i.test(html)) {
+      html = html.replace(/<header\b[^>]*class=["'][^"']*sbk-global-header[^"']*["'][^>]*>[\s\S]*?<\/header>/i, header);
+    } else {
+      html = html.replace(/<body([^>]*)>/i, `<body$1>${header}`);
+    }
+  }
+
   fs.writeFileSync(file, html);
 }
 
-console.log('Normalized route metadata and shared assets.');
+console.log('Normalized route metadata, shared assets and public navigation.');
