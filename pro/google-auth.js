@@ -1,6 +1,6 @@
 import { supabase } from './backend.js';
 
-const REDIRECT_URL = 'https://solobizkit.it.com/pro/?oauth=google';
+const REDIRECT_URL = 'https://solobizkit.it.com/pro/';
 let injecting = false;
 
 function googleIcon() {
@@ -15,6 +15,7 @@ async function startGoogle(button, message) {
   if (message) message.textContent = '';
 
   try {
+    sessionStorage.setItem('sbk_oauth_source', 'google');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -26,7 +27,11 @@ async function startGoogle(button, message) {
     if (!data?.url) throw new Error('Google sign-in is not available yet.');
   } catch (error) {
     console.error('Google sign-in failed', error);
-    const text = error?.message || 'Could not start Google sign-in.';
+    sessionStorage.removeItem('sbk_oauth_source');
+    const raw = error?.message || 'Could not start Google sign-in.';
+    const text = /provider.*not.*enabled|unsupported provider/i.test(raw)
+      ? 'Google sign-in is not enabled on the authentication server yet.'
+      : raw;
     if (message) message.textContent = text;
     else window.sbkToast?.(text, 'error');
     button.disabled = false;
