@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const site = 'https://solobizkit.it.com';
 const lastModified = '2026-09-05';
-const leading = ['/', '/tools/', '/business-calculators/', '/small-business-toolkit/', '/freelancer-toolkit/', '/pdf-tools/', '/guides/'];
+const leading = ['/', '/no/', '/tools/', '/business-calculators/', '/no/kalkulatorer/', '/small-business-toolkit/', '/freelancer-toolkit/', '/pdf-tools/', '/guides/'];
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -36,14 +36,19 @@ routes.sort((a, b) => {
 });
 
 function priority(route) {
-  if (route === '/') return '1.0';
+  if (route === '/' || route === '/no/') return '1.0';
   if (leading.includes(route)) return '0.9';
   if (/\/(about|contact|privacy|terms|methodology|security)\//.test(route)) return '0.5';
   if (/\/guides\//.test(route) || /how-to|template|without-uploading|editable-word/.test(route)) return '0.7';
   return '0.8';
 }
 
-const urls = routes.map((route) => `  <url><loc>${site}${route}</loc><lastmod>${lastModified}</lastmod><changefreq>${route === '/' || leading.includes(route) ? 'weekly' : 'monthly'}</changefreq><priority>${priority(route)}</priority></url>`);
-const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
-fs.writeFileSync(path.join(root, 'sitemap.xml'), xml);
-console.log(`Generated sitemap.xml with ${routes.length} public routes.`);
+function xmlFor(list) {
+  const urls = list.map((route) => `  <url><loc>${site}${route}</loc><lastmod>${lastModified}</lastmod><changefreq>${route === '/' || route === '/no/' || leading.includes(route) ? 'weekly' : 'monthly'}</changefreq><priority>${priority(route)}</priority></url>`);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+}
+
+fs.writeFileSync(path.join(root, 'sitemap.xml'), xmlFor(routes));
+const norwegianRoutes = routes.filter((route) => route === '/no/' || route.startsWith('/no/'));
+fs.writeFileSync(path.join(root, 'sitemap-no.xml'), xmlFor(norwegianRoutes));
+console.log(`Generated sitemap.xml with ${routes.length} public routes and sitemap-no.xml with ${norwegianRoutes.length} Norwegian routes.`);
