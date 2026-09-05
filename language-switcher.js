@@ -26,10 +26,10 @@
     no:{
       '/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/'
     },
-    sv:{'/':'/sv/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/'},
-    de:{'/':'/de/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/','/break-even-calculator/':'/de/break-even-rechner/'},
-    es:{'/':'/es/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/','/break-even-calculator/':'/es/calculadora-punto-equilibrio/'},
-    fr:{'/':'/fr/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/','/break-even-calculator/':'/fr/calculateur-seuil-rentabilite/'}
+    sv:{'/':'/sv/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/'},
+    de:{'/':'/de/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/','/break-even-calculator/':'/de/break-even-rechner/','/hourly-rate-calculator/':'/de/stundensatz-rechner/'},
+    es:{'/':'/es/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/','/break-even-calculator/':'/es/calculadora-punto-equilibrio/','/hourly-rate-calculator/':'/es/calculadora-tarifa-hora/'},
+    fr:{'/':'/fr/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/','/break-even-calculator/':'/fr/calculateur-seuil-rentabilite/','/hourly-rate-calculator/':'/fr/calculateur-taux-horaire/'}
   };
   const reverse={};
   for(const [code,map] of Object.entries(maps))for(const [en,local] of Object.entries(map))reverse[local]={code,en};
