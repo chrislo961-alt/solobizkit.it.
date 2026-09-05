@@ -56,10 +56,19 @@ function sharedHeader(route) {
 
 for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.html') || name.endsWith(`${path.sep}index.html`))) {
   let html = fs.readFileSync(file, 'utf8');
+  const route = routeForFile(file);
+
+  if (route.startsWith('/pro/') && !/<script[^>]+src=["']\/pro\/leads-nav\.js["']/i.test(html)) {
+    html = html.replace('</body>', '<script src="/pro/leads-nav.js" defer></script></body>');
+  }
+
   const title = value(html, /<title>([^<]+)<\/title>/i);
   const description = value(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
   const canonical = value(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
-  if (!title || !description || !canonical) continue;
+  if (!title || !description || !canonical) {
+    fs.writeFileSync(file, html);
+    continue;
+  }
 
   html = html
     .replace(/<meta[^>]+name=["']theme-color["'][^>]*>/gi, '')
@@ -114,7 +123,6 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
     html = html.replace('</head>', '<script src="/analytics.js" defer></script></head>');
   }
 
-  const route = routeForFile(file);
   if (route.startsWith('/guides/') && route !== '/guides/' && !/<script[^>]+src=["']\/guides\/guide-interactions\.js["']/i.test(html)) {
     html = html.replace('</body>', '<script src="/guides/guide-interactions.js" defer></script></body>');
   }
@@ -131,4 +139,4 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
   fs.writeFileSync(file, html);
 }
 
-console.log('Normalized route metadata, shared assets, guide interactions and public navigation.');
+console.log('Normalized route metadata, shared assets, guide interactions, Pro Leads navigation and public navigation.');
