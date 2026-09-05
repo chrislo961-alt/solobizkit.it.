@@ -36,7 +36,7 @@
   function savedLanguage(){try{const v=localStorage.getItem(STORAGE_KEY);return languages[v]?v:null}catch(_){return null}}
   function activeLanguage(){return urlLanguage()||savedLanguage()||'en'}
   function englishEquivalent(){return reverse[location.pathname]||location.pathname||'/'}
-  function pathFor(code){const english=englishEquivalent();if(code==='en')return english;return maps[code]?.[english]||location.pathname}
+  function pathFor(code){const english=englishEquivalent();if(code==='en')return english;if(english==='/invoice-generator/')return `/invoice-generator/?lang=${code}`;return maps[code]?.[english]||location.pathname}
   function save(code){try{localStorage.setItem(STORAGE_KEY,code)}catch(_){}}
   function localizeKnownLinks(code){
     if(code==='en'||!maps[code])return;
