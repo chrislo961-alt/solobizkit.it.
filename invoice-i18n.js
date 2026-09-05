@@ -1,11 +1,12 @@
 (function(){
   'use strict';
   if(location.pathname!=='/invoice-generator/'&&!location.pathname.startsWith('/invoice-generator/'))return;
+
   const supported=['no','sv','de','es','fr'];
   const lang=(()=>{try{const v=localStorage.getItem('sbk_language');return supported.includes(v)?v:'en'}catch(_){return'en'}})();
   if(lang==='en')return;
 
-  const D={
+  const L={
     no:{
       'Free · private · no account required':'Gratis · privat · ingen konto nødvendig','Free Invoice Generator':'Gratis fakturagenerator','Create a professional invoice with multiple line items, tax, discounts, your logo, payment terms and notes. Your draft auto-saves locally in this browser, then you can print or save the invoice as a PDF.':'Lag en profesjonell faktura med flere varelinjer, MVA/skatt, rabatt, logo, betalingsvilkår og notater. Utkastet lagres lokalt i nettleseren, og du kan skrive ut eller lagre som PDF.','Free to use':'Gratis å bruke','No SoloBizKit account':'Ingen SoloBizKit-konto','Auto-saves locally':'Lagrer lokalt automatisk','Print or save as PDF':'Skriv ut eller lagre som PDF','New invoice':'Ny faktura','Duplicate':'Dupliser','Saved locally':'Lagret lokalt','Auto-save on':'Autolagring på','Saving…':'Lagrer…','Print / Save PDF':'Skriv ut / lagre PDF','Your business':'Din bedrift','Business name':'Bedriftsnavn','Your Business':'Din bedrift','Logo (optional)':'Logo (valgfritt)','optional':'valgfritt','Email':'E-post','Phone':'Telefon','Business address':'Bedriftsadresse','Client & invoice details':'Kunde- og fakturadetaljer','Client / company':'Kunde / firma','Client name':'Kundenavn','Client email':'Kundens e-post','Client address':'Kundeadresse','Invoice #':'Fakturanr.','Issue date':'Fakturadato','Due date':'Forfallsdato','Currency':'Valuta','Payment terms':'Betalingsvilkår','Due on receipt':'Forfaller ved mottak','Line items':'Varelinjer','+ Add line item':'+ Legg til linje','Totals & notes':'Summer og notater','Tax %':'MVA / skatt %','Discount %':'Rabatt %','Notes / payment instructions':'Notater / betalingsinstruksjoner','Tax and invoice requirements vary by country and business type. This tool helps create the document; it does not determine which taxes or legal fields apply to you.':'MVA, skatt og fakturakrav varierer mellom land og virksomhetstyper. Verktøyet lager dokumentet, men avgjør ikke hvilke juridiske eller skattemessige krav som gjelder.','Draft data and logo stay in this browser unless you choose to print or save the invoice yourself.':'Utkast og logo blir i denne nettleseren med mindre du selv velger å skrive ut eller lagre fakturaen.','INVOICE':'FAKTURA','Invoice':'Faktura','Bill to':'Fakturer til','Invoice details':'Fakturadetaljer','Description':'Beskrivelse','Qty':'Ant.','Rate':'Pris','Amount':'Beløp','Subtotal':'Delsum','Tax':'MVA / skatt','Discount':'Rabatt','Total due':'Totalt å betale','Notes':'Notater','Professional services':'Profesjonelle tjenester','Issued':'Utstedt','Due':'Forfall','Terms':'Vilkår','Need more than a one-off invoice?':'Trenger du mer enn én enkelt faktura?','Manage customers, recurring invoices and payments with SoloBizKit Pro.':'Administrer kunder, gjentakende fakturaer og betalinger med SoloBizKit Pro.','The free invoice generator stays free. Pro is the optional workspace for customer history, estimates, recurring billing, reminders and payment tracking.':'Den gratis fakturageneratoren forblir gratis. Pro er det valgfrie arbeidsområdet for kundehistorikk, tilbud, gjentakende fakturering, påminnelser og betalingssporing.','Explore SoloBizKit Pro →':'Utforsk SoloBizKit Pro →','Street, city, country':'Gate, by, land','Thank you for your business. Payment details...':'Takk for handelen. Betalingsinformasjon...','Business logo':'Bedriftslogo','Logo preview':'Forhåndsvisning av logo','Start a new invoice? Your current local draft will be replaced.':'Starte en ny faktura? Det nåværende lokale utkastet blir erstattet.'
     },
@@ -19,60 +20,84 @@
       'Free · private · no account required':'Gratis · privado · sin cuenta','Free Invoice Generator':'Generador de facturas gratis','Create a professional invoice with multiple line items, tax, discounts, your logo, payment terms and notes. Your draft auto-saves locally in this browser, then you can print or save the invoice as a PDF.':'Crea una factura profesional con varias líneas, impuestos, descuentos, logotipo, condiciones de pago y notas. El borrador se guarda localmente en el navegador y puedes imprimirlo o guardarlo como PDF.','Free to use':'Gratis','No SoloBizKit account':'Sin cuenta SoloBizKit','Auto-saves locally':'Guardado local automático','Print or save as PDF':'Imprimir o guardar como PDF','New invoice':'Nueva factura','Duplicate':'Duplicar','Saved locally':'Guardado localmente','Auto-save on':'Guardado automático activo','Saving…':'Guardando…','Print / Save PDF':'Imprimir / guardar PDF','Your business':'Tu negocio','Business name':'Nombre del negocio','Your Business':'Tu negocio','Logo (optional)':'Logotipo (opcional)','optional':'opcional','Email':'Correo electrónico','Phone':'Teléfono','Business address':'Dirección del negocio','Client & invoice details':'Datos del cliente y factura','Client / company':'Cliente / empresa','Client name':'Nombre del cliente','Client email':'Correo del cliente','Client address':'Dirección del cliente','Invoice #':'N.º de factura','Issue date':'Fecha de emisión','Due date':'Fecha de vencimiento','Currency':'Moneda','Payment terms':'Condiciones de pago','Due on receipt':'Pago al recibir','Line items':'Líneas de factura','+ Add line item':'+ Añadir línea','Totals & notes':'Totales y notas','Tax %':'Impuesto %','Discount %':'Descuento %','Notes / payment instructions':'Notas / instrucciones de pago','Tax and invoice requirements vary by country and business type. This tool helps create the document; it does not determine which taxes or legal fields apply to you.':'Los requisitos fiscales y de facturación varían según el país y el tipo de negocio. Esta herramienta crea el documento, pero no determina qué requisitos legales o fiscales se aplican.','Draft data and logo stay in this browser unless you choose to print or save the invoice yourself.':'El borrador y el logotipo permanecen en este navegador salvo que decidas imprimir o guardar la factura.','INVOICE':'FACTURA','Invoice':'Factura','Bill to':'Facturar a','Invoice details':'Datos de factura','Description':'Descripción','Qty':'Cant.','Rate':'Precio','Amount':'Importe','Subtotal':'Subtotal','Tax':'Impuesto','Discount':'Descuento','Total due':'Total a pagar','Notes':'Notas','Professional services':'Servicios profesionales','Issued':'Emitida','Due':'Vence','Terms':'Condiciones','Need more than a one-off invoice?':'¿Necesitas más que una factura puntual?','Manage customers, recurring invoices and payments with SoloBizKit Pro.':'Gestiona clientes, facturas recurrentes y pagos con SoloBizKit Pro.','The free invoice generator stays free. Pro is the optional workspace for customer history, estimates, recurring billing, reminders and payment tracking.':'El generador de facturas gratis seguirá siendo gratuito. Pro es el espacio opcional para historial de clientes, presupuestos, facturación recurrente, recordatorios y seguimiento de pagos.','Explore SoloBizKit Pro →':'Explorar SoloBizKit Pro →','Street, city, country':'Calle, ciudad, país','Thank you for your business. Payment details...':'Gracias por confiar en nosotros. Datos de pago...','Business logo':'Logotipo del negocio','Logo preview':'Vista previa del logotipo','Start a new invoice? Your current local draft will be replaced.':'¿Crear una factura nueva? El borrador local actual será reemplazado.'
     },
     fr:{
-      'Free · private · no account required':'Gratuit · privé · sans compte','Free Invoice Generator':'Générateur de factures gratuit','Create a professional invoice with multiple line items, tax, discounts, your logo, payment terms and notes. Your draft auto-saves locally in this browser, then you can print or save the invoice as a PDF.':'Créez une facture professionnelle avec plusieurs lignes, taxes, remises, logo, conditions de paiement et notes. Le brouillon est enregistré localement dans le navigateur puis peut être imprimé ou sauvegardé en PDF.','Free to use':'Gratuit','No SoloBizKit account':'Sans compte SoloBizKit','Auto-saves locally':'Enregistrement local automatique','Print or save as PDF':'Imprimer ou enregistrer en PDF','New invoice':'Nouvelle facture','Duplicate':'Dupliquer','Saved locally':'Enregistré localement','Auto-save on':'Enregistrement automatique actif','Saving…':'Enregistrement…','Print / Save PDF':'Imprimer / enregistrer PDF','Your business':'Votre entreprise','Business name':'Nom de l’entreprise','Your Business':'Votre entreprise','Logo (optional)':'Logo (facultatif)','optional':'facultatif','Email':'E-mail','Phone':'Téléphone','Business address':'Adresse de l’entreprise','Client & invoice details':'Client et détails de facture','Client / company':'Client / entreprise','Client name':'Nom du client','Client email':'E-mail du client','Client address':'Adresse du client','Invoice #':'N° de facture','Issue date':'Date d’émission','Due date':'Date d’échéance','Currency':'Devise','Payment terms':'Conditions de paiement','Due on receipt':'À réception','Line items':'Lignes de facture','+ Add line item':'+ Ajouter une ligne','Totals & notes':'Totaux et notes','Tax %':'Taxe %','Discount %':'Remise %','Notes / payment instructions':'Notes / instructions de paiement','Tax and invoice requirements vary by country and business type. This tool helps create the document; it does not determine which taxes or legal fields apply to you.':'Les exigences fiscales et de facturation varient selon le pays et le type d’entreprise. Cet outil crée le document mais ne détermine pas les obligations juridiques ou fiscales applicables.','Draft data and logo stay in this browser unless you choose to print or save the invoice yourself.':'Le brouillon et le logo restent dans ce navigateur sauf si vous choisissez d’imprimer ou d’enregistrer la facture.','INVOICE':'FACTURE','Invoice':'Facture','Bill to':'Facturer à','Invoice details':'Détails de la facture','Description':'Description','Qty':'Qté','Rate':'Prix','Amount':'Montant','Subtotal':'Sous-total','Tax':'Taxe','Discount':'Remise','Total due':'Total à payer','Notes':'Notes','Professional services':'Services professionnels','Issued':'Émise','Due':'Échéance','Terms':'Conditions','Need more than a one-off invoice?':'Besoin de plus qu’une facture ponctuelle ?','Manage customers, recurring invoices and payments with SoloBizKit Pro.':'Gérez les clients, les factures récurrentes et les paiements avec SoloBizKit Pro.','The free invoice generator stays free. Pro is the optional workspace for customer history, estimates, recurring billing, reminders and payment tracking.':'Le générateur de factures gratuit reste gratuit. Pro est l’espace optionnel pour l’historique client, les devis, la facturation récurrente, les rappels et le suivi des paiements.','Explore SoloBizKit Pro →':'Découvrir SoloBizKit Pro →','Street, city, country':'Rue, ville, pays','Thank you for your business. Payment details...':'Merci pour votre confiance. Informations de paiement...','Business logo':'Logo de l’entreprise','Logo preview':'Aperçu du logo','Start a new invoice? Your current local draft will be replaced.':'Créer une nouvelle facture ? Le brouillon local actuel sera remplacé.'
+      'Free · private · no account required':'Gratuit · privé · sans compte','Free Invoice Generator':'Générateur de factures gratuit','Create a professional invoice with multiple line items, tax, discounts, your logo, payment terms and notes. Your draft auto-saves locally in this browser, then you can print or save the invoice as a PDF.':'Créez une facture professionnelle avec plusieurs lignes, taxes, remises, votre logo, les conditions de paiement et des notes. Le brouillon est enregistré localement dans le navigateur, puis vous pouvez imprimer ou enregistrer la facture en PDF.','Free to use':'Gratuit','No SoloBizKit account':'Aucun compte SoloBizKit','Auto-saves locally':'Enregistrement local automatique','Print or save as PDF':'Imprimer ou enregistrer en PDF','New invoice':'Nouvelle facture','Duplicate':'Dupliquer','Saved locally':'Enregistré localement','Auto-save on':'Enregistrement automatique actif','Saving…':'Enregistrement…','Print / Save PDF':'Imprimer / enregistrer le PDF','Your business':'Votre entreprise','Business name':'Nom de l’entreprise','Your Business':'Votre entreprise','Logo (optional)':'Logo (facultatif)','optional':'facultatif','Email':'E-mail','Phone':'Téléphone','Business address':'Adresse de l’entreprise','Client & invoice details':'Client et détails de la facture','Client / company':'Client / entreprise','Client name':'Nom du client','Client email':'E-mail du client','Client address':'Adresse du client','Invoice #':'N° de facture','Issue date':'Date d’émission','Due date':'Date d’échéance','Currency':'Devise','Payment terms':'Conditions de paiement','Due on receipt':'Paiement à réception','Line items':'Lignes de facture','+ Add line item':'+ Ajouter une ligne','Totals & notes':'Totaux et notes','Tax %':'Taxe %','Discount %':'Remise %','Notes / payment instructions':'Notes / instructions de paiement','Tax and invoice requirements vary by country and business type. This tool helps create the document; it does not determine which taxes or legal fields apply to you.':'Les exigences fiscales et de facturation varient selon le pays et le type d’activité. Cet outil aide à créer le document, mais ne détermine pas les obligations légales ou fiscales qui vous concernent.','Draft data and logo stay in this browser unless you choose to print or save the invoice yourself.':'Le brouillon et le logo restent dans ce navigateur sauf si vous choisissez vous-même d’imprimer ou d’enregistrer la facture.','INVOICE':'FACTURE','Invoice':'Facture','Bill to':'Facturer à','Invoice details':'Détails de la facture','Description':'Description','Qty':'Qté','Rate':'Prix','Amount':'Montant','Subtotal':'Sous-total','Tax':'Taxe','Discount':'Remise','Total due':'Total à payer','Notes':'Notes','Professional services':'Services professionnels','Issued':'Émise','Due':'Échéance','Terms':'Conditions','Need more than a one-off invoice?':'Besoin de plus qu’une facture ponctuelle ?','Manage customers, recurring invoices and payments with SoloBizKit Pro.':'Gérez clients, factures récurrentes et paiements avec SoloBizKit Pro.','The free invoice generator stays free. Pro is the optional workspace for customer history, estimates, recurring billing, reminders and payment tracking.':'Le générateur de factures gratuit reste gratuit. Pro est l’espace facultatif pour l’historique client, les devis, la facturation récurrente, les rappels et le suivi des paiements.','Explore SoloBizKit Pro →':'Découvrir SoloBizKit Pro →','Street, city, country':'Rue, ville, pays','Thank you for your business. Payment details...':'Merci pour votre confiance. Informations de paiement...','Business logo':'Logo de l’entreprise','Logo preview':'Aperçu du logo','Start a new invoice? Your current local draft will be replaced.':'Créer une nouvelle facture ? Le brouillon local actuel sera remplacé.'
     }
   };
 
-  const dict=D[lang]||{};
-  const originalText=new WeakMap();
-  const originalAttrs=new WeakMap();
-  let busy=false;
-  const nativeConfirm=window.confirm.bind(window);
+  const dict=L[lang]||{};
   const t=(text)=>dict[text]||text;
-  const preserve=(raw,next)=>(raw.match(/^\s*/)?.[0]||'')+next+(raw.match(/\s*$/)?.[0]||'');
+  const nativeConfirm=window.confirm.bind(window);
+  let scheduled=false;
+  let translating=false;
 
   window.sbkInvoiceI18n={lang,t};
   window.confirm=(message)=>nativeConfirm(t(String(message)));
 
+  function setText(node,next){if(node&&node.nodeValue!==next)node.nodeValue=next}
   function translateTextNode(node){
-    const parent=node.parentElement;if(!parent||parent.closest('.sbk-language-switcher')||['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName))return;
-    if(!originalText.has(node))originalText.set(node,node.nodeValue||'');
-    const raw=originalText.get(node)||'',key=raw.trim();if(!key)return;
-    const next=t(key);if(next!==key&&node.nodeValue!==preserve(raw,next))node.nodeValue=preserve(raw,next);
+    const parent=node.parentElement;
+    if(!parent||parent.closest('.sbk-language-switcher')||['SCRIPT','STYLE','NOSCRIPT'].includes(parent.tagName)||parent.matches('input,textarea'))return;
+    const raw=node.nodeValue||'';
+    const key=raw.trim();
+    if(!key)return;
+    const next=t(key);
+    if(next!==key)setText(node,raw.replace(key,next));
   }
   function translateElement(el){
     if(!(el instanceof Element)||el.closest('.sbk-language-switcher'))return;
-    let attrs=originalAttrs.get(el);if(!attrs){attrs={};originalAttrs.set(el,attrs)}
     for(const name of ['placeholder','aria-label','title','alt']){
       if(!el.hasAttribute(name))continue;
-      if(!(name in attrs))attrs[name]=el.getAttribute(name)||'';
-      const source=attrs[name],next=t(source.trim());if(next!==source.trim())el.setAttribute(name,preserve(source,next));
+      const raw=el.getAttribute(name)||'';
+      const key=raw.trim();
+      const next=t(key);
+      if(next!==key&&raw!==raw.replace(key,next))el.setAttribute(name,raw.replace(key,next));
     }
     if(el.tagName==='OPTION'){
-      if(!el.hasAttribute('value'))el.setAttribute('value',el.textContent||'');
-      const source=(el.dataset.sbkSourceText||(el.dataset.sbkSourceText=el.textContent||'')).trim();
-      const next=t(source);if(next!==source)el.textContent=next;
+      const source=el.getAttribute('data-sbk-source-text')||el.textContent||'';
+      if(!el.hasAttribute('data-sbk-source-text'))el.setAttribute('data-sbk-source-text',source);
+      if(!el.hasAttribute('value'))el.setAttribute('value',source);
+      const next=t(source.trim());
+      if(next!==source.trim()&&el.textContent!==next)el.textContent=next;
     }
   }
   function translateSpecial(){
     const dates=document.getElementById('pDates');
-    if(dates&&dates.textContent){dates.textContent=dates.textContent.replace(/^Issued:/m,t('Issued')+':').replace(/^Due:/m,t('Due')+':').replace(/^Terms:/m,t('Terms')+':')}
+    if(dates&&dates.textContent){
+      const current=dates.textContent;
+      const next=current.replace(/^Issued:/m,t('Issued')+':').replace(/^Due:/m,t('Due')+':').replace(/^Terms:/m,t('Terms')+':');
+      if(next!==current)dates.textContent=next;
+    }
     const logo=document.getElementById('logoPreview');
-    if(logo&&!logo.querySelector('img')&&/Logo/i.test(logo.textContent||''))logo.innerHTML='Logo<br>'+t('optional');
+    if(logo&&!logo.querySelector('img')){
+      const desired='Logo\n'+t('optional');
+      if((logo.textContent||'').trim().replace(/\s+/g,' ')!==desired.replace(/\s+/g,' '))logo.innerHTML='Logo<br>'+t('optional');
+    }
+    const business=document.getElementById('business');
+    if(business&&business.value==='Your Business')business.value=t('Your Business');
+    document.querySelectorAll('#itemsEdit input[data-k="desc"]').forEach(input=>{if(input.value==='Professional services')input.value=t('Professional services')});
     document.documentElement.lang=lang;
     document.querySelector('.seo')?.setAttribute('hidden','');
   }
   function translate(root=document.body){
-    if(busy||!root)return;busy=true;
-    if(root instanceof Element)translateElement(root);
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);let node;
-    while((node=walker.nextNode()))node.nodeType===Node.TEXT_NODE?translateTextNode(node):translateElement(node);
-    translateSpecial();busy=false;
+    if(!root||translating)return;
+    translating=true;
+    try{
+      if(root instanceof Element)translateElement(root);
+      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);
+      let node;
+      while((node=walker.nextNode()))node.nodeType===Node.TEXT_NODE?translateTextNode(node):translateElement(node);
+      translateSpecial();
+    }finally{translating=false}
+  }
+  function schedule(){
+    if(scheduled||translating)return;
+    scheduled=true;
+    requestAnimationFrame(()=>{scheduled=false;translate()});
   }
   function run(){
     translate();
-    const observer=new MutationObserver(()=>{if(!busy)requestAnimationFrame(()=>translate())});
-    observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title','alt']});
+    const observer=new MutationObserver(schedule);
+    observer.observe(document.body,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
 })();
