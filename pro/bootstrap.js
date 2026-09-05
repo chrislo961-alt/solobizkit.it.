@@ -45,12 +45,11 @@ async function safeImport(path) {
   }
 }
 
-// Core order is intentional. Auth routing and the runtime guard must be active
-// before anything can subscribe to Supabase auth events.
-await import('./auth-routing.js?v=20260905-4');
-await import('./runtime-guard.js?v=20260905-4');
-await import('./auth-recovery.js?v=20260905-4');
-await import('./pro-app.js?v=20260905-4');
+const V = '20260905-6';
+await import(`./auth-routing.js?v=${V}`);
+await import(`./runtime-guard.js?v=${V}`);
+await import(`./auth-recovery.js?v=${V}`);
+await import(`./pro-app.js?v=${V}`);
 
 const coreReady = await waitForCoreReady();
 
@@ -58,42 +57,39 @@ if (!coreReady) {
   console.error('[SoloBizKit Pro] Core workspace did not settle within startup budget. Optional enhancements were not loaded.');
   window.sbkToast?.('Workspace startup took too long. Use Try again to refresh the secure session.', 'error');
 } else if (!document.querySelector('#sbkRetryWorkspace')) {
-  // Enhancements are deliberately loaded only after the core app has rendered.
-  // This keeps first paint deterministic and prevents a startup storm of
-  // duplicate workspace reads and MutationObserver races.
   await Promise.allSettled([
-    safeImport('./deep-links.js?v=20260905-4'),
-    safeImport('./document-print-v2.js?v=20260905-4'),
-    safeImport('./document-defaults.js?v=20260905-4'),
-    safeImport('./document-options-v2.js?v=20260905-4'),
-    safeImport('./reminder-actions.js?v=20260905-4'),
-    safeImport('./payment-actions.js?v=20260905-4'),
-    safeImport('./email-actions-v2.js?v=20260905-4'),
+    safeImport(`./deep-links.js?v=${V}`),
+    safeImport(`./document-print-v2.js?v=${V}`),
+    safeImport(`./document-defaults.js?v=${V}`),
+    safeImport(`./document-options-v2.js?v=${V}`),
+    safeImport(`./reminder-actions.js?v=${V}`),
+    safeImport(`./payment-actions.js?v=${V}`),
+    safeImport(`./email-actions-v2.js?v=${V}`),
   ]);
 
   await Promise.allSettled([
-    safeImport('./customer-history.js?v=20260905-4'),
-    safeImport('./customer-portal-actions.js?v=20260905-4'),
-    safeImport('./customer-workspace-actions.js?v=20260905-4'),
-    safeImport('./catalog/catalog-picker.js?v=20260905-4'),
-    safeImport('./document-attachments.js?v=20260905-4'),
-    safeImport('./activity-feed.js?v=20260905-4'),
-    safeImport('./onboarding.js?v=20260905-4'),
-    safeImport('./trial-ui.js?v=20260905-4'),
+    safeImport(`./customer-history.js?v=${V}`),
+    safeImport(`./customer-portal-actions.js?v=${V}`),
+    safeImport(`./customer-workspace-actions.js?v=${V}`),
+    safeImport(`./catalog/catalog-picker.js?v=${V}`),
+    safeImport(`./document-attachments.js?v=${V}`),
+    safeImport(`./activity-feed.js?v=${V}`),
+    safeImport(`./onboarding.js?v=${V}`),
+    safeImport(`./trial-ui.js?v=${V}`),
   ]);
 
   await Promise.allSettled([
-    safeImport('./crm-dashboard-v2.js?v=20260905-4'),
-    safeImport('./crm-ux-v3.js?v=20260905-4'),
-    safeImport('./lead-followups.js?v=20260905-4'),
-    safeImport('./document-ux-v2.js?v=20260905-4'),
-    safeImport('./document-editor-v3.js?v=20260905-4'),
-    safeImport('./funnel-analytics.js?v=20260905-4'),
+    safeImport(`./crm-dashboard-v2.js?v=${V}`),
+    safeImport(`./crm-ux-v3.js?v=${V}`),
+    safeImport(`./lead-followups.js?v=${V}`),
+    safeImport(`./document-ux-v2.js?v=${V}`),
+    safeImport(`./document-editor-v3.js?v=${V}`),
+    safeImport(`./funnel-analytics.js?v=${V}`),
   ]);
 }
 
 window.sbkProBoot = {
-  version: 4,
+  version: 6,
   coreReady,
   bootedAt: new Date().toISOString(),
 };
