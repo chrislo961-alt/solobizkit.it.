@@ -6,7 +6,6 @@
   <url><loc>https://solobizkit.it.com/small-business-toolkit/</loc><lastmod>2026-09-02</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/freelancer-toolkit/</loc><lastmod>2026-09-02</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/pdf-tools/</loc><lastmod>2026-09-02</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://solobizkit.it.com/pro-pricing/</loc><lastmod>2026-09-03</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/about/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://solobizkit.it.com/biweekly-paycheck-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/break-even-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -14,6 +13,7 @@
   <url><loc>https://solobizkit.it.com/business-name-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/cash-flow-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/cleaning-business-name-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/cleaning-business-profit-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/compress-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/consultant-hourly-rate-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/consulting-business-name-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -27,13 +27,30 @@
   <url><loc>https://solobizkit.it.com/customer-lifetime-value-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/delete-pdf-pages/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/discount-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/ecommerce-conversion-rate-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/ecommerce-customer-lifetime-value-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/ecommerce-profit-margin-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/ecommerce-roas-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/edit-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/email-qr-code-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/estimate-response/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/extract-pdf-pages/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/free-invoice-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/freelance-day-rate-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/freelance-hourly-rate-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/google-ads-cpc-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/gross-profit-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/build-business-website-cheap/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/cash-flow-basics/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/freelance-invoice-checklist/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/get-first-freelance-clients/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/late-paying-clients/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/price-freelance-services/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/simple-crm-small-business/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/small-business-monthly-checklist/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/start-small-business/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/write-professional-estimate/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://solobizkit.it.com/hourly-paycheck-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/hourly-rate-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/how-to-make-an-invoice/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -42,6 +59,7 @@
   <url><loc>https://solobizkit.it.com/invoice-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/invoice-guide/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://solobizkit.it.com/invoice-number-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/invoice-payment/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/invoice-template-for-small-business/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://solobizkit.it.com/jpg-to-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/llc-name-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -63,8 +81,17 @@
   <url><loc>https://solobizkit.it.com/percentage-increase-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/photography-business-name-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/png-to-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/portal/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/portal/invoice/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/price-increase-calculator-for-small-business/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/price-increase-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/privacy/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://solobizkit.it.com/pro-pricing/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/pro/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/pro/catalog/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/pro/estimates/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/pro/recurring/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/pro/settings/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/profit-margin-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/protect-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/qr-code-for-business-card/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -73,13 +100,17 @@
   <url><loc>https://solobizkit.it.com/qr-code-guide/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://solobizkit.it.com/qr-code-with-logo/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/reorder-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/restaurant-profit-margin-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/roas-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/roi-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/rotate-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/saas-cac-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/salary-paycheck-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/security/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/sign-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/small-business-name-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/sms-qr-code-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/social-media-cpm-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/split-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/target-profit-margin-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/terms/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
@@ -88,14 +119,4 @@
   <url><loc>https://solobizkit.it.com/watermark-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/wifi-qr-code-generator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/word-to-pdf/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/cleaning-business-profit-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/restaurant-profit-margin-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/ecommerce-profit-margin-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/ecommerce-conversion-rate-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/saas-cac-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/ecommerce-customer-lifetime-value-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/google-ads-cpc-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/social-media-cpm-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/ecommerce-roas-calculator/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/price-increase-calculator-for-small-business/</loc><lastmod>2026-09-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
