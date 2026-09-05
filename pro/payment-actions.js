@@ -18,7 +18,7 @@ async function getInvoice(id) {
 export async function ensurePaymentLink(id) {
   const invoice = await getInvoice(id);
   if (invoice.payment_url) return invoice.payment_url;
-  if (['paid', 'void'].includes(invoice.status)) throw new Error(`Invoice is already ${invoice.status}.`);
+  if (['paid', 'void'].includes(String(invoice.status).toLowerCase())) throw new Error(`Invoice is already ${invoice.status}.`);
   const { data, error } = await supabase.functions.invoke('create-solobizkit-invoice-checkout', { body: { invoiceId: id } });
   if (error) throw error;
   if (!data?.url) throw new Error(data?.error || 'Could not create payment link.');
@@ -32,11 +32,13 @@ async function copyPaymentLink(id, button) {
   try {
     const url = await ensurePaymentLink(id);
     await navigator.clipboard.writeText(url);
-    button.textContent = 'Link copied';
-    setTimeout(() => { button.textContent = 'Pay link'; button.disabled = false; }, 1200);
+    button.textContent = 'Stripe link copied';
+    window.sbkToast?.('Optional Stripe payment link copied.', 'success');
+    window.sbkTrack?.('pro_invoice_payment_link_copied');
+    setTimeout(() => { button.textContent = 'Stripe pay link'; button.disabled = false; }, 1400);
   } catch (error) {
     console.error(error);
-    alert(error?.message || 'Could not create payment link.');
+    window.sbkToast?.(error?.message || 'Could not create Stripe payment link.', 'error');
     button.textContent = original;
     button.disabled = false;
   }
@@ -54,7 +56,8 @@ function injectButtons(root = document) {
     button.type = 'button';
     button.className = 'mini-btn';
     button.dataset.payLink = id;
-    button.textContent = 'Pay link';
+    button.textContent = 'Stripe pay link';
+    button.title = 'Optional: create a Stripe card-payment link for this invoice';
     cell.appendChild(document.createTextNode(' '));
     cell.appendChild(button);
   });
