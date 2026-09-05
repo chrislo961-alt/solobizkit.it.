@@ -1,6 +1,15 @@
 (function(){
   'use strict';
   if(location.pathname.startsWith('/pro/')||location.pathname.startsWith('/lead/'))return;
+
+  if(!document.querySelector('script[data-sbk-public-i18n]')){
+    const i18n=document.createElement('script');
+    i18n.src='/public-i18n.js?v=20260905-1';
+    i18n.defer=true;
+    i18n.dataset.sbkPublicI18n='1';
+    document.head.appendChild(i18n);
+  }
+
   const nav=document.querySelector('.sbk-global-nav');
   if(!nav||nav.querySelector('.sbk-language-switcher'))return;
 
