@@ -98,6 +98,11 @@
     if(location.pathname!=='/invoice-generator/'||document.querySelector('script[data-free-invoice-options-v2]'))return;
     const script=document.createElement('script');script.src='/invoice-generator/document-options-v2.js';script.defer=true;script.dataset.freeInvoiceOptionsV2='1';document.head.appendChild(script);
   }
-  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2()}
+  function installSeoTrustLayer(){
+    if(location.pathname.startsWith('/pro/')||location.pathname.startsWith('/pro-pricing/'))return;
+    if(document.querySelector('script[data-seo-trust-v1]'))return;
+    const script=document.createElement('script');script.src='/seo-trust-v1.js?v=20260905-1';script.defer=true;script.dataset.seoTrustV1='1';document.head.appendChild(script);
+  }
+  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2();installSeoTrustLayer()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
