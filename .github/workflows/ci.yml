@@ -18,5 +18,5 @@ jobs:
         with:
           node-version: 22
       - name: Test calculator logic and audit the complete static site
-        # Includes public metadata, sitemap/internal links and accessibility checks.
+        # Includes public metadata, sitemap/internal links, accessibility and expanded guide checks.
         run: npm test
