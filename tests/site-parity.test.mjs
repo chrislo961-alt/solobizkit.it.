@@ -39,6 +39,8 @@ test('every parity route exists and loads the language switcher',()=>{
 
 test('language switcher always loads the shared parity runtime',()=>{
   assert.match(switcher,/site-parity\.js/);
+  assert.match(switcher,/public-i18n-extra\.js/);
+  assert.match(switcher,/public-i18n\.js/);
   assert.match(switcher,/sbkRelocalizeLinks/);
   assert.match(switcher,/MutationObserver/);
 });
@@ -62,7 +64,10 @@ test('localized invoice routes hydrate the exact canonical invoice generator',()
 
 test('shared public tools remain single-base runtime-localized',()=>{
   const publicI18n=fs.readFileSync(path.join(root,'public-i18n.js'),'utf8');
-  for(const lang of ['no','sv','de','es','fr'])assert.match(publicI18n,new RegExp(`${lang}:\\{`));
+  const publicExtra=fs.readFileSync(path.join(root,'public-i18n-extra.js'),'utf8');
+  assert.match(publicI18n,/const languages=\['no','sv','de','es','fr'\]/);
+  assert.match(publicI18n,/window\.SBK_PUBLIC_I18N_EXTRA/);
+  assert.match(publicExtra,/languages":\["no","sv","de","es","fr"\]/);
   assert.match(publicI18n,/MutationObserver/);
   assert.match(publicI18n,/attributeFilter:\['placeholder','aria-label','title','alt'\]/);
 });
