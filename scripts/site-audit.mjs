@@ -4,6 +4,8 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const SITE = 'https://solobizkit.it.com';
 const errors = [];
+const rootLanguageRoutes = { en: '/', no: '/no/', sv: '/sv/', de: '/de/', es: '/es/', fr: '/fr/' };
+const languageRootSet = new Set(Object.values(rootLanguageRoutes));
 const languagePairs = new Map([
   ['/', '/no/'],
   ['/business-calculators/', '/no/kalkulatorer/'],
@@ -53,6 +55,13 @@ const inbound = new Map(publicPages.map((page) => [page.route, 0]));
 const titleOwners = new Map();
 const descriptionOwners = new Map();
 
+function hasAlternate(html, lang, href) {
+  const escaped = href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const direct = new RegExp(`<link[^>]+rel=["']alternate["'][^>]+hreflang=["']${lang}["'][^>]+href=["']${escaped}["']`, 'i');
+  const reverse = new RegExp(`<link[^>]+rel=["']alternate["'][^>]+href=["']${escaped}["'][^>]+hreflang=["']${lang}["']`, 'i');
+  return direct.test(html) || reverse.test(html);
+}
+
 for (const page of pages) {
   const label = page.route;
   if (!page.title) errors.push(`${label}: missing title`);
@@ -96,18 +105,19 @@ for (const page of pages) {
       if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) errors.push(`${label}: shared header is missing the brand icon`);
     }
 
-    const enRoute = languagePairs.has(label) ? label : reverseLanguagePairs.get(label);
-    const noRoute = languagePairs.get(label) || (reverseLanguagePairs.has(label) ? label : null);
-    if (enRoute && noRoute) {
-      const requiredAlternates = [
-        ['en', `${SITE}${enRoute}`],
-        ['no', `${SITE}${noRoute}`],
-        ['x-default', `${SITE}${enRoute}`]
-      ];
-      for (const [lang, href] of requiredAlternates) {
-        const re = new RegExp(`<link[^>]+rel=["']alternate["'][^>]+hreflang=["']${lang}["'][^>]+href=["']${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`, 'i');
-        const reverseRe = new RegExp(`<link[^>]+rel=["']alternate["'][^>]+href=["']${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]+hreflang=["']${lang}["']`, 'i');
-        if (!re.test(page.html) && !reverseRe.test(page.html)) errors.push(`${label}: missing hreflang ${lang} -> ${href}`);
+    if (languageRootSet.has(label)) {
+      for (const [lang, route] of Object.entries(rootLanguageRoutes)) {
+        const href = `${SITE}${route}`;
+        if (!hasAlternate(page.html, lang, href)) errors.push(`${label}: missing hreflang ${lang} -> ${href}`);
+      }
+      if (!hasAlternate(page.html, 'x-default', `${SITE}/`)) errors.push(`${label}: missing hreflang x-default -> ${SITE}/`);
+    } else {
+      const enRoute = languagePairs.has(label) ? label : reverseLanguagePairs.get(label);
+      const noRoute = languagePairs.get(label) || (reverseLanguagePairs.has(label) ? label : null);
+      if (enRoute && noRoute) {
+        for (const [lang, href] of [['en', `${SITE}${enRoute}`], ['no', `${SITE}${noRoute}`], ['x-default', `${SITE}${enRoute}`]]) {
+          if (!hasAlternate(page.html, lang, href)) errors.push(`${label}: missing hreflang ${lang} -> ${href}`);
+        }
       }
     }
   } else if (!/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(page.html)) {
@@ -146,7 +156,7 @@ for (const page of pages) {
 
 for (const [title, owners] of titleOwners) if (title && owners.length > 1) errors.push(`duplicate title: ${title}`);
 for (const [description, owners] of descriptionOwners) if (description && owners.length > 1) errors.push(`duplicate description: ${owners.join(', ')}`);
-for (const [route, count] of inbound) if (route !== '/' && count === 0) errors.push(`${route}: orphan route with no internal links`);
+for (const [route, count] of inbound) if (route !== '/' && count === 0 && !languageRootSet.has(route)) errors.push(`${route}: orphan route with no internal links`);
 
 const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
 const sitemapRoutes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) => new URL(item[1]).pathname);
@@ -187,4 +197,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Verified ${publicPages.length} public routes, ${pages.length - publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, localized hreflang, metadata, structured data, local assets and internal links.`);
+console.log(`Verified ${publicPages.length} public routes, ${pages.length - publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, multilingual entrypoints, localized hreflang, metadata, structured data, local assets and internal links.`);
