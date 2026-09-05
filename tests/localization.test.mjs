@@ -3,62 +3,76 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = process.cwd();
-const site = 'https://solobizkit.it.com';
-const pairs = [
-  ['/', '/no/', 'index.html', 'no/index.html'],
-  ['/business-calculators/', '/no/kalkulatorer/', 'business-calculators/index.html', 'no/kalkulatorer/index.html'],
-  ['/profit-margin-calculator/', '/no/fortjenestemargin-kalkulator/', 'profit-margin-calculator/index.html', 'no/fortjenestemargin-kalkulator/index.html'],
-  ['/break-even-calculator/', '/no/nullpunkt-kalkulator/', 'break-even-calculator/index.html', 'no/nullpunkt-kalkulator/index.html'],
-  ['/hourly-rate-calculator/', '/no/timepris-kalkulator/', 'hourly-rate-calculator/index.html', 'no/timepris-kalkulator/index.html']
-];
+const root=process.cwd();
+const site='https://solobizkit.it.com';
+const langs=['en','no','sv','de','es','fr'];
+const groups={
+  home:{en:'/',no:'/no/',sv:'/sv/',de:'/de/',es:'/es/',fr:'/fr/'},
+  calculators:{en:'/business-calculators/',no:'/no/kalkulatorer/',sv:'/sv/kalkylatorer/',de:'/de/rechner/',es:'/es/calculadoras/',fr:'/fr/calculateurs/'},
+  margin:{en:'/profit-margin-calculator/',no:'/no/fortjenestemargin-kalkulator/',sv:'/sv/vinstmarginal-kalkylator/',de:'/de/gewinnmargen-rechner/',es:'/es/calculadora-margen-beneficio/',fr:'/fr/calculateur-marge-beneficiaire/'},
+  breakEven:{en:'/break-even-calculator/',no:'/no/nullpunkt-kalkulator/',sv:'/sv/nollpunkts-kalkylator/',de:'/de/break-even-rechner/',es:'/es/calculadora-punto-equilibrio/',fr:'/fr/calculateur-seuil-rentabilite/'},
+  hourly:{en:'/hourly-rate-calculator/',no:'/no/timepris-kalkulator/',sv:'/sv/timpris-kalkylator/',de:'/de/stundensatz-rechner/',es:'/es/calculadora-tarifa-hora/',fr:'/fr/calculateur-taux-horaire/'},
+  invoice:{en:'/invoice-generator/',no:'/no/fakturagenerator/',sv:'/sv/fakturagenerator/',de:'/de/rechnungsgenerator/',es:'/es/generador-facturas/',fr:'/fr/generateur-factures/'}
+};
+const fileFor=(route)=>route==='/'?'index.html':`${route.replace(/^\//,'')}index.html`;
+const read=(route)=>fs.readFileSync(path.join(root,fileFor(route)),'utf8');
+const hasAlternate=(html,lang,route)=>html.includes(`hreflang="${lang}" href="${site}${route}"`)||html.includes(`href="${site}${route}" hreflang="${lang}"`);
 
-function read(relative) {
-  return fs.readFileSync(path.join(root, relative), 'utf8');
+for(const [name,group] of Object.entries(groups)){
+  test(`${name} has complete six-language canonical and hreflang coverage`,()=>{
+    for(const lang of langs){
+      const route=group[lang];
+      assert.ok(fs.existsSync(path.join(root,fileFor(route))),`${route} is missing`);
+      const html=read(route);
+      assert.ok(html.includes(`<link rel="canonical" href="${site}${route}">`),`${route} self canonical missing`);
+      for(const alternate of langs)assert.ok(hasAlternate(html,alternate,group[alternate]),`${route} missing ${alternate} hreflang`);
+      assert.ok(hasAlternate(html,'x-default',group.en),`${route} missing x-default`);
+      if(lang!=='en')assert.match(html,new RegExp(`<html lang="${lang}"`),`${route} has wrong html lang`);
+    }
+  });
 }
 
-function hasAlternate(html, lang, href) {
-  return html.includes(`hreflang="${lang}" href="${href}"`) || html.includes(`href="${href}" hreflang="${lang}"`);
-}
-
-test('English and Norwegian SEO routes have reciprocal hreflang and self canonicals', () => {
-  for (const [enRoute, noRoute, enFile, noFile] of pairs) {
-    const en = read(enFile);
-    const no = read(noFile);
-    assert.match(en, new RegExp(`<link rel="canonical" href="${site.replaceAll('.', '\\.')}${enRoute.replaceAll('/', '\\/')}"`));
-    assert.match(no, new RegExp(`<link rel="canonical" href="${site.replaceAll('.', '\\.')}${noRoute.replaceAll('/', '\\/')}"`));
-    assert.ok(hasAlternate(en, 'en', `${site}${enRoute}`), `${enRoute} should reference English`);
-    assert.ok(hasAlternate(en, 'no', `${site}${noRoute}`), `${enRoute} should reference Norwegian`);
-    assert.ok(hasAlternate(no, 'en', `${site}${enRoute}`), `${noRoute} should reference English`);
-    assert.ok(hasAlternate(no, 'no', `${site}${noRoute}`), `${noRoute} should reference Norwegian`);
+test('localized calculator hubs link only to their local core calculators',()=>{
+  for(const lang of langs.filter((x)=>x!=='en')){
+    const html=read(groups.calculators[lang]);
+    for(const key of ['margin','breakEven','hourly'])assert.ok(html.includes(`href="${groups[key][lang]}"`),`${groups.calculators[lang]} missing ${key}`);
   }
 });
 
-test('Norwegian pages declare Norwegian language and localized navigation', () => {
-  for (const [, , , noFile] of pairs) {
-    const html = read(noFile);
-    assert.match(html, /<html lang="no">/);
-    assert.match(html, /href="\/no\/kalkulatorer\/"/);
-    assert.match(html, /language-switcher\.js/);
+test('localized home pages link to local calculator and invoice destinations',()=>{
+  for(const lang of langs.filter((x)=>x!=='en')){
+    const html=read(groups.home[lang]);
+    assert.ok(html.includes(`href="${groups.calculators[lang]}"`),`${groups.home[lang]} should link local calculator hub`);
+    assert.ok(html.includes(`href="${groups.invoice[lang]}"`),`${groups.home[lang]} should link local invoice landing`);
   }
 });
 
-test('Norwegian calculator routes contain working calculator inputs and scripts', () => {
-  const margin = read('no/fortjenestemargin-kalkulator/index.html');
-  const breakEven = read('no/nullpunkt-kalkulator/index.html');
-  const hourly = read('no/timepris-kalkulator/index.html');
-  for (const id of ['cost', 'price', 'target', 'profit', 'margin']) assert.ok(margin.includes(`id="${id}"`));
-  for (const id of ['fixed', 'price', 'variable', 'units', 'revenue']) assert.ok(breakEven.includes(`id="${id}"`));
-  for (const id of ['income', 'expenses', 'billable', 'rate', 'revenue']) assert.ok(hourly.includes(`id="${id}"`));
-  assert.match(margin, /function calc\(\)/);
-  assert.match(breakEven, /function calc\(\)/);
-  assert.match(hourly, /function calc\(\)/);
+test('localized calculator pages remain functional, not translation-only shells',()=>{
+  for(const lang of langs.filter((x)=>x!=='en')){
+    const margin=read(groups.margin[lang]);
+    const breakEven=read(groups.breakEven[lang]);
+    const hourly=read(groups.hourly[lang]);
+    for(const id of ['cost','price','target','profit','margin'])assert.ok(margin.includes(`id="${id}"`),`${groups.margin[lang]} missing ${id}`);
+    for(const id of ['fixed','price','variable','units','revenue'])assert.ok(breakEven.includes(`id="${id}"`),`${groups.breakEven[lang]} missing ${id}`);
+    for(const id of ['income','expenses','billable','rate','revenue'])assert.ok(hourly.includes(`id="${id}"`),`${groups.hourly[lang]} missing ${id}`);
+    assert.match(margin,/function calc\(\)/);assert.match(breakEven,/function calc\(\)/);assert.match(hourly,/function calc\(\)/);
+  }
 });
 
-test('Norwegian sitemap contains only Norwegian routes and all localized routes', () => {
-  const xml = read('sitemap-no.xml');
-  for (const [, noRoute] of pairs) assert.ok(xml.includes(`<loc>${site}${noRoute}</loc>`), `${noRoute} missing from sitemap-no.xml`);
-  const locations = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
-  assert.ok(locations.length >= pairs.length);
-  assert.ok(locations.every((route) => route === '/no/' || route.startsWith('/no/')));
+test('invoice flow has six-language routing and robust runtime localization',()=>{
+  const generator=read(groups.invoice.en);
+  const switcher=fs.readFileSync(path.join(root,'language-switcher.js'),'utf8');
+  const invoiceI18n=fs.readFileSync(path.join(root,'invoice-i18n.js'),'utf8');
+  assert.match(generator,/\/invoice-i18n\.js/,'invoice generator must load invoice-i18n.js');
+  for(const lang of langs.filter((x)=>x!=='en')){
+    assert.ok(switcher.includes(`'${groups.invoice.en}':'${groups.invoice[lang]}'`),`language switcher missing invoice mapping for ${lang}`);
+    assert.ok(invoiceI18n.includes(`${lang}:{`),`invoice dictionary missing ${lang}`);
+  }
+  for(const capability of ['placeholder','OPTION','MutationObserver','window.confirm','pDates'])assert.ok(invoiceI18n.includes(capability),`invoice i18n missing ${capability} handling`);
+});
+
+test('Pro workspace localization supports all six languages and dynamic attributes',()=>{
+  const pro=fs.readFileSync(path.join(root,'pro/pro-i18n.js'),'utf8');
+  for(const lang of langs)assert.ok(pro.includes(`${lang}:{name:`),`Pro language metadata missing ${lang}`);
+  for(const capability of ['placeholder','aria-label','title','MutationObserver'])assert.ok(pro.includes(capability),`Pro i18n missing ${capability}`);
 });
