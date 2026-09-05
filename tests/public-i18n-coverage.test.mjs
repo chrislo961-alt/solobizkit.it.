@@ -90,3 +90,8 @@ test('localized invoice entry points open the functional translated generator',(
   const switcher=fs.readFileSync(path.join(root,'language-switcher.js'),'utf8');
   assert.ok(switcher.includes("if(english==='/invoice-generator/')return `/invoice-generator/?lang=${code}`"), 'invoice language switching must stay on the functional generator');
 });
+
+
+test('public translation catalog contains no transport markers',()=>{
+  assert.doesNotMatch(publicI18n,/ZX\d{3}ZX/);
+});
