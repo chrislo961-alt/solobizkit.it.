@@ -4,6 +4,7 @@
   const nav=document.querySelector('.sbk-global-nav');
   if(!nav||nav.querySelector('.sbk-language-switcher'))return;
 
+  const STORAGE_KEY='sbk_language';
   const languages={
     en:{name:'English',short:'EN',root:'/'},
     no:{name:'Norsk',short:'NO',root:'/no/'},
@@ -12,37 +13,30 @@
     es:{name:'Español',short:'ES',root:'/es/'},
     fr:{name:'Français',short:'FR',root:'/fr/'}
   };
-  const norwegianMap={
-    '/':'/no/',
-    '/business-calculators/':'/no/kalkulatorer/',
-    '/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/',
-    '/break-even-calculator/':'/no/nullpunkt-kalkulator/',
-    '/hourly-rate-calculator/':'/no/timepris-kalkulator/'
+  const maps={
+    no:{
+      '/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/'
+    },
+    sv:{'/':'/sv/'},de:{'/':'/de/'},es:{'/':'/es/'},fr:{'/':'/fr/'}
   };
-  const englishMap=Object.fromEntries(Object.entries(norwegianMap).map(([en,no])=>[no,en]));
-  function currentLanguage(){
-    const match=location.pathname.match(/^\/(no|sv|de|es|fr)(?:\/|$)/);
-    return match?match[1]:'en';
-  }
-  function englishEquivalent(){
-    const lang=currentLanguage();
-    if(lang==='no')return englishMap[location.pathname]||'/';
-    if(lang!=='en')return '/';
-    return location.pathname||'/';
-  }
-  function pathFor(code){
-    const lang=currentLanguage();
-    if(code==='en')return englishEquivalent();
-    if(code==='no'){
-      if(lang==='no')return location.pathname;
-      if(lang==='en')return norwegianMap[location.pathname]||'/no/';
-      return '/no/';
-    }
-    if(lang===code)return location.pathname;
-    return languages[code].root;
-  }
+  const reverse={};
+  for(const [code,map] of Object.entries(maps))for(const [en,local] of Object.entries(map))reverse[local]={code,en};
 
-  const active=currentLanguage();
+  function urlLanguage(){const match=location.pathname.match(/^\/(no|sv|de|es|fr)(?:\/|$)/);return match?match[1]:null}
+  function savedLanguage(){try{const v=localStorage.getItem(STORAGE_KEY);return languages[v]?v:null}catch(_){return null}}
+  function activeLanguage(){return urlLanguage()||savedLanguage()||'en'}
+  function englishEquivalent(){return reverse[location.pathname]?.en||location.pathname||'/'}
+  function pathFor(code){
+    const english=englishEquivalent();
+    if(code==='en')return english;
+    const mapped=maps[code]?.[english];
+    if(mapped)return mapped;
+    return location.pathname;
+  }
+  function save(code){try{localStorage.setItem(STORAGE_KEY,code)}catch(_){}}
+
+  const active=activeLanguage();
+  if(urlLanguage())save(active);
   const wrap=document.createElement('div');
   wrap.className='sbk-language-switcher';
   wrap.innerHTML=`<button type="button" class="sbk-language-button" aria-haspopup="true" aria-expanded="false" aria-label="Language"><span class="sbk-language-globe" aria-hidden="true">🌐</span><span class="sbk-language-name">${languages[active].name}</span><span aria-hidden="true">▾</span></button><div class="sbk-language-menu" role="menu">${Object.entries(languages).map(([code,language])=>`<a role="menuitem" href="${pathFor(code)}" data-language="${code}" ${code===active?'aria-current="true"':''}><span>${language.name}</span><small>${language.short}</small></a>`).join('')}</div>`;
@@ -51,11 +45,13 @@
   const button=wrap.querySelector('button');
   function close(){wrap.classList.remove('is-open');button.setAttribute('aria-expanded','false')}
   button.addEventListener('click',()=>{
-    const open=!wrap.classList.contains('is-open');
-    wrap.classList.toggle('is-open',open);
-    button.setAttribute('aria-expanded',String(open));
+    const open=!wrap.classList.contains('is-open');wrap.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open));
   });
-  wrap.querySelectorAll('[data-language]').forEach(link=>link.addEventListener('click',()=>{try{localStorage.setItem('sbk_language',link.dataset.language)}catch(_){}}));
+  wrap.querySelectorAll('[data-language]').forEach(link=>link.addEventListener('click',(event)=>{
+    const code=link.dataset.language;save(code);
+    const target=link.getAttribute('href')||location.pathname;
+    if(target===location.pathname){event.preventDefault();location.reload()}
+  }));
   document.addEventListener('click',(event)=>{if(!wrap.contains(event.target))close()});
   document.addEventListener('keydown',(event)=>{if(event.key==='Escape')close()});
 })();
