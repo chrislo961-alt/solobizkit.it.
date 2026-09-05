@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://solobizkit.it.com/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://solobizkit.it.com/no/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://solobizkit.it.com/tools/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/business-calculators/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/no/kalkulatorer/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/small-business-toolkit/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/freelancer-toolkit/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://solobizkit.it.com/pdf-tools/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
@@ -65,9 +67,7 @@
   <url><loc>https://solobizkit.it.com/merge-pdf/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/methodology/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://solobizkit.it.com/monthly-paycheck-calculator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/no/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/no/fortjenestemargin-kalkulator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://solobizkit.it.com/no/kalkulatorer/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/no/nullpunkt-kalkulator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/no/timepris-kalkulator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://solobizkit.it.com/number-pages/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
