@@ -63,8 +63,28 @@
       const mapped=maps[code][raw];if(mapped&&mapped!==raw)link.setAttribute('href',mapped);
     });
   }
+  function clarifyPaymentOptions(){
+    const pathLang=urlLanguage()||'en';
+    const labels={en:'BANK / STRIPE',no:'BANK / STRIPE',sv:'BANK / STRIPE',de:'BANK / STRIPE',es:'BANCO / STRIPE',fr:'BANQUE / STRIPE'};
+    const bullets={
+      en:'✓ Recurring billing & bank / Stripe payments',
+      no:'✓ Fast fakturering og bank / Stripe-betalinger',
+      sv:'✓ Återkommande fakturering och bank / Stripe-betalningar',
+      de:'✓ Wiederkehrende Abrechnung und Bank- / Stripe-Zahlungen',
+      es:'✓ Facturación recurrente y pagos por banco / Stripe',
+      fr:'✓ Facturation récurrente et paiements banque / Stripe'
+    };
+    const flowTags=document.querySelectorAll('.hero-product-flow em');
+    if(flowTags.length)flowTags[flowTags.length-1].textContent=labels[pathLang]||labels.en;
+    document.querySelectorAll('.product-choice-card.pro li').forEach((item)=>{
+      const text=(item.textContent||'').toLowerCase();
+      if(text.includes('stripe')||text.includes('betaling')||text.includes('betalning')||text.includes('zahlung')||text.includes('pago')||text.includes('paiement')){
+        if(text.includes('recurr')||text.includes('fast fakturering')||text.includes('återkommande')||text.includes('wiederkehrende')||text.includes('facturación recurrente')||text.includes('facturation récurrente'))item.textContent=bullets[pathLang]||bullets.en;
+      }
+    });
+  }
 
-  window.sbkRelocalizeLinks=function(){localizeKnownLinks(activeLanguage())};
+  window.sbkRelocalizeLinks=function(){localizeKnownLinks(activeLanguage());clarifyPaymentOptions()};
 
   const active=activeLanguage();
   if(urlLanguage())save(active);
@@ -84,8 +104,8 @@
   const observer=new MutationObserver(()=>{
     if(relocalizeQueued)return;
     relocalizeQueued=true;
-    requestAnimationFrame(()=>{relocalizeQueued=false;localizeKnownLinks(activeLanguage())});
+    requestAnimationFrame(()=>{relocalizeQueued=false;localizeKnownLinks(activeLanguage());clarifyPaymentOptions()});
   });
   observer.observe(document.body,{childList:true,subtree:true});
-  bootPromise.then(()=>{window.sbkPublicI18n?.apply?.();window.sbkRelocalizeLinks?.()});
+  bootPromise.then(()=>{window.sbkPublicI18n?.apply?.();window.sbkRelocalizeLinks?.();clarifyPaymentOptions()});
 })();
