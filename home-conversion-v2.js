@@ -1,4 +1,5 @@
 (function(){
+  if(document.querySelector('script[data-sbk-site-parity]')||window.sbkSiteParity)return;
   if(location.pathname !== '/') return;
   function ready(fn){ if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, {once:true}); else fn(); }
   ready(function(){
