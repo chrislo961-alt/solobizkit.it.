@@ -6,14 +6,21 @@ const SITE = 'https://solobizkit.it.com';
 const errors = [];
 const rootLanguageRoutes = { en: '/', no: '/no/', sv: '/sv/', de: '/de/', es: '/es/', fr: '/fr/' };
 const languageRootSet = new Set(Object.values(rootLanguageRoutes));
-const languagePairs = new Map([
-  ['/', '/no/'],
-  ['/business-calculators/', '/no/kalkulatorer/'],
-  ['/profit-margin-calculator/', '/no/fortjenestemargin-kalkulator/'],
-  ['/break-even-calculator/', '/no/nullpunkt-kalkulator/'],
-  ['/hourly-rate-calculator/', '/no/timepris-kalkulator/']
-]);
-const reverseLanguagePairs = new Map([...languagePairs].map(([en, no]) => [no, en]));
+const languageGroups = [
+  { en:'/business-calculators/', no:'/no/kalkulatorer/', sv:'/sv/kalkylatorer/', de:'/de/rechner/', es:'/es/calculadoras/', fr:'/fr/calculateurs/' },
+  { en:'/profit-margin-calculator/', no:'/no/fortjenestemargin-kalkulator/', sv:'/sv/vinstmarginal-kalkylator/', de:'/de/gewinnmargen-rechner/', es:'/es/calculadora-margen-beneficio/', fr:'/fr/calculateur-marge-beneficiaire/' },
+  { en:'/break-even-calculator/', no:'/no/nullpunkt-kalkulator/', sv:'/sv/nollpunkts-kalkylator/', de:'/de/break-even-rechner/', es:'/es/calculadora-punto-equilibrio/', fr:'/fr/calculateur-seuil-rentabilite/' },
+  { en:'/hourly-rate-calculator/', no:'/no/timepris-kalkulator/', sv:'/sv/timpris-kalkylator/', de:'/de/stundensatz-rechner/', es:'/es/calculadora-tarifa-hora/', fr:'/fr/calculateur-taux-horaire/' },
+  { en:'/invoice-generator/', no:'/no/fakturagenerator/', sv:'/sv/fakturagenerator/', de:'/de/rechnungsgenerator/', es:'/es/generador-facturas/', fr:'/fr/generateur-factures/' }
+];
+const headerDestinations={
+  en:['/business-calculators/','/invoice-generator/','/pdf-tools/','/qr-code-generator/','/about/','/tools/'],
+  no:['/no/kalkulatorer/','/no/fakturagenerator/','/pdf-tools/','/qr-code-generator/','/about/','/tools/'],
+  sv:['/sv/kalkylatorer/','/sv/fakturagenerator/','/pdf-tools/','/qr-code-generator/','/about/','/tools/'],
+  de:['/de/rechner/','/de/rechnungsgenerator/','/pdf-tools/','/qr-code-generator/','/about/','/tools/'],
+  es:['/es/calculadoras/','/es/generador-facturas/','/pdf-tools/','/qr-code-generator/','/about/','/tools/'],
+  fr:['/fr/calculateurs/','/fr/generateur-factures/','/pdf-tools/','/qr-code-generator/','/about/','/tools/']
+};
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -22,30 +29,17 @@ function walk(directory) {
     return entry.isDirectory() ? walk(full) : [full];
   });
 }
-
-function match(html, expression) {
-  return html.match(expression)?.[1]?.trim() || '';
-}
+function match(html, expression) { return html.match(expression)?.[1]?.trim() || ''; }
+function routeLanguage(route){const found=route.match(/^\/(no|sv|de|es|fr)(?:\/|$)/);return found?.[1]||'en'}
 
 const files = walk(ROOT).filter((file) => file === path.join(ROOT, 'index.html') || file.endsWith(`${path.sep}index.html`));
 const pages = files.map((file) => {
   const html = fs.readFileSync(file, 'utf8');
   const relative = path.relative(ROOT, file);
   const route = relative === 'index.html' ? '/' : `/${path.dirname(relative).split(path.sep).join('/')}/`;
-  const structural = html
-    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
-    .replace(/<style\b[\s\S]*?<\/style>/gi, '')
-    .replace(/<textarea\b[\s\S]*?<\/textarea>/gi, '')
-    .replace(/<template\b[\s\S]*?<\/template>/gi, '');
+  const structural = html.replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(/<style\b[\s\S]*?<\/style>/gi, '').replace(/<textarea\b[\s\S]*?<\/textarea>/gi, '').replace(/<template\b[\s\S]*?<\/template>/gi, '');
   const robots = match(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i);
-  return {
-    file, html, structural, route, robots,
-    privateApp: /(?:^|,)\s*noindex\b/i.test(robots),
-    title: match(html, /<title>([^<]+)<\/title>/i),
-    description: match(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i),
-    canonical: match(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i),
-    links: [...structural.matchAll(/<a\b[^>]*href=["']([^"'#?]+)[^"']*["']/gi)].map((item) => item[1])
-  };
+  return {file,html,structural,route,robots,privateApp:/(?:^|,)\s*noindex\b/i.test(robots),title:match(html,/<title>([^<]+)<\/title>/i),description:match(html,/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i),canonical:match(html,/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i),links:[...structural.matchAll(/<a\b[^>]*href=["']([^"'#?]+)[^"']*["']/gi)].map((item)=>item[1])};
 });
 
 const publicPages = pages.filter((page) => !page.privateApp);
@@ -73,71 +67,31 @@ for (const page of pages) {
     if (page.description.length > 220) errors.push(`${label}: meta description exceeds 220 characters`);
     if (page.canonical !== `${SITE}${page.route}`) errors.push(`${label}: incorrect canonical URL`);
 
-    for (const [name, expression] of Object.entries({
-      robots: /<meta[^>]+name=["']robots["']/i,
-      themeColor: /<meta[^>]+name=["']theme-color["']/i,
-      favicon: /<link[^>]+rel=["']icon["']/i,
-      manifest: /<link[^>]+rel=["']manifest["']/i,
-      ogTitle: /<meta[^>]+property=["']og:title["']/i,
-      ogDescription: /<meta[^>]+property=["']og:description["']/i,
-      ogImage: /<meta[^>]+property=["']og:image["']/i,
-      twitterCard: /<meta[^>]+name=["']twitter:card["']/i,
-      analytics: /<script[^>]+src=["']\/analytics\.js["']/i,
-      consentStyles: /<link[^>]+href=["']\/analytics-consent\.css["']/i,
-      globalShell: /<link[^>]+href=["']\/global-shell\.css["']/i,
-      visualPolish: /<link[^>]+href=["']\/visual-polish\.css["']/i,
-      structuredData: /<script[^>]+type=["']application\/ld\+json["']/i
-    })) {
-      if (!expression.test(page.html)) errors.push(`${label}: missing ${name}`);
-    }
+    for (const [name, expression] of Object.entries({robots:/<meta[^>]+name=["']robots["']/i,themeColor:/<meta[^>]+name=["']theme-color["']/i,favicon:/<link[^>]+rel=["']icon["']/i,manifest:/<link[^>]+rel=["']manifest["']/i,ogTitle:/<meta[^>]+property=["']og:title["']/i,ogDescription:/<meta[^>]+property=["']og:description["']/i,ogImage:/<meta[^>]+property=["']og:image["']/i,twitterCard:/<meta[^>]+name=["']twitter:card["']/i,analytics:/<script[^>]+src=["']\/analytics\.js["']/i,consentStyles:/<link[^>]+href=["']\/analytics-consent\.css["']/i,globalShell:/<link[^>]+href=["']\/global-shell\.css["']/i,visualPolish:/<link[^>]+href=["']\/visual-polish\.css["']/i,structuredData:/<script[^>]+type=["']application\/ld\+json["']/i})) if (!expression.test(page.html)) errors.push(`${label}: missing ${name}`);
 
     const headers = page.structural.match(/<header\b[^>]*>[\s\S]*?<\/header>/gi) || [];
-    if (headers.length !== 1 || !/class=["'][^"']*sbk-global-header/.test(headers[0] || '')) {
-      errors.push(`${label}: must use exactly one shared global header`);
-    } else {
-      const norwegian = label === '/no/' || label.startsWith('/no/');
-      const requiredLinks = norwegian
-        ? ['/no/kalkulatorer/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/']
-        : ['/business-calculators/', '/invoice-generator/', '/pdf-tools/', '/qr-code-generator/', '/about/', '/tools/'];
-      for (const href of requiredLinks) {
-        if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) errors.push(`${label}: shared header is missing ${href}`);
-      }
+    if (headers.length !== 1 || !/class=["'][^"']*sbk-global-header/.test(headers[0] || '')) errors.push(`${label}: must use exactly one shared global header`);
+    else {
+      const lang=routeLanguage(label);
+      for (const href of headerDestinations[lang]) if (!new RegExp(`href=["']${href.replaceAll('/', '\\/')}["']`).test(headers[0])) errors.push(`${label}: shared header is missing ${href}`);
       if (!/class=["']sbk-brand-icon["'][^>]+src=["']\/favicon\.svg["']/.test(headers[0])) errors.push(`${label}: shared header is missing the brand icon`);
     }
 
     if (languageRootSet.has(label)) {
-      for (const [lang, route] of Object.entries(rootLanguageRoutes)) {
-        const href = `${SITE}${route}`;
-        if (!hasAlternate(page.html, lang, href)) errors.push(`${label}: missing hreflang ${lang} -> ${href}`);
-      }
+      for (const [lang, route] of Object.entries(rootLanguageRoutes)) if (!hasAlternate(page.html, lang, `${SITE}${route}`)) errors.push(`${label}: missing hreflang ${lang} -> ${SITE}${route}`);
       if (!hasAlternate(page.html, 'x-default', `${SITE}/`)) errors.push(`${label}: missing hreflang x-default -> ${SITE}/`);
     } else {
-      const enRoute = languagePairs.has(label) ? label : reverseLanguagePairs.get(label);
-      const noRoute = languagePairs.get(label) || (reverseLanguagePairs.has(label) ? label : null);
-      if (enRoute && noRoute) {
-        for (const [lang, href] of [['en', `${SITE}${enRoute}`], ['no', `${SITE}${noRoute}`], ['x-default', `${SITE}${enRoute}`]]) {
-          if (!hasAlternate(page.html, lang, href)) errors.push(`${label}: missing hreflang ${lang} -> ${href}`);
-        }
+      const group=languageGroups.find((candidate)=>Object.values(candidate).includes(label));
+      if(group){
+        for(const [lang,route] of Object.entries(group)) if(!hasAlternate(page.html,lang,`${SITE}${route}`)) errors.push(`${label}: missing hreflang ${lang} -> ${SITE}${route}`);
+        if(!hasAlternate(page.html,'x-default',`${SITE}${group.en}`)) errors.push(`${label}: missing hreflang x-default -> ${SITE}${group.en}`);
       }
     }
-  } else if (!/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(page.html)) {
-    errors.push(`${label}: private app route must explicitly declare noindex`);
-  }
+  } else if (!/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(page.html)) errors.push(`${label}: private app route must explicitly declare noindex`);
 
-  if (['/', '/tools/'].includes(label)) {
-    for (const icon of page.structural.matchAll(/<div class=["']quick-icon["']>([\s\S]*?)<\/div>/gi)) {
-      if (!/<svg\b/.test(icon[1])) errors.push(`${label}: quick-card icon must be SVG`);
-    }
-  }
-
-  for (const json of page.html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
-    try { JSON.parse(json[1]); } catch { errors.push(`${label}: invalid JSON-LD`); }
-  }
-
-  if (!page.privateApp) {
-    titleOwners.set(page.title, [...(titleOwners.get(page.title) || []), label]);
-    descriptionOwners.set(page.description, [...(descriptionOwners.get(page.description) || []), label]);
-  }
+  if (['/', '/tools/'].includes(label)) for (const icon of page.structural.matchAll(/<div class=["']quick-icon["']>([\s\S]*?)<\/div>/gi)) if (!/<svg\b/.test(icon[1])) errors.push(`${label}: quick-card icon must be SVG`);
+  for (const json of page.html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) try { JSON.parse(json[1]); } catch { errors.push(`${label}: invalid JSON-LD`); }
+  if (!page.privateApp) {titleOwners.set(page.title,[...(titleOwners.get(page.title)||[]),label]);descriptionOwners.set(page.description,[...(descriptionOwners.get(page.description)||[]),label]);}
 
   for (const url of page.links) {
     if (!url.startsWith('/') || url.startsWith('//')) continue;
@@ -146,12 +100,7 @@ for (const page of pages) {
     else if (routes.has(target)) continue;
     else if (!fs.existsSync(path.join(ROOT, url)) && !fs.existsSync(path.join(ROOT, url, 'index.html'))) errors.push(`${label}: broken internal link ${url}`);
   }
-
-  for (const asset of page.html.matchAll(/(?:src|href)=["'](\/[^"'#?]+)["']/gi)) {
-    const url = asset[1];
-    if (url.endsWith('/')) continue;
-    if (!fs.existsSync(path.join(ROOT, url))) errors.push(`${label}: missing local asset ${url}`);
-  }
+  for (const asset of page.html.matchAll(/(?:src|href)=["'](\/[^"'#?]+)["']/gi)) {const url=asset[1];if(url.endsWith('/'))continue;if(!fs.existsSync(path.join(ROOT,url)))errors.push(`${label}: missing local asset ${url}`);}
 }
 
 for (const [title, owners] of titleOwners) if (title && owners.length > 1) errors.push(`duplicate title: ${title}`);
@@ -172,12 +121,9 @@ if (fs.existsSync(path.join(ROOT, 'sitemap-no.xml'))) {
   for (const route of noRoutes) if (!expectedNoRoutes.includes(route)) errors.push(`${route}: non-Norwegian URL in sitemap-no.xml`);
 }
 
-for (const required of ['favicon.svg', 'favicon.ico', 'favicon-192.png', 'favicon-512.png', 'site.webmanifest', 'robots.txt', 'ads.txt']) {
-  if (!fs.existsSync(path.join(ROOT, required))) errors.push(`missing required root asset ${required}`);
-}
+for (const required of ['favicon.svg', 'favicon.ico', 'favicon-192.png', 'favicon-512.png', 'site.webmanifest', 'robots.txt', 'ads.txt']) if (!fs.existsSync(path.join(ROOT, required))) errors.push(`missing required root asset ${required}`);
 const socialImage = path.join(ROOT, 'assets/images/solobizkit-social-preview.png');
-if (!fs.existsSync(socialImage)) errors.push('missing social preview image');
-else if (fs.statSync(socialImage).size > 250_000) errors.push('social preview image exceeds 250 KB');
+if (!fs.existsSync(socialImage)) errors.push('missing social preview image'); else if (fs.statSync(socialImage).size > 250_000) errors.push('social preview image exceeds 250 KB');
 const allHtml = files.map((file) => fs.readFileSync(file, 'utf8')).join('\n');
 if (/analytics-consent\.js/.test(allHtml)) errors.push('obsolete analytics-consent.js reference remains');
 if (/href=["']\/#tools/.test(allHtml)) errors.push('obsolete /#tools link remains');
@@ -187,14 +133,7 @@ if (!/@media\(max-width:600px\)/.test(visualCss)) errors.push('visual polish is 
 if (!/#sbk-accept\{background:#2563eb!important/.test(visualCss)) errors.push('analytics consent button does not use the brand color');
 const ads = fs.readFileSync(path.join(ROOT, 'ads.txt'), 'utf8');
 if (!/google\.com\s*,\s*pub-9212084765206199\s*,\s*DIRECT\s*,\s*f08c47fec0942fa0/i.test(ads)) errors.push('ads.txt publisher line is incorrect');
-for (const manifest of ['site.webmanifest', 'manifest.webmanifest']) {
-  try { JSON.parse(fs.readFileSync(path.join(ROOT, manifest), 'utf8')); }
-  catch { errors.push(`${manifest} is not valid JSON`); }
-}
+for (const manifest of ['site.webmanifest', 'manifest.webmanifest']) try { JSON.parse(fs.readFileSync(path.join(ROOT, manifest), 'utf8')); } catch { errors.push(`${manifest} is not valid JSON`); }
 
-if (errors.length) {
-  console.error(errors.map((error) => `- ${error}`).join('\n'));
-  process.exit(1);
-}
-
-console.log(`Verified ${publicPages.length} public routes, ${pages.length - publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, multilingual entrypoints, localized hreflang, metadata, structured data, local assets and internal links.`);
+if (errors.length) {console.error(errors.map((error) => `- ${error}`).join('\n'));process.exit(1);}
+console.log(`Verified ${publicPages.length} public routes, ${pages.length-publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, six-language navigation/hreflang, metadata, structured data, local assets and internal links.`);
