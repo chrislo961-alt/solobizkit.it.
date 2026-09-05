@@ -38,7 +38,7 @@
   };
   const maps={
     no:{'/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/','/invoice-generator/':'/no/fakturagenerator/'},
-    sv:{'/':'/sv/','/business-calculators/':'/sv/kalkylatorer/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkulator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/','/invoice-generator/':'/sv/fakturagenerator/'},
+    sv:{'/':'/sv/','/business-calculators/':'/sv/kalkylatorer/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/','/invoice-generator/':'/sv/fakturagenerator/'},
     de:{'/':'/de/','/business-calculators/':'/de/rechner/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/','/break-even-calculator/':'/de/break-even-rechner/','/hourly-rate-calculator/':'/de/stundensatz-rechner/','/invoice-generator/':'/de/rechnungsgenerator/'},
     es:{'/':'/es/','/business-calculators/':'/es/calculadoras/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/','/break-even-calculator/':'/es/calculadora-punto-equilibrio/','/hourly-rate-calculator/':'/es/calculadora-tarifa-hora/','/invoice-generator/':'/es/generador-facturas/'},
     fr:{'/':'/fr/','/business-calculators/':'/fr/calculateurs/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/','/break-even-calculator/':'/fr/calculateur-seuil-rentabilite/','/hourly-rate-calculator/':'/fr/calculateur-taux-horaire/','/invoice-generator/':'/fr/generateur-factures/'}
