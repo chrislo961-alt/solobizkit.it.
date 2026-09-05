@@ -90,8 +90,16 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
   let html = fs.readFileSync(file, 'utf8');
   const route = routeForFile(file);
 
-  if (route.startsWith('/pro/') && !/<script[^>]+src=["']\/pro\/leads-nav\.js["']/i.test(html)) {
-    html = html.replace('</body>', '<script src="/pro/leads-nav.js" defer></script></body>');
+  if (route.startsWith('/pro/')) {
+    if (!/<script[^>]+src=["']\/pro\/leads-nav\.js["']/i.test(html)) {
+      html = html.replace('</body>', '<script src="/pro/leads-nav.js" defer></script></body>');
+    }
+    if (!/<link[^>]+href=["']\/pro\/pro-i18n\.css["']/i.test(html)) {
+      html = html.replace('</head>', '<link rel="stylesheet" href="/pro/pro-i18n.css"></head>');
+    }
+    if (!/<script[^>]+src=["']\/pro\/pro-i18n\.js["']/i.test(html)) {
+      html = html.replace('</body>', '<script src="/pro/pro-i18n.js" defer></script></body>');
+    }
   }
 
   const title = value(html, /<title>([^<]+)<\/title>/i);
@@ -159,4 +167,4 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
   fs.writeFileSync(file, html);
 }
 
-console.log('Normalized route metadata, shared assets, language alternates, localized navigation, guide interactions and Pro Leads navigation.');
+console.log('Normalized route metadata, shared assets, language alternates, localized navigation, guide interactions and six-language Pro workspace.');
