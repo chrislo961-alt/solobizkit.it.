@@ -4,7 +4,7 @@
 
   if(!document.querySelector('script[data-sbk-public-i18n]')){
     const i18n=document.createElement('script');
-    i18n.src='/public-i18n.js?v=20260905-1';
+    i18n.src='/public-i18n.js?v=20260905-2';
     i18n.defer=true;
     i18n.dataset.sbkPublicI18n='1';
     document.head.appendChild(i18n);
@@ -23,11 +23,11 @@
     fr:{name:'Français',short:'FR',root:'/fr/'}
   };
   const maps={
-    no:{'/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/'},
-    sv:{'/':'/sv/','/business-calculators/':'/sv/kalkylatorer/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/'},
-    de:{'/':'/de/','/business-calculators/':'/de/rechner/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/','/break-even-calculator/':'/de/break-even-rechner/','/hourly-rate-calculator/':'/de/stundensatz-rechner/'},
-    es:{'/':'/es/','/business-calculators/':'/es/calculadoras/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/','/break-even-calculator/':'/es/calculadora-punto-equilibrio/','/hourly-rate-calculator/':'/es/calculadora-tarifa-hora/'},
-    fr:{'/':'/fr/','/business-calculators/':'/fr/calculateurs/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/','/break-even-calculator/':'/fr/calculateur-seuil-rentabilite/','/hourly-rate-calculator/':'/fr/calculateur-taux-horaire/'}
+    no:{'/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/','/invoice-generator/':'/no/fakturagenerator/'},
+    sv:{'/':'/sv/','/business-calculators/':'/sv/kalkylatorer/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/','/invoice-generator/':'/sv/fakturagenerator/'},
+    de:{'/':'/de/','/business-calculators/':'/de/rechner/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/','/break-even-calculator/':'/de/break-even-rechner/','/hourly-rate-calculator/':'/de/stundensatz-rechner/','/invoice-generator/':'/de/rechnungsgenerator/'},
+    es:{'/':'/es/','/business-calculators/':'/es/calculadoras/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/','/break-even-calculator/':'/es/calculadora-punto-equilibrio/','/hourly-rate-calculator/':'/es/calculadora-tarifa-hora/','/invoice-generator/':'/es/generador-facturas/'},
+    fr:{'/':'/fr/','/business-calculators/':'/fr/calculateurs/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/','/break-even-calculator/':'/fr/calculateur-seuil-rentabilite/','/hourly-rate-calculator/':'/fr/calculateur-taux-horaire/','/invoice-generator/':'/fr/generateur-factures/'}
   };
   const reverse={};
   for(const map of Object.values(maps))for(const [en,local] of Object.entries(map))reverse[local]=en;
@@ -36,19 +36,13 @@
   function savedLanguage(){try{const v=localStorage.getItem(STORAGE_KEY);return languages[v]?v:null}catch(_){return null}}
   function activeLanguage(){return urlLanguage()||savedLanguage()||'en'}
   function englishEquivalent(){return reverse[location.pathname]||location.pathname||'/'}
-  function pathFor(code){
-    const english=englishEquivalent();
-    if(code==='en')return english;
-    return maps[code]?.[english]||location.pathname;
-  }
+  function pathFor(code){const english=englishEquivalent();if(code==='en')return english;return maps[code]?.[english]||location.pathname}
   function save(code){try{localStorage.setItem(STORAGE_KEY,code)}catch(_){}}
   function localizeKnownLinks(code){
     if(code==='en'||!maps[code])return;
     document.querySelectorAll('a[href]').forEach((link)=>{
-      const raw=link.getAttribute('href');
-      if(!raw||!raw.startsWith('/'))return;
-      const mapped=maps[code][raw];
-      if(mapped)link.setAttribute('href',mapped);
+      const raw=link.getAttribute('href');if(!raw||!raw.startsWith('/'))return;
+      const mapped=maps[code][raw];if(mapped)link.setAttribute('href',mapped);
     });
   }
 
@@ -58,8 +52,7 @@
   const wrap=document.createElement('div');
   wrap.className='sbk-language-switcher';
   wrap.innerHTML=`<button type="button" class="sbk-language-button" aria-haspopup="true" aria-expanded="false" aria-label="Language"><span class="sbk-language-globe" aria-hidden="true">🌐</span><span class="sbk-language-name">${languages[active].name}</span><span aria-hidden="true">▾</span></button><div class="sbk-language-menu" role="menu">${Object.entries(languages).map(([code,language])=>`<a role="menuitem" href="${pathFor(code)}" data-language="${code}" ${code===active?'aria-current="true"':''}><span>${language.name}</span><small>${language.short}</small></a>`).join('')}</div>`;
-  const tools=nav.querySelector('.sbk-global-tools');
-  if(tools)nav.insertBefore(wrap,tools);else nav.appendChild(wrap);
+  const tools=nav.querySelector('.sbk-global-tools');if(tools)nav.insertBefore(wrap,tools);else nav.appendChild(wrap);
   const button=wrap.querySelector('button');
   function close(){wrap.classList.remove('is-open');button.setAttribute('aria-expanded','false')}
   button.addEventListener('click',()=>{const open=!wrap.classList.contains('is-open');wrap.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open))});
