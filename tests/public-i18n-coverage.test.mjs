@@ -88,5 +88,5 @@ test('localized invoice entry points open the functional translated generator',(
     assert.match(html,new RegExp(`href=["']/invoice-generator/\\?lang=${code}["']`),`${relative} must open the functional invoice generator`);
   }
   const switcher=fs.readFileSync(path.join(root,'language-switcher.js'),'utf8');
-  assert.match(switcher,/english==='\\/invoice-generator\\/'\)return `\\/invoice-generator\\/\\?lang=\\$\\{code\\}`/, 'invoice language switching must stay on the functional generator');
+  assert.ok(switcher.includes("if(english==='/invoice-generator/')return `/invoice-generator/?lang=${code}`"), 'invoice language switching must stay on the functional generator');
 });
