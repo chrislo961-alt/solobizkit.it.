@@ -5,12 +5,13 @@ const ROOT = process.cwd();
 const SITE = 'https://solobizkit.it.com';
 const SOCIAL_IMAGE = `${SITE}/assets/images/solobizkit-social-preview.png`;
 const ROOT_LANGUAGE_ROUTES = { en: '/', no: '/no/', sv: '/sv/', de: '/de/', es: '/es/', fr: '/fr/' };
+const LANGUAGE_GROUPS = [
+  { en:'/profit-margin-calculator/', no:'/no/fortjenestemargin-kalkulator/', sv:'/sv/vinstmarginal-kalkylator/', de:'/de/gewinnmargen-rechner/', es:'/es/calculadora-margen-beneficio/', fr:'/fr/calculateur-marge-beneficiaire/' },
+  { en:'/break-even-calculator/', no:'/no/nullpunkt-kalkulator/', sv:'/sv/nollpunkts-kalkylator/', de:'/de/break-even-rechner/', es:'/es/calculadora-punto-equilibrio/', fr:'/fr/calculateur-seuil-rentabilite/' },
+  { en:'/hourly-rate-calculator/', no:'/no/timepris-kalkulator/', sv:'/sv/timpris-kalkylator/', de:'/de/stundensatz-rechner/', es:'/es/calculadora-tarifa-hora/', fr:'/fr/calculateur-taux-horaire/' }
+];
 const LANGUAGE_PAIRS = new Map([
-  ['/', '/no/'],
-  ['/business-calculators/', '/no/kalkulatorer/'],
-  ['/profit-margin-calculator/', '/no/fortjenestemargin-kalkulator/'],
-  ['/break-even-calculator/', '/no/nullpunkt-kalkulator/'],
-  ['/hourly-rate-calculator/', '/no/timepris-kalkulator/']
+  ['/business-calculators/', '/no/kalkulatorer/']
 ]);
 const REVERSE_LANGUAGE_PAIRS = new Map([...LANGUAGE_PAIRS].map(([en, no]) => [no, en]));
 const PUBLIC_LANGUAGE_HEADERS = {
@@ -33,7 +34,6 @@ function attr(text) { return text.replaceAll('&', '&amp;').replaceAll('"', '&quo
 function routeForFile(file) { const relative = path.relative(ROOT, file); return relative === 'index.html' ? '/' : `/${path.dirname(relative).split(path.sep).join('/')}/`; }
 function isPrivate(html) { const robots = value(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i); return /(?:^|,)\s*noindex\b/i.test(robots); }
 function routeLanguage(route) { const match=route.match(/^\/(no|sv|de|es|fr)(?:\/|$)/); return match?.[1] || 'en'; }
-function isNorwegianRoute(route) { return routeLanguage(route)==='no'; }
 
 function currentAttr(route, href) {
   if (href === '/guides/' && route.startsWith('/guides/')) return ' aria-current="page"';
@@ -58,12 +58,19 @@ function sharedHeader(route) {
 }
 
 function injectLanguageAlternates(html, route) {
-  const rootCodes=Object.entries(ROOT_LANGUAGE_ROUTES).filter(([,r])=>r===route);
-  if(rootCodes.length){
+  if(Object.values(ROOT_LANGUAGE_ROUTES).includes(route)){
     html=html.replace(/<link[^>]+rel=["']alternate["'][^>]+hreflang=["'][^"']+["'][^>]*>/gi,'');
     const alternates=Object.entries(ROOT_LANGUAGE_ROUTES).map(([code,r])=>`<link rel="alternate" hreflang="${code}" href="${SITE}${r}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${SITE}/">`;
     return html.replace('</head>',`${alternates}</head>`);
   }
+
+  const group=LANGUAGE_GROUPS.find((candidate)=>Object.values(candidate).includes(route));
+  if(group){
+    html=html.replace(/<link[^>]+rel=["']alternate["'][^>]+hreflang=["'](?:en|no|sv|de|es|fr|x-default)["'][^>]*>/gi,'');
+    const alternates=Object.entries(group).map(([code,r])=>`<link rel="alternate" hreflang="${code}" href="${SITE}${r}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${SITE}${group.en}">`;
+    return html.replace('</head>',`${alternates}</head>`);
+  }
+
   const enRoute=LANGUAGE_PAIRS.has(route)?route:REVERSE_LANGUAGE_PAIRS.get(route);
   const noRoute=LANGUAGE_PAIRS.get(route)||(REVERSE_LANGUAGE_PAIRS.has(route)?route:null);
   if(!enRoute||!noRoute)return html;
@@ -108,6 +115,7 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
   if(!/<script[^>]+src=["']\/analytics\.js["']/i.test(html))html=html.replace('</head>','<script src="/analytics.js" defer></script></head>');
 
   if(!isPrivate(html)){
+    if(!/<link[^>]+href=["']\/visual-polish\.css["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/visual-polish.css"></head>');
     if(!/<link[^>]+href=["']\/language-switcher\.css["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/language-switcher.css"></head>');
     if(!/<script[^>]+src=["']\/language-switcher\.js["']/i.test(html))html=html.replace('</head>','<script src="/language-switcher.js" defer></script></head>');
     html=injectLanguageAlternates(html,route);
@@ -123,4 +131,4 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
   fs.writeFileSync(file,html);
 }
 
-console.log('Normalized metadata, six-language public navigation, hreflang, guide interactions and six-language Pro workspace.');
+console.log('Normalized metadata, six-language public navigation, full calculator hreflang, visual polish, guide interactions and six-language Pro workspace.');
