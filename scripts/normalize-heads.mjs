@@ -9,16 +9,15 @@ const LANGUAGE_GROUPS = [
   { en:'/business-calculators/', no:'/no/kalkulatorer/', sv:'/sv/kalkylatorer/', de:'/de/rechner/', es:'/es/calculadoras/', fr:'/fr/calculateurs/' },
   { en:'/profit-margin-calculator/', no:'/no/fortjenestemargin-kalkulator/', sv:'/sv/vinstmarginal-kalkylator/', de:'/de/gewinnmargen-rechner/', es:'/es/calculadora-margen-beneficio/', fr:'/fr/calculateur-marge-beneficiaire/' },
   { en:'/break-even-calculator/', no:'/no/nullpunkt-kalkulator/', sv:'/sv/nollpunkts-kalkylator/', de:'/de/break-even-rechner/', es:'/es/calculadora-punto-equilibrio/', fr:'/fr/calculateur-seuil-rentabilite/' },
-  { en:'/hourly-rate-calculator/', no:'/no/timepris-kalkulator/', sv:'/sv/timpris-kalkylator/', de:'/de/stundensatz-rechner/', es:'/es/calculadora-tarifa-hora/', fr:'/fr/calculateur-taux-horaire/' }
+  { en:'/hourly-rate-calculator/', no:'/no/timepris-kalkulator/', sv:'/sv/timpris-kalkylator/', de:'/de/stundensatz-rechner/', es:'/es/calculadora-tarifa-hora/', fr:'/fr/calculateur-taux-horaire/' },
+  { en:'/invoice-generator/', no:'/no/fakturagenerator/', sv:'/sv/fakturagenerator/', de:'/de/rechnungsgenerator/', es:'/es/generador-facturas/', fr:'/fr/generateur-factures/' }
 ];
-const LANGUAGE_PAIRS = new Map();
-const REVERSE_LANGUAGE_PAIRS = new Map();
 const PUBLIC_LANGUAGE_HEADERS = {
-  no: { home: '/no/', homeLabel: 'SoloBizKit hjem', navLabel: 'Hovedmeny', tools: 'Alle verktøy', links: [['/no/kalkulatorer/','Kalkulatorer'],['/invoice-generator/','Faktura'],['/pdf-tools/','PDF-verktøy'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
-  sv: { home: '/sv/', homeLabel: 'SoloBizKit hem', navLabel: 'Huvudmeny', tools: 'Alla verktyg', links: [['/sv/kalkylatorer/','Kalkylatorer'],['/invoice-generator/','Fakturor'],['/pdf-tools/','PDF-verktyg'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
-  de: { home: '/de/', homeLabel: 'SoloBizKit Startseite', navLabel: 'Hauptnavigation', tools: 'Alle Tools', links: [['/de/rechner/','Rechner'],['/invoice-generator/','Rechnungen'],['/pdf-tools/','PDF-Tools'],['/qr-code-generator/','QR-Codes'],['/guides/','Guides'],['/about/','Über uns']] },
-  es: { home: '/es/', homeLabel: 'Inicio de SoloBizKit', navLabel: 'Navegación principal', tools: 'Todas las herramientas', links: [['/es/calculadoras/','Calculadoras'],['/invoice-generator/','Facturas'],['/pdf-tools/','PDF'],['/qr-code-generator/','Códigos QR'],['/guides/','Guías'],['/about/','Acerca de']] },
-  fr: { home: '/fr/', homeLabel: 'Accueil SoloBizKit', navLabel: 'Navigation principale', tools: 'Tous les outils', links: [['/fr/calculateurs/','Calculateurs'],['/invoice-generator/','Factures'],['/pdf-tools/','Outils PDF'],['/qr-code-generator/','Codes QR'],['/guides/','Guides'],['/about/','À propos']] }
+  no: { home: '/no/', homeLabel: 'SoloBizKit hjem', navLabel: 'Hovedmeny', tools: 'Alle verktøy', links: [['/no/kalkulatorer/','Kalkulatorer'],['/no/fakturagenerator/','Faktura'],['/pdf-tools/','PDF-verktøy'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
+  sv: { home: '/sv/', homeLabel: 'SoloBizKit hem', navLabel: 'Huvudmeny', tools: 'Alla verktyg', links: [['/sv/kalkylatorer/','Kalkylatorer'],['/sv/fakturagenerator/','Fakturor'],['/pdf-tools/','PDF-verktyg'],['/qr-code-generator/','QR-koder'],['/guides/','Guider'],['/about/','Om']] },
+  de: { home: '/de/', homeLabel: 'SoloBizKit Startseite', navLabel: 'Hauptnavigation', tools: 'Alle Tools', links: [['/de/rechner/','Rechner'],['/de/rechnungsgenerator/','Rechnungen'],['/pdf-tools/','PDF-Tools'],['/qr-code-generator/','QR-Codes'],['/guides/','Guides'],['/about/','Über uns']] },
+  es: { home: '/es/', homeLabel: 'Inicio de SoloBizKit', navLabel: 'Navegación principal', tools: 'Todas las herramientas', links: [['/es/calculadoras/','Calculadoras'],['/es/generador-facturas/','Facturas'],['/pdf-tools/','PDF'],['/qr-code-generator/','Códigos QR'],['/guides/','Guías'],['/about/','Acerca de']] },
+  fr: { home: '/fr/', homeLabel: 'Accueil SoloBizKit', navLabel: 'Navigation principale', tools: 'Tous les outils', links: [['/fr/calculateurs/','Calculateurs'],['/fr/generateur-factures/','Factures'],['/pdf-tools/','Outils PDF'],['/qr-code-generator/','Codes QR'],['/guides/','Guides'],['/about/','À propos']] }
 };
 
 function walk(directory) {
@@ -62,19 +61,10 @@ function injectLanguageAlternates(html, route) {
     const alternates=Object.entries(ROOT_LANGUAGE_ROUTES).map(([code,r])=>`<link rel="alternate" hreflang="${code}" href="${SITE}${r}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${SITE}/">`;
     return html.replace('</head>',`${alternates}</head>`);
   }
-
   const group=LANGUAGE_GROUPS.find((candidate)=>Object.values(candidate).includes(route));
-  if(group){
-    html=html.replace(/<link[^>]+rel=["']alternate["'][^>]+hreflang=["'](?:en|no|sv|de|es|fr|x-default)["'][^>]*>/gi,'');
-    const alternates=Object.entries(group).map(([code,r])=>`<link rel="alternate" hreflang="${code}" href="${SITE}${r}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${SITE}${group.en}">`;
-    return html.replace('</head>',`${alternates}</head>`);
-  }
-
-  const enRoute=LANGUAGE_PAIRS.has(route)?route:REVERSE_LANGUAGE_PAIRS.get(route);
-  const noRoute=LANGUAGE_PAIRS.get(route)||(REVERSE_LANGUAGE_PAIRS.has(route)?route:null);
-  if(!enRoute||!noRoute)return html;
-  html=html.replace(/<link[^>]+rel=["']alternate["'][^>]+hreflang=["'](?:en|no|x-default)["'][^>]*>/gi,'');
-  const alternates=`<link rel="alternate" hreflang="en" href="${SITE}${enRoute}"><link rel="alternate" hreflang="no" href="${SITE}${noRoute}"><link rel="alternate" hreflang="x-default" href="${SITE}${enRoute}">`;
+  if(!group)return html;
+  html=html.replace(/<link[^>]+rel=["']alternate["'][^>]+hreflang=["'](?:en|no|sv|de|es|fr|x-default)["'][^>]*>/gi,'');
+  const alternates=Object.entries(group).map(([code,r])=>`<link rel="alternate" hreflang="${code}" href="${SITE}${r}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${SITE}${group.en}">`;
   return html.replace('</head>',`${alternates}</head>`);
 }
 
@@ -88,13 +78,14 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
     if(!/<script[^>]+src=["']\/pro\/pro-i18n\.js["']/i.test(html))html=html.replace('</body>','<script src="/pro/pro-i18n.js" defer></script></body>');
   }
 
+  if(route==='/invoice-generator/'&&!/<script[^>]+src=["']\/invoice-i18n\.js["']/i.test(html))html=html.replace('</body>','<script src="/invoice-i18n.js" defer></script></body>');
+
   const title=value(html,/<title>([^<]+)<\/title>/i);
   const description=value(html,/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
   const canonical=value(html,/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
   if(!title||!description||!canonical){fs.writeFileSync(file,html);continue;}
 
   html=html.replace(/<meta[^>]+name=["']theme-color["'][^>]*>/gi,'').replace(/<link[^>]+rel=["']manifest["'][^>]*>/gi,'').replace(/<link[^>]+rel=["']icon["'][^>]*>/gi,'').replace(/<meta[^>]+property=["']og:site_name["'][^>]*>/gi,'').replace(/<meta[^>]+property=["']og:image["'][^>]*>/gi,'').replace(/<meta[^>]+name=["']twitter:image["'][^>]*>/gi,'').replace(/<meta[^>]+name=["']twitter:card["'][^>]*>/gi,'').replace(/<script[^>]+src=["']\/analytics-consent\.js["'][^>]*><\/script>/gi,'<script src="/analytics.js" defer></script>');
-
   if(!/<meta[^>]+name=["']robots["']/i.test(html))html=html.replace(/(<link[^>]+rel=["']canonical["'][^>]*>)/i,'$1<meta name="robots" content="index,follow,max-image-preview:large">');
   if(!/<meta[^>]+property=["']og:title["']/i.test(html))html=html.replace('</head>',`<meta property="og:title" content="${attr(title)}"></head>`);
   if(!/<meta[^>]+property=["']og:description["']/i.test(html))html=html.replace('</head>',`<meta property="og:description" content="${attr(description)}"></head>`);
@@ -107,7 +98,6 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
     const schema=JSON.stringify({'@context':'https://schema.org','@type':'WebPage',name:title.replace(/\s*\|\s*SoloBizKit\s*$/i,''),url:canonical,description,...(lang!=='en'?{inLanguage:lang}:{}),isPartOf:{'@type':'WebSite',name:'SoloBizKit',url:`${SITE}/`}});
     html=html.replace('</head>',`<script type="application/ld+json">${schema}</script></head>`);
   }
-
   const standard=`<meta name="theme-color" content="#2563eb"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="manifest" href="/site.webmanifest"><meta property="og:site_name" content="SoloBizKit"><meta property="og:image" content="${SOCIAL_IMAGE}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${SOCIAL_IMAGE}">`;
   html=html.replace('</head>',`${standard}</head>`);
   if(!/<link[^>]+href=["']\/analytics-consent\.css["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/analytics-consent.css"></head>');
@@ -119,9 +109,7 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
     if(!/<script[^>]+src=["']\/language-switcher\.js["']/i.test(html))html=html.replace('</head>','<script src="/language-switcher.js" defer></script></head>');
     html=injectLanguageAlternates(html,route);
   }
-
   if(route.startsWith('/guides/')&&route!=='/guides/'&&!/<script[^>]+src=["']\/guides\/guide-interactions\.js["']/i.test(html))html=html.replace('</body>','<script src="/guides/guide-interactions.js" defer></script></body>');
-
   if(!isPrivate(html)){
     const header=sharedHeader(route);
     if(/<header\b[^>]*class=["'][^"']*sbk-global-header[^"']*["'][^>]*>[\s\S]*?<\/header>/i.test(html))html=html.replace(/<header\b[^>]*class=["'][^"']*sbk-global-header[^"']*["'][^>]*>[\s\S]*?<\/header>/i,header);
@@ -130,4 +118,4 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
   fs.writeFileSync(file,html);
 }
 
-console.log('Normalized metadata, six-language public navigation, full calculator hreflang, visual polish, guide interactions and six-language Pro workspace.');
+console.log('Normalized metadata, six-language navigation, calculator/invoice hreflang, visual polish, guide interactions and Pro i18n.');
