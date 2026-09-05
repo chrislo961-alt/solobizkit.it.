@@ -114,8 +114,12 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
     html = html.replace('</head>', '<script src="/analytics.js" defer></script></head>');
   }
 
+  const route = routeForFile(file);
+  if (route.startsWith('/guides/') && route !== '/guides/' && !/<script[^>]+src=["']\/guides\/guide-interactions\.js["']/i.test(html)) {
+    html = html.replace('</body>', '<script src="/guides/guide-interactions.js" defer></script></body>');
+  }
+
   if (!isPrivate(html)) {
-    const route = routeForFile(file);
     const header = sharedHeader(route);
     if (/<header\b[^>]*class=["'][^"']*sbk-global-header[^"']*["'][^>]*>[\s\S]*?<\/header>/i.test(html)) {
       html = html.replace(/<header\b[^>]*class=["'][^"']*sbk-global-header[^"']*["'][^>]*>[\s\S]*?<\/header>/i, header);
@@ -127,4 +131,4 @@ for (const file of walk(ROOT).filter((name) => name === path.join(ROOT, 'index.h
   fs.writeFileSync(file, html);
 }
 
-console.log('Normalized route metadata, shared assets and public navigation.');
+console.log('Normalized route metadata, shared assets, guide interactions and public navigation.');
