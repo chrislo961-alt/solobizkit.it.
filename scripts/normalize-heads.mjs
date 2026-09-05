@@ -73,12 +73,12 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
   const route=routeForFile(file);
 
   if(route.startsWith('/pro/')){
-    if(!/<script[^>]+src=["']\/pro\/leads-nav\.js["']/i.test(html))html=html.replace('</body>','<script src="/pro/leads-nav.js" defer></script></body>');
-    if(!/<link[^>]+href=["']\/pro\/pro-i18n\.css["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/pro/pro-i18n.css"></head>');
-    if(!/<script[^>]+src=["']\/pro\/pro-i18n\.js["']/i.test(html))html=html.replace('</body>','<script src="/pro/pro-i18n.js" defer></script></body>');
+    if(!/<script[^>]+src=["']\/pro\/leads-nav\.js(?:\?[^"']*)?["']/i.test(html))html=html.replace('</body>','<script src="/pro/leads-nav.js" defer></script></body>');
+    if(!/<link[^>]+href=["']\/pro\/pro-i18n\.css(?:\?[^"']*)?["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/pro/pro-i18n.css"></head>');
+    if(!/<script[^>]+src=["']\/pro\/pro-i18n\.js(?:\?[^"']*)?["']/i.test(html))html=html.replace('</body>','<script src="/pro/pro-i18n.js" defer></script></body>');
   }
 
-  if(route==='/invoice-generator/'&&!/<script[^>]+src=["']\/invoice-i18n\.js["']/i.test(html))html=html.replace('</body>','<script src="/invoice-i18n.js" defer></script></body>');
+  if(route==='/invoice-generator/'&&!/<script[^>]+src=["']\/invoice-i18n\.js(?:\?[^"']*)?["']/i.test(html))html=html.replace('</body>','<script src="/invoice-i18n.js" defer></script></body>');
 
   const title=value(html,/<title>([^<]+)<\/title>/i);
   const description=value(html,/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
