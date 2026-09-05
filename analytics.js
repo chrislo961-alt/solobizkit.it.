@@ -103,6 +103,14 @@
     if(document.querySelector('script[data-seo-trust-v1]'))return;
     const script=document.createElement('script');script.src='/seo-trust-v1.js?v=20260905-1';script.defer=true;script.dataset.seoTrustV1='1';document.head.appendChild(script);
   }
-  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2();installSeoTrustLayer()}
+  function installAssistant(){
+    if(location.pathname.startsWith('/pro/')||location.pathname.startsWith('/lead/'))return;
+    if(document.querySelector('script[data-sbk-assistant]'))return;
+    if(!document.querySelector('link[data-sbk-assistant-style]')){
+      const style=document.createElement('link');style.rel='stylesheet';style.href='/assistant-widget.css?v=20260905-1';style.dataset.sbkAssistantStyle='1';document.head.appendChild(style);
+    }
+    const script=document.createElement('script');script.src='/assistant-widget.js?v=20260905-1';script.defer=true;script.dataset.sbkAssistant='1';document.head.appendChild(script);
+  }
+  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2();installSeoTrustLayer();installAssistant()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
