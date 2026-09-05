@@ -45,10 +45,11 @@ async function safeImport(path) {
   }
 }
 
-const V = '20260905-7';
+const V = '20260905-8';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
+await import(`./google-auth.js?v=${V}`);
 await import(`./pro-app.js?v=${V}`);
 
 const coreReady = await waitForCoreReady();
@@ -89,7 +90,7 @@ if (!coreReady) {
 }
 
 window.sbkProBoot = {
-  version: 7,
+  version: 8,
   coreReady,
   bootedAt: new Date().toISOString(),
 };
