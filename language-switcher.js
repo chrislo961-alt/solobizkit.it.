@@ -13,21 +13,16 @@
   ]);
   if(parityRoutes.has(location.pathname))document.documentElement.classList.add('sbk-parity-loading');
 
-  if(!document.querySelector('script[data-sbk-site-parity]')){
-    const parity=document.createElement('script');
-    parity.src='/site-parity.js?v=20260905-2';
-    parity.async=false;
-    parity.dataset.sbkSiteParity='1';
-    document.head.appendChild(parity);
+  function loadScript(src,marker){
+    if(document.querySelector(`script[${marker}]`))return Promise.resolve();
+    return new Promise((resolve)=>{const s=document.createElement('script');s.src=src;s.async=false;s.setAttribute(marker,'1');s.onload=s.onerror=()=>resolve();document.head.appendChild(s)});
   }
 
-  if(!document.querySelector('script[data-sbk-public-i18n]')){
-    const i18n=document.createElement('script');
-    i18n.src='/public-i18n.js?v=20260905-3';
-    i18n.async=false;
-    i18n.dataset.sbkPublicI18n='1';
-    document.head.appendChild(i18n);
-  }
+  const bootPromise=(async()=>{
+    await loadScript('/public-i18n-extra.js?v=20260905-1','data-sbk-public-i18n-extra');
+    await loadScript('/public-i18n.js?v=20260905-4','data-sbk-public-i18n');
+    await loadScript('/site-parity.js?v=20260905-2','data-sbk-site-parity');
+  })();
 
   const nav=document.querySelector('.sbk-global-nav');
   if(!nav||nav.querySelector('.sbk-language-switcher'))return;
@@ -43,7 +38,7 @@
   };
   const maps={
     no:{'/':'/no/','/business-calculators/':'/no/kalkulatorer/','/profit-margin-calculator/':'/no/fortjenestemargin-kalkulator/','/break-even-calculator/':'/no/nullpunkt-kalkulator/','/hourly-rate-calculator/':'/no/timepris-kalkulator/','/invoice-generator/':'/no/fakturagenerator/'},
-    sv:{'/':'/sv/','/business-calculators/':'/sv/kalkylatorer/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkylator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/','/invoice-generator/':'/sv/fakturagenerator/'},
+    sv:{'/':'/sv/','/business-calculators/':'/sv/kalkylatorer/','/profit-margin-calculator/':'/sv/vinstmarginal-kalkulator/','/break-even-calculator/':'/sv/nollpunkts-kalkylator/','/hourly-rate-calculator/':'/sv/timpris-kalkylator/','/invoice-generator/':'/sv/fakturagenerator/'},
     de:{'/':'/de/','/business-calculators/':'/de/rechner/','/profit-margin-calculator/':'/de/gewinnmargen-rechner/','/break-even-calculator/':'/de/break-even-rechner/','/hourly-rate-calculator/':'/de/stundensatz-rechner/','/invoice-generator/':'/de/rechnungsgenerator/'},
     es:{'/':'/es/','/business-calculators/':'/es/calculadoras/','/profit-margin-calculator/':'/es/calculadora-margen-beneficio/','/break-even-calculator/':'/es/calculadora-punto-equilibrio/','/hourly-rate-calculator/':'/es/calculadora-tarifa-hora/','/invoice-generator/':'/es/generador-facturas/'},
     fr:{'/':'/fr/','/business-calculators/':'/fr/calculateurs/','/profit-margin-calculator/':'/fr/calculateur-marge-beneficiaire/','/break-even-calculator/':'/fr/calculateur-seuil-rentabilite/','/hourly-rate-calculator/':'/fr/calculateur-taux-horaire/','/invoice-generator/':'/fr/generateur-factures/'}
@@ -88,4 +83,5 @@
     requestAnimationFrame(()=>{relocalizeQueued=false;localizeKnownLinks(activeLanguage())});
   });
   observer.observe(document.body,{childList:true,subtree:true});
+  bootPromise.then(()=>{window.sbkPublicI18n?.apply?.();window.sbkRelocalizeLinks?.()});
 })();
