@@ -126,6 +126,9 @@
 .pdf-hero{padding-bottom:25px!important}
 .pdf-hero h1{font-size:clamp(40px,5.2vw,58px)!important}
 
+/* Invoice editor and preview should move through the page together. */
+.workspace > .editor + .preview{position:static!important;top:auto!important}
+
 /* Clear section rhythm instead of one continuous pale-blue surface. */
 .quick{padding:42px 0!important;background:#fff;border-top:1px solid #e8eef7;border-bottom:1px solid #e8eef7}
 .browse{padding:54px 0 64px;background:#f7faff}
