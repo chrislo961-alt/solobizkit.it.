@@ -6,6 +6,9 @@ const pricing = fs.readFileSync(new URL('../pro-pricing/index.html', import.meta
 const proIndex = fs.readFileSync(new URL('../pro/index.html', import.meta.url), 'utf8');
 const bootstrap = fs.readFileSync(new URL('../pro/bootstrap.js', import.meta.url), 'utf8');
 const onboarding = fs.readFileSync(new URL('../pro/onboarding.js', import.meta.url), 'utf8');
+const emailActions = fs.readFileSync(new URL('../pro/email-actions-v2.js', import.meta.url), 'utf8');
+const paymentActions = fs.readFileSync(new URL('../pro/payment-actions.js', import.meta.url), 'utf8');
+const billing = fs.readFileSync(new URL('../pro/settings/billing-account.js', import.meta.url), 'utf8');
 
 test('pricing page has separate trial and existing-user login paths', () => {
   assert.match(pricing, /Start 14-day Pro trial/);
@@ -33,4 +36,25 @@ test('first-run activation covers business, payment, customer and invoice setup'
   assert.match(onboarding, /Add your first customer/);
   assert.match(onboarding, /Create your first invoice/);
   assert.match(onboarding, /pro_onboarding_step_clicked/);
+});
+
+test('invoice sending keeps Stripe optional', () => {
+  assert.match(emailActions, /Stripe is optional/);
+  assert.match(emailActions, /includeStripeLink/);
+  assert.match(emailActions, /Payment instructions are included on the invoice/);
+  assert.doesNotMatch(emailActions, /adds a secure Stripe payment link automatically/);
+});
+
+test('payment-link UI labels Stripe as optional', () => {
+  assert.match(paymentActions, /Stripe pay link/);
+  assert.match(paymentActions, /Optional: create a Stripe card-payment link/);
+  assert.doesNotMatch(paymentActions, /alert\(/);
+});
+
+test('billing UI handles trial, payment failures and cancellation', () => {
+  assert.match(billing, /Trial active/);
+  assert.match(billing, /past_due/);
+  assert.match(billing, /Payment issue/);
+  assert.match(billing, /Cancellation scheduled/);
+  assert.match(billing, /Cancel before then to avoid the first charge/);
 });
