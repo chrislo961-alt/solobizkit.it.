@@ -57,8 +57,9 @@ export async function loadWorkspace(userId) {
 
   const customers = (customersResult.data || []).map((row) => ({
     id: row.id, name: row.name, company: row.company || '', email: row.email || '', phone: row.phone || '',
-    status: crmFromDb[row.crm_status] || 'lead', notes: row.crm_notes || row.notes || '', createdAt: row.created_at,
-    updatedAt: row.crm_updated_at || row.created_at,
+    status: crmFromDb[row.crm_status] || 'lead', notes: row.crm_notes || row.notes || '',
+    source: row.crm_source || '', followUp: row.crm_follow_up || '', nextAction: row.crm_next_action || '',
+    createdAt: row.created_at, updatedAt: row.crm_updated_at || row.created_at,
   }));
 
   const invoices = (invoicesResult.data || []).map((row) => ({
@@ -143,8 +144,18 @@ export async function saveCompanySettings(userId, settings) {
 
 export async function saveCustomer(userId, customer) {
   const payload = {
-    user_id: userId, name: customer.name, company: customer.company || null, email: customer.email || null, phone: customer.phone || null,
-    notes: customer.notes || null, crm_enabled: true, crm_status: crmToDb[customer.status] || 'lead', crm_notes: customer.notes || null,
+    user_id: userId,
+    name: customer.name,
+    company: customer.company || null,
+    email: customer.email || null,
+    phone: customer.phone || null,
+    notes: customer.notes || null,
+    crm_enabled: true,
+    crm_status: crmToDb[customer.status] || 'lead',
+    crm_notes: customer.notes || null,
+    crm_source: customer.source || null,
+    crm_follow_up: customer.followUp || null,
+    crm_next_action: customer.nextAction || null,
     crm_updated_at: new Date().toISOString(),
   };
   const query = customer.persisted
@@ -152,7 +163,16 @@ export async function saveCustomer(userId, customer) {
     : supabase.from('customers').insert(payload);
   const { data, error } = await query.select('*').single();
   if (error) throw error;
-  return { ...customer, id: data.id, persisted: true, createdAt: data.created_at, updatedAt: data.crm_updated_at || data.created_at };
+  return {
+    ...customer,
+    id: data.id,
+    persisted: true,
+    source: data.crm_source || customer.source || '',
+    followUp: data.crm_follow_up || customer.followUp || '',
+    nextAction: data.crm_next_action || customer.nextAction || '',
+    createdAt: data.created_at,
+    updatedAt: data.crm_updated_at || data.created_at,
+  };
 }
 
 function totalsFromLines(lines, taxRate) {
