@@ -12,6 +12,7 @@ const daysLeft = (value) => {
 };
 
 let subscription = null;
+let applyQueued = false;
 
 async function loadSubscription() {
   const session = await getSession();
@@ -25,22 +26,28 @@ async function loadSubscription() {
   return data;
 }
 
+function setTextIfChanged(node, value) {
+  if (!node) return;
+  const next = String(value ?? '');
+  if (node.textContent !== next) node.textContent = next;
+}
+
 function decoratePaywall() {
   const card = document.querySelector('.paywall-card');
   if (!card || card.dataset.trialAware === 'true') return;
   card.dataset.trialAware = 'true';
   const lead = card.querySelector('.paywall-lead');
-  if (lead) lead.textContent = 'Customers, CRM follow-up, estimates, invoices and recurring billing in one focused Pro workspace. Eligible new accounts get 14 days to try everything before the first charge.';
+  setTextIfChanged(lead, 'Customers, CRM follow-up, estimates, invoices and recurring billing in one focused Pro workspace. Eligible new accounts get 14 days to try everything before the first charge.');
   card.querySelectorAll('[data-checkout]').forEach((button) => {
     const strong = button.querySelector('strong');
     const span = button.querySelector('span');
-    if (strong) strong.textContent = button.dataset.checkout === 'annual' ? 'Start 14-day trial · annual' : 'Start 14-day trial · monthly';
-    if (span) span.textContent = button.dataset.checkout === 'annual' ? 'Best value after trial' : 'Cancel during trial';
+    setTextIfChanged(strong, button.dataset.checkout === 'annual' ? 'Start 14-day trial · annual' : 'Start 14-day trial · monthly');
+    setTextIfChanged(span, button.dataset.checkout === 'annual' ? 'Best value after trial' : 'Cancel during trial');
   });
   const foot = card.querySelector('.paywall-foot');
-  if (foot) foot.textContent = 'Secure checkout by Stripe. A payment method is collected for the subscription, but eligible new accounts are not charged until the 14-day trial ends.';
+  setTextIfChanged(foot, 'Secure checkout by Stripe. A payment method is collected for the subscription, but eligible new accounts are not charged until the 14-day trial ends.');
   const notice = card.querySelector('.paywall-notice.success');
-  if (notice) notice.textContent = 'Checkout completed. Your Pro trial or subscription is activating now. Refresh below if access has not appeared yet.';
+  setTextIfChanged(notice, 'Checkout completed. Your Pro trial or subscription is activating now. Refresh below if access has not appeared yet.');
 }
 
 function renderTrialBanner() {
@@ -60,18 +67,31 @@ function decorateAccountChip() {
   if (!subscription) return;
   const small = document.querySelector('.account-chip small');
   if (!small) return;
-  small.textContent = String(subscription.status).toLowerCase() === 'trialing' ? 'PRO TRIAL' : (String(subscription.plan).toLowerCase() === 'pro' ? 'PRO' : 'ACCOUNT');
+  const next = String(subscription.status).toLowerCase() === 'trialing'
+    ? 'PRO TRIAL'
+    : (String(subscription.plan).toLowerCase() === 'pro' ? 'PRO' : 'ACCOUNT');
+  setTextIfChanged(small, next);
 }
 
 function apply() {
+  applyQueued = false;
   decoratePaywall();
   decorateAccountChip();
   renderTrialBanner();
+}
+
+function scheduleApply() {
+  if (applyQueued) return;
+  applyQueued = true;
+  requestAnimationFrame(apply);
 }
 
 const style = document.createElement('style');
 style.textContent = '.trial-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;padding:15px 17px;border:1px solid #b7dfc4;border-radius:14px;background:#f1fbf4}.trial-banner strong{display:block;font-size:14px}.trial-banner span{display:block;margin-top:3px;color:var(--muted);font-size:12px}.trial-banner .eyebrow{margin-bottom:4px}@media(max-width:600px){.trial-banner{align-items:flex-start;flex-direction:column}}';
 document.head.appendChild(style);
 
-new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
-loadSubscription().then(apply).catch((error) => console.error('Trial UI failed', error));
+// Observe structural changes, but never rewrite identical text. The old version
+// updated the account badge on every mutation, which created a self-triggering
+// childList loop and could make the entire Pro workspace appear unclickable.
+new MutationObserver(scheduleApply).observe(document.body, { childList: true, subtree: true });
+loadSubscription().then(scheduleApply).catch((error) => console.error('Trial UI failed', error));
