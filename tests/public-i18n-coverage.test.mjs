@@ -73,3 +73,20 @@ test('all remaining public runtime controls have five non-English translations',
   const missing=audit(files,publicI18n);
   assert.deepEqual(missing,[],failMessage('public control',missing));
 });
+
+
+test('localized invoice entry points open the functional translated generator',()=>{
+  const routes={
+    no:'no/fakturagenerator/index.html',
+    sv:'sv/fakturagenerator/index.html',
+    de:'de/rechnungsgenerator/index.html',
+    es:'es/generador-facturas/index.html',
+    fr:'fr/generateur-factures/index.html'
+  };
+  for(const [code,relative] of Object.entries(routes)){
+    const html=fs.readFileSync(path.join(root,relative),'utf8');
+    assert.match(html,new RegExp(`href=["']/invoice-generator/\\?lang=${code}["']`),`${relative} must open the functional invoice generator`);
+  }
+  const switcher=fs.readFileSync(path.join(root,'language-switcher.js'),'utf8');
+  assert.match(switcher,/english==='\\/invoice-generator\\/'\)return `\\/invoice-generator\\/\\?lang=\\$\\{code\\}`/, 'invoice language switching must stay on the functional generator');
+});
