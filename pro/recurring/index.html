@@ -10,11 +10,12 @@
   <link rel="stylesheet" href="/pro/pro-auth.css" />
   <link rel="stylesheet" href="/pro/recurring/recurring.css" />
   <script src="/analytics.js" defer></script>
-<link rel="stylesheet" href="/pro/pro-i18n.css"></head>
+  <link rel="stylesheet" href="/pro/pro-i18n.css">
+</head>
 <body>
-  <div class="app-shell signed-out" id="shell">
+  <div class="app-shell" id="shell">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="SoloBizKit home"><span class="brand-mark">SB</span><span><strong>SoloBizKit</strong><small>PRO</small></span></a>
+      <a class="brand" href="/pro/" aria-label="SoloBizKit Pro home"><span class="brand-mark">SB</span><span><strong>SoloBizKit</strong><small>PRO</small></span></a>
       <nav class="nav" aria-label="Pro navigation">
         <a class="nav-item" href="/pro/?view=dashboard">Dashboard</a>
         <a class="nav-item" href="/pro/?view=customers">Customers</a>
@@ -27,8 +28,8 @@
       <div class="sidebar-footer"><span class="pro-pill">Pro workspace</span><p>Automatic invoice creation for repeat work.</p></div>
     </aside>
     <main class="main">
-      <header class="topbar"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h1>Recurring invoices</h1></div><div class="top-actions"><div id="authActions"></div><button class="btn primary" id="newRecurring">+ Recurring invoice</button></div></header>
-      <section id="app" class="content" aria-live="polite"></section>
+      <header class="topbar"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h1>Recurring invoices</h1></div><div class="top-actions"><div id="authActions"></div><button class="btn primary" id="newRecurring" hidden>+ Recurring invoice</button></div></header>
+      <section id="app" class="content" aria-live="polite"><div class="auth-stage"><section class="auth-card"><h2>Loading recurring invoices…</h2><p class="muted">Loading your Pro workspace.</p></section></div></section>
     </main>
   </div>
 
@@ -40,8 +41,10 @@
     </form>
   </dialog>
 
-  <script type="module" src="/pro/recurring/recurring.js"></script>
+  <script type="module" src="/pro/recurring/recurring.js?v=20260906-1"></script>
   <script type="module" src="/pro/catalog/catalog-picker.js"></script>
   <script type="module" src="/pro/funnel-analytics.js"></script>
-<script src="/pro/leads-nav.js" defer></script><script src="/pro/pro-i18n.js" defer></script></body>
+  <script src="/pro/leads-nav.js" defer></script>
+  <script src="/pro/pro-i18n.js" defer></script>
+</body>
 </html>
