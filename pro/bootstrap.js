@@ -18,7 +18,6 @@ function isCoreLoading() {
 function waitForCoreReady(timeoutMs = CORE_WAIT_MS) {
   const app = document.querySelector('#app');
   if (!app || (!isCoreLoading() && app.childElementCount > 0)) return Promise.resolve(true);
-
   return new Promise((resolve) => {
     let settled = false;
     const finish = (value) => {
@@ -37,15 +36,14 @@ function waitForCoreReady(timeoutMs = CORE_WAIT_MS) {
 }
 
 async function safeImport(path) {
-  try {
-    return await import(path);
-  } catch (error) {
+  try { return await import(path); }
+  catch (error) {
     console.warn(`[SoloBizKit Pro] Optional module failed: ${path}`, error);
     return null;
   }
 }
 
-const V = '20260905-8';
+const V = '20260906-9';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
@@ -89,8 +87,4 @@ if (!coreReady) {
   ]);
 }
 
-window.sbkProBoot = {
-  version: 8,
-  coreReady,
-  bootedAt: new Date().toISOString(),
-};
+window.sbkProBoot = { version: 9, coreReady, bootedAt: new Date().toISOString() };
