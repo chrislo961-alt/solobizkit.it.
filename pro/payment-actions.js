@@ -17,8 +17,11 @@ async function getInvoice(id) {
 
 export async function ensurePaymentLink(id) {
   const invoice = await getInvoice(id);
-  if (invoice.payment_url) return invoice.payment_url;
   if (['paid', 'void'].includes(String(invoice.status).toLowerCase())) throw new Error(`Invoice is already ${invoice.status}.`);
+
+  // Always let the checkout edge function decide whether an existing session can be
+  // reused or must be regenerated. Returning payment_url directly here could hand
+  // customers an expired Stripe Checkout URL after the stored session has expired.
   const { data, error } = await supabase.functions.invoke('create-solobizkit-invoice-checkout', { body: { invoiceId: id } });
   if (error) throw error;
   if (!data?.url) throw new Error(data?.error || 'Could not create payment link.');
