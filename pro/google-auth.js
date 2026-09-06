@@ -1,4 +1,4 @@
-import { supabase } from './backend.js';
+import { supabase } from './backend.js?v=20260906-11';
 
 const REDIRECT_URL = 'https://solobizkit.it.com/pro/';
 let injecting = false;
