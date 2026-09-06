@@ -1,4 +1,4 @@
-import { supabase } from './backend.js';
+import { supabase } from './backend.js?v=20260906-11';
 
 function cleanUrl() {
   try {
@@ -53,7 +53,6 @@ async function consumeOAuthReturn() {
       return { ok:true, session:data.session, mode:'implicit' };
     }
 
-    // Supabase may already have consumed the callback before this module runs.
     const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
     if (data?.session && sessionStorage.getItem('sbk_oauth_source') === 'google') {
