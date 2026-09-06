@@ -11,6 +11,7 @@
     '/es/','/es/calculadoras/','/es/calculadora-margen-beneficio/','/es/calculadora-punto-equilibrio/','/es/calculadora-tarifa-hora/','/es/generador-facturas/',
     '/fr/','/fr/calculateurs/','/fr/calculateur-marge-beneficiaire/','/fr/calculateur-seuil-rentabilite/','/fr/calculateur-taux-horaire/','/fr/generateur-factures/'
   ]);
+  const homeRoutes=new Set(['/','/no/','/sv/','/de/','/es/','/fr/']);
   const localizedInvoiceRoutes=new Set([
     '/no/fakturagenerator/','/sv/fakturagenerator/','/de/rechnungsgenerator/','/es/generador-facturas/','/fr/generateur-factures/'
   ]);
@@ -25,6 +26,7 @@
     await loadScript('/public-i18n-extra.js?v=20260905-1','data-sbk-public-i18n-extra');
     await loadScript('/public-i18n.js?v=20260905-4','data-sbk-public-i18n');
     await loadScript('/site-parity.js?v=20260905-2','data-sbk-site-parity');
+    if(homeRoutes.has(location.pathname))await loadScript('/home-positioning.js?v=20260906-1','data-sbk-home-positioning');
     if(localizedInvoiceRoutes.has(location.pathname))await loadScript('/invoice-payment-details.js?v=20260905-1','data-sbk-invoice-payment-details');
   })();
 
@@ -69,7 +71,7 @@
     const bullets={
       en:'✓ Recurring billing & bank / Stripe payments',
       no:'✓ Fast fakturering og bank / Stripe-betalinger',
-      sv:'✓ Återkommande fakturering och bank / Stripe-betalningar',
+      sv:'✓ Återkommande fakturering og bank / Stripe-betalningar',
       de:'✓ Wiederkehrende Abrechnung und Bank- / Stripe-Zahlungen',
       es:'✓ Facturación recurrente y pagos por banco / Stripe',
       fr:'✓ Facturation récurrente et paiements banque / Stripe'
