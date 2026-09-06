@@ -4,8 +4,13 @@ const SUPABASE_URL = 'https://eaqddwqprhofpizbpziq.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9PpiWr0duM-ve-mcqkCysg_BpX58a9O';
 const SOLOBIzKIT_PRO_URL = 'https://solobizkit.it.com/pro/';
 
+// OAuth callback URLs are consumed explicitly by oauth-return.js before pro-app.js
+// boots. Keeping detectSessionInUrl enabled here created a race where Supabase's
+// automatic callback parser and our explicit exchangeCodeForSession() both tried
+// to consume the same one-time PKCE code. The loser then rendered the signed-out
+// form again even though Google had just succeeded.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 });
 
 const crmToDb = { lead: 'lead', active: 'contacted', client: 'won' };
@@ -134,10 +139,10 @@ export async function saveCompanySettings(userId, settings) {
     payment_terms_days: Math.max(0, Number(settings.paymentTermsDays ?? 14)),
     ...(Array.isArray(settings.reminderScheduleDays) ? { reminder_schedule_days: settings.reminderScheduleDays } : {}),
     bank_account: settings.bankAccount || null,
-    iban: settings.iban || null,
-    bic_swift: settings.bicSwift || null,
-    payment_reference: settings.paymentReference || null,
-    payment_details: settings.paymentDetails || null,
+    iban: settings.iban || '',
+    bic_swift: settings.bicSwift || '',
+    payment_reference: settings.paymentReference || '',
+    payment_details: settings.paymentDetails || '',
     invoice_onboarding_completed: true,
     onboarding_completed_at: new Date().toISOString(),
   };
