@@ -1,10 +1,11 @@
-import { getCompanySettings, getSession, onAuthChange, saveCompanySettings, signOut } from '../backend.js';
+import { getCompanySettings, getSession, onAuthChange, saveCompanySettings, signOut, supabase } from '../backend.js';
 
 const app = document.querySelector('#app');
 const shell = document.querySelector('#shell');
 const authActions = document.querySelector('#authActions');
 let session = null;
 let settings = null;
+let hydrateSeq = 0;
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
@@ -17,7 +18,6 @@ function normalizeReminderDays(value) {
 }
 
 async function readSubscription(userId) {
-  const { supabase } = await import('../backend.js');
   const { data, error } = await supabase.from('subscriptions').select('status,plan').eq('user_id', userId).maybeSingle();
   if (error) throw error;
   return data;
@@ -36,7 +36,7 @@ function renderLocked() {
 
 function renderAuthActions() {
   authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>PRO</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
-  document.querySelector('#signOutBtn').onclick = () => signOut();
+  document.querySelector('#signOutBtn').onclick = () => signOut().catch(console.error);
 }
 
 function previewMarkup(data) {
@@ -48,25 +48,9 @@ function previewMarkup(data) {
 function formDataToSettings(form) {
   const data = new FormData(form);
   return {
-    companyName: String(data.get('companyName') || '').trim(),
-    companyEmail: String(data.get('companyEmail') || '').trim(),
-    phone: String(data.get('phone') || '').trim(),
-    address: String(data.get('address') || '').trim(),
-    city: String(data.get('city') || '').trim(),
-    postalCode: String(data.get('postalCode') || '').trim(),
-    country: String(data.get('country') || '').trim(),
-    taxNumber: String(data.get('taxNumber') || '').trim(),
-    defaultCurrency: String(data.get('defaultCurrency') || 'USD'),
-    defaultTax: Math.max(0, Math.min(100, Number(data.get('defaultTax') || 0))),
-    invoicePrefix: String(data.get('invoicePrefix') || 'INV').trim() || 'INV',
-    estimatePrefix: String(data.get('estimatePrefix') || 'EST-').trim() || 'EST-',
-    paymentTermsDays: Math.max(0, Math.min(365, Number(data.get('paymentTermsDays') ?? 14))),
-    reminderScheduleDays: normalizeReminderDays(data.get('reminderScheduleDays')),
-    bankAccount: String(data.get('bankAccount') || '').trim(),
-    iban: String(data.get('iban') || '').trim(),
-    bicSwift: String(data.get('bicSwift') || '').trim(),
-    paymentReference: String(data.get('paymentReference') || '').trim(),
-    paymentDetails: String(data.get('paymentDetails') || '').trim(),
+    companyName: String(data.get('companyName') || '').trim(), companyEmail: String(data.get('companyEmail') || '').trim(), phone: String(data.get('phone') || '').trim(), address: String(data.get('address') || '').trim(), city: String(data.get('city') || '').trim(), postalCode: String(data.get('postalCode') || '').trim(), country: String(data.get('country') || '').trim(), taxNumber: String(data.get('taxNumber') || '').trim(),
+    defaultCurrency: String(data.get('defaultCurrency') || 'USD'), defaultTax: Math.max(0, Math.min(100, Number(data.get('defaultTax') || 0))), invoicePrefix: String(data.get('invoicePrefix') || 'INV').trim() || 'INV', estimatePrefix: String(data.get('estimatePrefix') || 'EST-').trim() || 'EST-', paymentTermsDays: Math.max(0, Math.min(365, Number(data.get('paymentTermsDays') ?? 14))), reminderScheduleDays: normalizeReminderDays(data.get('reminderScheduleDays')),
+    bankAccount: String(data.get('bankAccount') || '').trim(), iban: String(data.get('iban') || '').trim(), bicSwift: String(data.get('bicSwift') || '').trim(), paymentReference: String(data.get('paymentReference') || '').trim(), paymentDetails: String(data.get('paymentDetails') || '').trim(),
   };
 }
 
@@ -74,7 +58,11 @@ function renderSettings() {
   shell.classList.remove('signed-out');
   renderAuthActions();
   const s = settings;
-  app.innerHTML = `<div class="settings-grid"><section class="settings-card"><h2>Company profile</h2><p class="muted">These details are stored securely on your account and used as your business defaults.</p><form id="settingsForm" class="settings-form"><div class="settings-section"><div class="field"><label>Business name</label><input class="input" name="companyName" value="${esc(s.companyName)}" placeholder="Acme Studio AB"></div><div class="field"><label>Business email</label><input class="input" type="email" name="companyEmail" value="${esc(s.companyEmail)}" placeholder="hello@company.com"></div><div class="field"><label>Phone</label><input class="input" name="phone" value="${esc(s.phone)}"></div><div class="field"><label>Tax / VAT number</label><input class="input" name="taxNumber" value="${esc(s.taxNumber)}"></div><div class="field full"><label>Address</label><input class="input" name="address" value="${esc(s.address)}"></div><div class="field"><label>Postal code</label><input class="input" name="postalCode" value="${esc(s.postalCode)}"></div><div class="field"><label>City</label><input class="input" name="city" value="${esc(s.city)}"></div><div class="field full"><label>Country</label><input class="input" name="country" value="${esc(s.country)}"></div></div><div class="settings-section"><div class="field"><label>Default currency</label><select class="select" name="defaultCurrency">${['USD','EUR','GBP','NOK','SEK','DKK'].map((currency) => `<option ${currency === s.defaultCurrency ? 'selected' : ''}>${currency}</option>`).join('')}</select></div><div class="field"><label>Default VAT %</label><input class="input" type="number" min="0" max="100" step="0.01" name="defaultTax" value="${Number(s.defaultTax || 0)}"></div><div class="field"><label>Invoice prefix</label><input class="input" name="invoicePrefix" value="${esc(s.invoicePrefix)}"></div><div class="field"><label>Estimate prefix</label><input class="input" name="estimatePrefix" value="${esc(s.estimatePrefix)}"></div><div class="field"><label>Payment terms (days)</label><input class="input" type="number" min="0" max="365" name="paymentTermsDays" value="${Number(s.paymentTermsDays ?? 14)}"></div><div class="field"><label>Automatic reminders</label><input class="input" name="reminderScheduleDays" value="${esc((s.reminderScheduleDays || [0,7,14]).join(', '))}" placeholder="0, 7, 14"><small class="muted">Days after due date. Leave blank to disable.</small></div></div><div class="settings-section"><div class="field"><label>Bank account</label><input class="input" name="bankAccount" value="${esc(s.bankAccount)}"></div><div class="field"><label>IBAN</label><input class="input" name="iban" value="${esc(s.iban)}"></div><div class="field"><label>SWIFT / BIC</label><input class="input" name="bicSwift" value="${esc(s.bicSwift)}"></div><div class="field"><label>Payment reference</label><input class="input" name="paymentReference" value="${esc(s.paymentReference)}"></div><div class="field full"><label>Payment notes</label><textarea class="textarea" name="paymentDetails" placeholder="Payment instructions shown on documents">${esc(s.paymentDetails)}</textarea></div></div><div class="save-row"><span class="save-state" id="saveState"></span><button class="btn primary" type="submit">Save settings</button></div></form></section><aside class="settings-card"><h2>Document preview</h2><p class="muted">A quick preview of the business information your Pro documents can use.</p><div id="preview">${previewMarkup(s)}</div></aside></div>`;
+  app.innerHTML = `<div class="settings-grid"><section class="settings-card"><h2>Company profile</h2><p class="muted">These details are stored securely on your account and used as your business defaults.</p><form id="settingsForm" class="settings-form">
+  <div class="settings-section"><h3>Business details</h3><div class="field"><label>Business name</label><input class="input" name="companyName" value="${esc(s.companyName)}" placeholder="Acme Studio AB"></div><div class="field"><label>Business email</label><input class="input" type="email" name="companyEmail" value="${esc(s.companyEmail)}" placeholder="hello@company.com"></div><div class="field"><label>Phone</label><input class="input" name="phone" value="${esc(s.phone)}"></div><div class="field"><label>Tax / VAT number</label><input class="input" name="taxNumber" value="${esc(s.taxNumber)}"></div><div class="field full"><label>Address</label><input class="input" name="address" value="${esc(s.address)}"></div><div class="field"><label>Postal code</label><input class="input" name="postalCode" value="${esc(s.postalCode)}"></div><div class="field"><label>City</label><input class="input" name="city" value="${esc(s.city)}"></div><div class="field full"><label>Country</label><input class="input" name="country" value="${esc(s.country)}"></div></div>
+  <div class="settings-section"><h3>Invoice defaults</h3><div class="field"><label>Default currency</label><select class="select" name="defaultCurrency">${['USD','EUR','GBP','NOK','SEK','DKK'].map((currency) => `<option ${currency === s.defaultCurrency ? 'selected' : ''}>${currency}</option>`).join('')}</select></div><div class="field"><label>Default VAT %</label><input class="input" type="number" min="0" max="100" step="0.01" name="defaultTax" value="${Number(s.defaultTax || 0)}"></div><div class="field"><label>Invoice prefix</label><input class="input" name="invoicePrefix" value="${esc(s.invoicePrefix)}"></div><div class="field"><label>Estimate prefix</label><input class="input" name="estimatePrefix" value="${esc(s.estimatePrefix)}"></div><div class="field"><label>Payment terms (days)</label><input class="input" type="number" min="0" max="365" name="paymentTermsDays" value="${Number(s.paymentTermsDays ?? 14)}"></div><div class="field"><label>Automatic reminders</label><input class="input" name="reminderScheduleDays" value="${esc((s.reminderScheduleDays || [0,7,14]).join(', '))}" placeholder="0, 7, 14"><small class="muted">Days after due date. Leave blank to disable.</small></div></div>
+  <div class="settings-section payment-settings"><h3>Payment details</h3><p class="muted full">These details are shown on invoices so customers can pay without Stripe.</p><div class="field"><label>Bank account</label><input class="input" name="bankAccount" value="${esc(s.bankAccount)}" placeholder="Account / clearing number"></div><div class="field"><label>IBAN</label><input class="input" name="iban" value="${esc(s.iban)}" placeholder="IBAN"></div><div class="field"><label>SWIFT / BIC</label><input class="input" name="bicSwift" value="${esc(s.bicSwift)}" placeholder="SWIFT / BIC"></div><div class="field"><label>Payment reference / KID</label><input class="input" name="paymentReference" value="${esc(s.paymentReference)}" placeholder="Reference or KID"></div><div class="field full"><label>Payment notes</label><textarea class="textarea" name="paymentDetails" placeholder="Extra payment instructions shown on documents">${esc(s.paymentDetails)}</textarea></div></div>
+  <div class="save-row"><span class="save-state" id="saveState"></span><button class="btn primary" type="submit">Save settings</button></div></form></section><aside class="settings-card"><h2>Document preview</h2><p class="muted">A quick preview of the business information your Pro documents can use.</p><div id="preview">${previewMarkup(s)}</div></aside></div>`;
 
   const form = app.querySelector('#settingsForm');
   const preview = app.querySelector('#preview');
@@ -96,26 +84,33 @@ function renderSettings() {
   });
 }
 
-async function hydrate() {
-  if (!session?.user?.id) return renderSignedOut();
-  app.innerHTML = '<div class="auth-stage"><div class="auth-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Loading business settings…</h2></div></div>';
-  const subscription = await readSubscription(session.user.id);
-  if (!hasProAccess(subscription)) return renderLocked();
-  settings = await getCompanySettings(session.user.id);
-  renderSettings();
+function renderLoadError(error) {
+  shell.classList.remove('signed-out');
+  app.innerHTML = `<div class="auth-stage"><section class="auth-card"><h2>Could not load settings</h2><p class="muted">${esc(error?.message || 'Please try again.')}</p><button class="btn primary" id="retrySettings" type="button">Try again</button></section></div>`;
+  app.querySelector('#retrySettings')?.addEventListener('click', () => void hydrate(session));
 }
 
-onAuthChange(async (_event, nextSession) => {
+async function hydrate(nextSession = session) {
+  const seq = ++hydrateSeq;
   session = nextSession;
-  if (session) await hydrate(); else renderSignedOut();
-});
-
-(async () => {
+  if (!session?.user?.id) return renderSignedOut();
+  shell.classList.remove('signed-out');
+  app.innerHTML = '<div class="auth-stage"><div class="auth-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Loading business settings…</h2><p class="muted">Loading account and payment details.</p></div></div>';
   try {
-    session = await getSession();
-    if (session) await hydrate(); else renderSignedOut();
+    const [subscription, nextSettings] = await Promise.all([
+      readSubscription(session.user.id),
+      getCompanySettings(session.user.id),
+    ]);
+    if (seq !== hydrateSeq) return;
+    if (!hasProAccess(subscription)) return renderLocked();
+    settings = nextSettings;
+    renderSettings();
   } catch (error) {
+    if (seq !== hydrateSeq) return;
     console.error(error);
-    app.innerHTML = `<div class="auth-stage"><section class="auth-card"><h2>Could not load settings</h2><p class="muted">${esc(error?.message || 'Please try again.')}</p></section></div>`;
+    renderLoadError(error);
   }
-})();
+}
+
+onAuthChange((_event, nextSession) => { void hydrate(nextSession); });
+void getSession().then((initialSession) => hydrate(initialSession)).catch(renderLoadError);
