@@ -106,12 +106,19 @@ async function sendInvoice(id) {
       const { data, error } = await supabase.functions.invoke('send-invoice-message', { body:{ invoiceId:id, kind:'invoice', recipient, subject, html, product:'solobizkit' } });
       if (error) throw error;
       if (!data?.sent) throw new Error(data?.error || 'Could not send invoice.');
+
       const today = new Date().toISOString().slice(0,10);
-      const { error:updateError } = await supabase.from('invoices').update({ status:'sent', sent_date:today, updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', session.user.id);
-      if (updateError) throw updateError;
-      try { await scheduleInvoiceReminders(id, doc.due_date); } catch (reminderError) { console.warn('Invoice sent, reminder scheduling skipped', reminderError); }
+      const currentStatus = String(doc.status || 'draft').toLowerCase();
+      const terminal = ['paid','void'].includes(currentStatus);
+      const nextStatus = terminal ? currentStatus : 'sent';
+      const { error:updateError } = await supabase.from('invoices').update({ status:nextStatus, sent_date:today, updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', session.user.id);
+      if (updateError) console.warn('Invoice email sent but status sync failed', updateError);
+
+      if (!terminal) {
+        try { await scheduleInvoiceReminders(id, doc.due_date); } catch (reminderError) { console.warn('Invoice sent, reminder scheduling skipped', reminderError); }
+      }
       msg.textContent = `Sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Replies go to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
-      window.sbkTrack?.('pro_invoice_sent', { stripe_link:Boolean(paymentUrl) });
+      window.sbkTrack?.('pro_invoice_sent', { stripe_link:Boolean(paymentUrl), preserved_status:terminal });
       setTimeout(() => { d.close(); location.reload(); }, 900);
     } catch (error) {
       console.error(error);
@@ -129,7 +136,11 @@ async function sendEstimate(id) {
   const body = `Hello ${customer?.name || 'there'},\n\nPlease find estimate ${doc.estimate_number}.\n\nTotal: ${money(doc.total, doc.currency)}\nValid until: ${doc.valid_until || '—'}\n\nYou can review, accept or decline the estimate online.\n\nBest regards,\n${company}`;
   const d = dialog('estimate', doc.estimate_number, customer?.email, subject, body);
   const msg = d.querySelector('#sendMessage');
-  d.querySelector('[data-own]').onclick = () => ownEmail(d.querySelector('#sendRecipient').value.trim(), d.querySelector('#sendSubject').value.trim(), d.querySelector('#sendBody').value);
+  d.querySelector('[data-own]').onclick = () => {
+    const recipient = d.querySelector('#sendRecipient').value.trim();
+    if (recipient && !isEmail(recipient)) { msg.textContent = 'Enter a valid recipient email.'; return; }
+    ownEmail(recipient, d.querySelector('#sendSubject').value.trim(), d.querySelector('#sendBody').value);
+  };
   d.querySelector('[data-secure]').onclick = async (event) => {
     const button = event.currentTarget;
     button.disabled = true;
@@ -139,11 +150,19 @@ async function sendEstimate(id) {
       const customSubject = d.querySelector('#sendSubject').value.trim();
       const customMessage = d.querySelector('#sendBody').value.trim();
       if (!isEmail(recipient)) throw new Error('Enter a valid recipient email.');
+      if (!customSubject) throw new Error('Add an email subject.');
       const { data, error } = await supabase.functions.invoke('send-estimate-email', { body:{ estimateId:id, recipient, subject:customSubject, message:customMessage, product:'solobizkit' } });
       if (error) throw error;
       if (!data?.sent) throw new Error(data?.error || 'Could not send estimate.');
+
+      const currentStatus = String(doc.status || 'draft').toLowerCase();
+      if (!['accepted','declined','converted'].includes(currentStatus)) {
+        const { error:updateError } = await supabase.from('estimates').update({ status:'sent', updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', session.user.id);
+        if (updateError) console.warn('Estimate email sent but status sync failed', updateError);
+      }
+
       msg.textContent = `Sent. The customer can accept or decline online and reply to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
-      window.sbkTrack?.('pro_estimate_sent');
+      window.sbkTrack?.('pro_estimate_sent', { previous_status:currentStatus });
       setTimeout(() => { d.close(); location.reload(); }, 900);
     } catch (error) {
       console.error(error);
