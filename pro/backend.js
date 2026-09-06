@@ -4,8 +4,6 @@ const SUPABASE_URL = 'https://eaqddwqprhofpizbpziq.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9PpiWr0duM-ve-mcqkCysg_BpX58a9O';
 const SOLOBIzKIT_PRO_URL = 'https://solobizkit.it.com/pro/';
 
-// Use one deterministic PKCE flow for OAuth. oauth-return.js consumes the one-time
-// callback code before pro-app.js starts, then reloads the clean /pro/ route.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     persistSession: true,
@@ -128,7 +126,7 @@ export async function saveCompanySettings(userId, settings) {
     business_email: settings.companyEmail || null,
     phone: settings.phone || null,
     address: settings.address || null,
-    business_address: settings.companyName || null,
+    business_address: settings.address || null,
     city: settings.city || null,
     postal_code: settings.postalCode || null,
     country: settings.country || null,
