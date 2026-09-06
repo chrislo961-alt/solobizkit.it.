@@ -4,13 +4,15 @@ const SUPABASE_URL = 'https://eaqddwqprhofpizbpziq.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9PpiWr0duM-ve-mcqkCysg_BpX58a9O';
 const SOLOBIzKIT_PRO_URL = 'https://solobizkit.it.com/pro/';
 
-// OAuth callback URLs are consumed explicitly by oauth-return.js before pro-app.js
-// boots. Keeping detectSessionInUrl enabled here created a race where Supabase's
-// automatic callback parser and our explicit exchangeCodeForSession() both tried
-// to consume the same one-time PKCE code. The loser then rendered the signed-out
-// form again even though Google had just succeeded.
+// Use one deterministic PKCE flow for OAuth. oauth-return.js consumes the one-time
+// callback code before pro-app.js starts, then reloads the clean /pro/ route.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    flowType: 'pkce',
+  },
 });
 
 const crmToDb = { lead: 'lead', active: 'contacted', client: 'won' };
@@ -126,7 +128,7 @@ export async function saveCompanySettings(userId, settings) {
     business_email: settings.companyEmail || null,
     phone: settings.phone || null,
     address: settings.address || null,
-    business_address: settings.address || null,
+    business_address: settings.companyName || null,
     city: settings.city || null,
     postal_code: settings.postalCode || null,
     country: settings.country || null,
