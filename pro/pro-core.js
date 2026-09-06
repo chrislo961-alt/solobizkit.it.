@@ -22,8 +22,8 @@ export function nextInvoiceNumber(invoices = []) {
 }
 
 export function normalizeInvoiceStatus(invoice, today = new Date()) {
-  const status = invoice?.status || 'draft';
-  if (status === 'paid' || status === 'draft') return status;
+  const status = String(invoice?.status || 'draft').toLowerCase();
+  if (['paid', 'draft', 'void'].includes(status)) return status;
   if (!invoice?.dueDate) return status;
   const due = new Date(`${invoice.dueDate}T23:59:59`);
   return due < today ? 'overdue' : status;
@@ -32,8 +32,7 @@ export function normalizeInvoiceStatus(invoice, today = new Date()) {
 export function customerOutstanding(customerId, invoices = [], today = new Date()) {
   return invoices
     .filter((invoice) => invoice.customerId === customerId)
-    .filter((invoice) => normalizeInvoiceStatus(invoice, today) !== 'paid')
-    .filter((invoice) => normalizeInvoiceStatus(invoice, today) !== 'draft')
+    .filter((invoice) => ['sent', 'overdue'].includes(normalizeInvoiceStatus(invoice, today)))
     .reduce((sum, invoice) => sum + calculateInvoice(invoice).total, 0);
 }
 
