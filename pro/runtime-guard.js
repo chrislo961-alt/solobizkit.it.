@@ -11,13 +11,27 @@ const LOADING_TEXTS = [
 ];
 const STALL_MS = 8000;
 
-// The Pro app already performs one explicit getSession() + hydrate() on boot.
-// Suppress INITIAL_SESSION/TOKEN_REFRESHED callbacks here so they cannot start
-// duplicate workspace hydrations and leave the UI stuck on the loading state.
+function isOAuthReturn() {
+  const source = sessionStorage.getItem('sbk_oauth_source');
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  return Boolean(source || /access_token=|refresh_token=|error_description=/i.test(hash) || /[?&]code=|[?&]error=/i.test(search));
+}
+
+// The Pro app already performs one explicit getSession() + hydrate() on normal boot.
+// Suppress duplicate refresh callbacks, but DO NOT suppress INITIAL_SESSION after an
+// OAuth return. On Google OAuth, getSession() can run before Supabase finishes
+// consuming the callback URL; INITIAL_SESSION is then the event that completes login.
 if (!supabase.auth.__sbkDeferredAuthCallbacks) {
   const originalOnAuthStateChange = supabase.auth.onAuthStateChange.bind(supabase.auth);
   supabase.auth.onAuthStateChange = (callback) => originalOnAuthStateChange((event, session) => {
-    if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+    if (event === 'TOKEN_REFRESHED') return;
+
+    if (event === 'INITIAL_SESSION') {
+      if (!session || !isOAuthReturn()) return;
+      sessionStorage.removeItem('sbk_oauth_source');
+    }
+
     setTimeout(() => {
       Promise.resolve(callback(event, session)).catch((error) => {
         console.error('[SoloBizKit Pro auth callback]', error);
@@ -112,8 +126,9 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 window.sbkProRuntimeGuard = {
-  version: 2,
+  version: 3,
   retryTimeoutMs: STALL_MS,
   deferredAuthCallbacks: true,
-  suppressedAuthEvents: ['INITIAL_SESSION', 'TOKEN_REFRESHED'],
+  oauthInitialSessionAllowed: true,
+  suppressedAuthEvents: ['TOKEN_REFRESHED', 'INITIAL_SESSION (normal boot only)'],
 };
