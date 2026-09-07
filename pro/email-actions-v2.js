@@ -1,9 +1,11 @@
-import { getCompanySettings, getSession, supabase } from './backend.js';
+import { getCompanySettings, getDataOwnerId, getSession, getWorkspaceContext, supabase } from './backend.js';
 import { scheduleInvoiceReminders } from './reminder-actions.js';
 import { ensurePaymentLink } from './payment-actions.js';
 
 let session = null;
 let settings = null;
+let workspace = null;
+let dataOwner = null;
 const esc = (v = '') => String(v).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;' })[c]);
 const money = (v, c = 'USD') => { try { return new Intl.NumberFormat(undefined, { style:'currency', currency:c }).format(Number(v) || 0); } catch { return `${Number(v || 0).toFixed(2)} ${c}`; } };
 const isEmail = (v = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
@@ -11,16 +13,20 @@ const isEmail = (v = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
 async function ctx() {
   if (!session) session = await getSession();
   if (!session?.user?.id) throw new Error('Sign in first.');
-  if (!settings) settings = await getCompanySettings(session.user.id);
+  workspace = await getWorkspaceContext();
+  dataOwner = await getDataOwnerId();
+  if (!dataOwner) throw new Error('Workspace not found.');
+  if (!settings) settings = await getCompanySettings(dataOwner);
 }
 
 async function fetchDoc(table, id) {
+  await ctx();
   const itemCol = table === 'invoices' ? 'invoice_items(*)' : 'estimate_items(*)';
-  const { data, error } = await supabase.from(table).select(`*, ${itemCol}`).eq('id', id).eq('user_id', session.user.id).maybeSingle();
+  const { data, error } = await supabase.from(table).select(`*, ${itemCol}`).eq('id', id).eq('user_id', dataOwner).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error('Document not found.');
   const customer = data.customer_id
-    ? await supabase.from('customers').select('*').eq('id', data.customer_id).eq('user_id', session.user.id).maybeSingle()
+    ? await supabase.from('customers').select('*').eq('id', data.customer_id).eq('user_id', dataOwner).maybeSingle()
     : { data:null, error:null };
   if (customer.error) throw customer.error;
   return { doc:data, customer:customer.data };
@@ -72,6 +78,7 @@ async function selectedPaymentUrl(d, doc, existingUrl) {
 
 async function sendInvoice(id) {
   await ctx();
+  if (!workspace?.canWrite) throw new Error('Editor access is required to send invoices.');
   const { doc, customer } = await fetchDoc('invoices', id);
   const template = invoiceTemplate(doc, customer);
   const d = dialog('invoice', doc.invoice_number, customer?.email, template.subject, template.body, { invoice:true, hasExistingPayLink:Boolean(template.paymentUrl) });
@@ -111,7 +118,7 @@ async function sendInvoice(id) {
       const currentStatus = String(doc.status || 'draft').toLowerCase();
       const terminal = ['paid','void'].includes(currentStatus);
       const nextStatus = terminal ? currentStatus : 'sent';
-      const { error:updateError } = await supabase.from('invoices').update({ status:nextStatus, sent_date:today, updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', session.user.id);
+      const { error:updateError } = await supabase.from('invoices').update({ status:nextStatus, sent_date:today, updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', dataOwner);
       if (updateError) console.warn('Invoice email sent but status sync failed', updateError);
 
       if (!terminal) {
@@ -130,6 +137,7 @@ async function sendInvoice(id) {
 
 async function sendEstimate(id) {
   await ctx();
+  if (!workspace?.canWrite) throw new Error('Editor access is required to send estimates.');
   const { doc, customer } = await fetchDoc('estimates', id);
   const company = settings?.companyName || 'our business';
   const subject = `Estimate ${doc.estimate_number} from ${company}`;
@@ -157,7 +165,7 @@ async function sendEstimate(id) {
 
       const currentStatus = String(doc.status || 'draft').toLowerCase();
       if (!['accepted','declined','converted'].includes(currentStatus)) {
-        const { error:updateError } = await supabase.from('estimates').update({ status:'sent', updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', session.user.id);
+        const { error:updateError } = await supabase.from('estimates').update({ status:'sent', updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', dataOwner);
         if (updateError) console.warn('Estimate email sent but status sync failed', updateError);
       }
 
@@ -172,7 +180,9 @@ async function sendEstimate(id) {
   };
 }
 
-function inject(root = document) {
+async function inject(root = document) {
+  try { await ctx(); } catch { return; }
+  if (!workspace?.canWrite) return;
   root.querySelectorAll('[data-edit-invoice]').forEach((edit) => {
     const id = edit.dataset.editInvoice;
     const cell = edit.parentElement;
@@ -201,5 +211,5 @@ const style = document.createElement('style');
 style.textContent = '.email-send-card{max-width:700px}.email-send-body{display:grid;gap:16px}.email-send-body .field{display:grid;gap:7px}.email-send-body .field span{font-weight:700;font-size:13px}.payment-choice{display:grid;gap:10px;padding:14px;border:1px solid #dbe5f2;border-radius:12px;background:#f8fbff}.payment-choice>div strong,.payment-choice>div span{display:block}.payment-choice>div span{margin-top:4px;color:#60708d;font-size:12px}.stripe-choice{display:flex;gap:9px;align-items:center;font-weight:700;font-size:13px}.send-trust{display:flex;gap:8px;flex-wrap:wrap}.send-trust span{padding:7px 9px;border-radius:999px;background:#f2f6fd;color:#53647f;font-size:11px;font-weight:750}@media(max-width:600px){.modal-actions{display:grid}.modal-actions .btn{width:100%}}';
 document.head.appendChild(style);
 new MutationObserver(() => inject()).observe(document.body, { childList:true, subtree:true });
+window.addEventListener('solobizkit:workspace-updated', () => { workspace = null; dataOwner = null; settings = null; inject(); });
 inject();
-(async () => { try { session = await getSession(); if (session?.user?.id) settings = await getCompanySettings(session.user.id); } catch (error) { console.error(error); } })();
