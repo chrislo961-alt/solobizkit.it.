@@ -31,33 +31,10 @@ function nextAction(customer, invoices, estimates){
   return 'Customer is up to date';
 }
 
-function rowCustomerId(row, data){
-  if(row?.dataset?.customerId) return row.dataset.customerId;
-  const cells=row?.querySelectorAll('td');
-  if(!cells?.length) return '';
-  const name=cells[0]?.querySelector('strong')?.textContent?.trim()||'';
-  const company=cells[0]?.querySelector('.muted')?.textContent?.trim()||'';
-  const contact=cells[1]?.textContent?.replace(/\s+/g,' ').trim().toLowerCase()||'';
-  const candidates=(data.customers||[]).filter((customer)=>String(customer.name||'').trim()===name);
-  if(candidates.length===1) return candidates[0].id;
-  const scored=candidates.map((customer)=>{
-    let score=0;
-    if(company&&company!=='—'&&String(customer.company||'').trim()===company) score+=4;
-    if(customer.email&&contact.includes(String(customer.email).trim().toLowerCase())) score+=6;
-    if(customer.phone&&contact.includes(String(customer.phone).trim().toLowerCase())) score+=3;
-    return {id:customer.id,score};
-  }).sort((a,b)=>b.score-a.score);
-  return scored[0]?.score>0&&scored[0]?.score>Number(scored[1]?.score||-1)?scored[0].id:'';
-}
-
-function annotateRows(results, data){
-  results.querySelectorAll('tbody tr').forEach((row)=>{
-    const id=rowCustomerId(row,data);
-    if(!id) return;
-    row.dataset.customerId=id;
-    const cell=row.lastElementChild;
-    if(cell){cell.dataset.customerActions='';cell.dataset.customerId=id;}
-  });
+function documentHref(doc){
+  return doc.type==='Invoice'
+    ? `/pro/?view=invoices&invoice=${encodeURIComponent(doc.id)}`
+    : `/pro/estimates/?estimate=${encodeURIComponent(doc.id)}`;
 }
 
 function renderPanel(data, customerId){
@@ -65,43 +42,19 @@ function renderPanel(data, customerId){
   const panel=app.querySelector('#crmCustomerPanel');
   if(!panel||!customer) return;
   currentCustomerId=customerId;
-  app.querySelectorAll('#customerResults tbody tr').forEach((row)=>row.classList.toggle('crm-selected',row.dataset.customerId===customerId));
+  app.querySelectorAll('#customerResults tbody tr[data-customer-id]').forEach((row)=>row.classList.toggle('crm-selected',row.dataset.customerId===customerId));
   const invoices=data.invoices.filter((i)=>i.customerId===customerId);
   const estimates=data.estimates.filter((e)=>e.customerId===customerId);
   const openInvoices=invoices.filter((i)=>['sent','overdue'].includes(invoiceStatus(i)));
   const paidInvoices=invoices.filter((i)=>invoiceStatus(i)==='paid');
   const canWrite=Boolean(data.workspace?.canWrite);
   const docs=[
-    ...invoices.map((i)=>({type:'Invoice',number:i.number,status:invoiceStatus(i),date:i.issueDate,currency:i.currency,amount:total(i)})),
-    ...estimates.map((e)=>({type:'Estimate',number:e.number,status:e.status,date:e.issueDate,currency:e.currency,amount:total(e)})),
+    ...invoices.map((i)=>({id:i.id,type:'Invoice',number:i.number,status:invoiceStatus(i),date:i.issueDate,currency:i.currency,amount:total(i)})),
+    ...estimates.map((e)=>({id:e.id,type:'Estimate',number:e.number,status:e.status,date:e.issueDate,currency:e.currency,amount:total(e)})),
   ].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,6);
-  panel.innerHTML=`
-    <div class="crm-profile-head">
-      <div class="crm-profile-top"><div class="crm-avatar">${esc(initials(customer.name))}</div><div class="crm-profile-name"><h3>${esc(customer.name)}</h3><p>${esc(customer.company||customer.email||'Customer')}</p></div><span class="crm-profile-status">${esc(customer.status||'lead')}</span></div>
-      <div class="crm-next-action"><small>Next best action</small><strong>${esc(nextAction(customer,invoices,estimates))}</strong></div>
-    </div>
-    <div class="crm-profile-body">
-      <div class="crm-contact-grid">
-        <div class="crm-contact-item"><small>Email</small>${customer.email?`<a href="mailto:${esc(customer.email)}">${esc(customer.email)}</a>`:'<span>Not added</span>'}</div>
-        <div class="crm-contact-item"><small>Phone</small>${customer.phone?`<a href="tel:${esc(customer.phone)}">${esc(customer.phone)}</a>`:'<span>Not added</span>'}</div>
-      </div>
-      <div class="crm-metrics">
-        <div class="crm-metric"><small>Open</small><strong>${openInvoices.length}</strong></div>
-        <div class="crm-metric"><small>Outstanding</small><strong>${esc(totalsByCurrency(openInvoices))}</strong></div>
-        <div class="crm-metric"><small>Paid</small><strong>${esc(totalsByCurrency(paidInvoices))}</strong></div>
-      </div>
-      <div class="crm-actions">
-        ${canWrite?`<button type="button" data-crm-edit="${customer.id}">Edit customer</button><button class="primary" type="button" data-crm-invoice="${customer.id}">+ Invoice</button><a href="/pro/estimates/?new=1">+ Estimate</a>`:'<span class="muted">Read only workspace access</span>'}
-        <a href="/pro/?view=invoices">View invoices</a>
-        <a href="/pro/estimates/">View estimates</a>
-      </div>
-      ${customer.notes?`<div class="crm-doc-section"><h4>Notes</h4><div class="crm-notes">${esc(customer.notes)}</div></div>`:''}
-      <div class="crm-doc-section"><h4>Recent documents</h4><div class="crm-doc-list">${docs.length?docs.map((d)=>`<div class="crm-doc"><div><strong>${esc(d.type)} ${esc(d.number)}</strong><span>${esc(d.status||'draft')} · ${esc(d.date||'')}</span></div><b>${esc(money(d.amount,d.currency))}</b></div>`).join(''):'<div class="crm-customer-empty" style="padding:14px">No documents yet.</div>'}</div></div>
-      <div class="crm-age">Last CRM update ${daysSince(customer.updatedAt||customer.createdAt)} day${daysSince(customer.updatedAt||customer.createdAt)===1?'':'s'} ago</div>
-    </div>`;
+  panel.innerHTML=`<div class="crm-profile-head"><div class="crm-profile-top"><div class="crm-avatar">${esc(initials(customer.name))}</div><div class="crm-profile-name"><h3>${esc(customer.name)}</h3><p>${esc(customer.company||customer.email||'Customer')}</p></div><span class="crm-profile-status">${esc(customer.status||'lead')}</span></div><div class="crm-next-action"><small>Next best action</small><strong>${esc(nextAction(customer,invoices,estimates))}</strong></div></div><div class="crm-profile-body"><div class="crm-contact-grid"><div class="crm-contact-item"><small>Email</small>${customer.email?`<a href="mailto:${esc(customer.email)}">${esc(customer.email)}</a>`:'<span>Not added</span>'}</div><div class="crm-contact-item"><small>Phone</small>${customer.phone?`<a href="tel:${esc(customer.phone)}">${esc(customer.phone)}</a>`:'<span>Not added</span>'}</div></div><div class="crm-metrics"><div class="crm-metric"><small>Open</small><strong>${openInvoices.length}</strong></div><div class="crm-metric"><small>Outstanding</small><strong>${esc(totalsByCurrency(openInvoices))}</strong></div><div class="crm-metric"><small>Paid</small><strong>${esc(totalsByCurrency(paidInvoices))}</strong></div></div><div class="crm-actions">${canWrite?`<button type="button" data-crm-edit="${customer.id}">Edit customer</button><a class="primary" href="/pro/?view=invoices&new=1&customer=${encodeURIComponent(customer.id)}">+ Invoice</a><a href="/pro/estimates/?new=1&customer=${encodeURIComponent(customer.id)}">+ Estimate</a>`:'<span class="muted">Read only workspace access</span>'}<a href="/pro/?view=invoices">View invoices</a><a href="/pro/estimates/">View estimates</a></div>${customer.notes?`<div class="crm-doc-section"><h4>Notes</h4><div class="crm-notes">${esc(customer.notes)}</div></div>`:''}<div class="crm-doc-section"><h4>Recent documents</h4><div class="crm-doc-list">${docs.length?docs.map((d)=>`<a class="crm-doc" href="${documentHref(d)}"><div><strong>${esc(d.type)} ${esc(d.number)}</strong><span>${esc(d.status||'draft')} · ${esc(d.date||'')}</span></div><b>${esc(money(d.amount,d.currency))}</b></a>`).join(''):'<div class="crm-customer-empty" style="padding:14px">No documents yet.</div>'}</div></div><div class="crm-age">Last CRM update ${daysSince(customer.updatedAt||customer.createdAt)} day${daysSince(customer.updatedAt||customer.createdAt)===1?'':'s'} ago</div></div>`;
   if(canWrite){
-    panel.querySelector('[data-crm-edit]')?.addEventListener('click',()=>app.querySelector(`[data-customer-actions][data-customer-id="${customer.id}"] [data-edit-customer]`)?.click());
-    panel.querySelector('[data-crm-invoice]')?.addEventListener('click',()=>app.querySelector(`[data-customer-actions][data-customer-id="${customer.id}"] [data-invoice-customer]`)?.click());
+    panel.querySelector('[data-crm-edit]')?.addEventListener('click',()=>app.querySelector(`[data-customer-actions][data-customer-id="${CSS.escape(customer.id)}"] [data-edit-customer]`)?.click());
   }
 }
 
@@ -112,7 +65,6 @@ async function enhance(){
   if(!results||!card) return;
   const data=await getWorkspace();
   if(!data) return;
-  annotateRows(results,data);
   let shell=app.querySelector('.crm-v3-shell');
   if(!shell){
     shell=document.createElement('div'); shell.className='crm-v3-shell';
@@ -121,8 +73,7 @@ async function enhance(){
     panel.innerHTML='<div class="crm-customer-empty"><strong>Customer workspace</strong>Select a customer to see contact details, documents, money and the next action.</div>';
     shell.appendChild(panel);
     const bindRows=()=>{
-      annotateRows(results,data);
-      results.querySelectorAll('tbody tr').forEach((row)=>{
+      results.querySelectorAll('tbody tr[data-customer-id]').forEach((row)=>{
         const id=row.dataset.customerId;
         if(!id||row.dataset.crmV3Bound) return;
         row.dataset.crmV3Bound='1';
@@ -132,7 +83,7 @@ async function enhance(){
     };
     const rowObserver=new MutationObserver(bindRows); rowObserver.observe(results,{childList:true,subtree:true}); bindRows();
   }
-  const firstId=currentCustomerId||results.querySelector('tbody tr')?.dataset.customerId||data.customers[0]?.id;
+  const firstId=currentCustomerId||results.querySelector('tbody tr[data-customer-id]')?.dataset.customerId||data.customers[0]?.id;
   if(firstId) renderPanel(data,firstId);
 }
 
