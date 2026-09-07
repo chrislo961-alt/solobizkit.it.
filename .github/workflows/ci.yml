@@ -17,8 +17,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Test calculator core
-        run: node --test tests/calculator-core.test.mjs tests/growth-calculators.test.mjs tests/use-case-calculators.test.mjs
+      - name: Test calculator core math
+        run: node --test tests/calculator-core.test.mjs
+      - name: Test growth calculators
+        run: node --test tests/growth-calculators.test.mjs
+      - name: Test use-case calculators
+        run: node --test tests/use-case-calculators.test.mjs
       - name: Test VAT promoted route
         run: node --test tests/vat-calculator.test.mjs
       - name: Test public navigation and search
