@@ -17,6 +17,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Test calculator logic and audit the complete static site
-        # Includes public metadata, sitemap/internal links, accessibility and expanded guide checks.
-        run: npm test
+      - name: Test calculator logic
+        run: node --test tests/*.test.mjs
+      - name: Audit public static site
+        run: node scripts/site-audit.mjs
+      - name: Audit accessibility
+        run: node scripts/accessibility-audit.mjs
+      - name: Audit Pro localization
+        run: node scripts/pro-i18n-audit.mjs
+      - name: Audit Pro spreadsheet transfer
+        run: node scripts/pro-spreadsheet-audit.mjs
+      - name: Audit Pro team and workspace rules
+        run: node scripts/pro-team-audit.mjs
