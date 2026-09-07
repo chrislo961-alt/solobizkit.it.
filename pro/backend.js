@@ -5,16 +5,12 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9PpiWr0duM-ve-mcqkCysg_BpX58a9O
 const SOLOBIzKIT_PRO_URL = 'https://solobizkit.it.com/pro/';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-    flowType: 'pkce',
-  },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: 'pkce' },
 });
 
 const crmToDb = { lead: 'lead', active: 'contacted', client: 'won' };
 const crmFromDb = { lead: 'lead', contacted: 'active', proposal: 'active', won: 'client', lost: 'lead' };
+let workspaceCache = null;
 
 export async function getSession() {
   const { data, error } = await supabase.auth.getSession();
@@ -23,246 +19,173 @@ export async function getSession() {
 }
 
 export function onAuthChange(callback) {
-  const { data } = supabase.auth.onAuthStateChange((event, session) => callback(event, session));
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    workspaceCache = null;
+    callback(event, session);
+  });
   return () => data.subscription.unsubscribe();
 }
 
 export async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  workspaceCache = null;
   return data.session;
 }
 
 export async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: SOLOBIzKIT_PRO_URL,
-      data: { source_app: 'solobizkit' },
-    },
-  });
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: SOLOBIzKIT_PRO_URL, data: { source_app: 'solobizkit' } } });
   if (error) throw error;
+  workspaceCache = null;
   return data;
 }
 
 export async function signOut() {
+  workspaceCache = null;
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
 
-export async function loadWorkspace(userId) {
-  const [customersResult, invoicesResult, estimatesResult, profileResult, subscriptionResult] = await Promise.all([
-    supabase.from('customers').select('*').eq('user_id', userId).eq('crm_archived', false).order('crm_updated_at', { ascending: false }),
-    supabase.from('invoices').select('*, invoice_items(*)').eq('user_id', userId).order('created_at', { ascending: false }),
-    supabase.from('estimates').select('*, estimate_items(*)').eq('user_id', userId).order('created_at', { ascending: false }),
-    supabase.from('profiles').select('id,email,full_name,plan').eq('id', userId).maybeSingle(),
-    supabase.from('subscriptions').select('status,plan,current_period_end,cancel_at_period_end').eq('user_id', userId).maybeSingle(),
+export async function getWorkspaceContext(force = false) {
+  if (!force && workspaceCache) return workspaceCache;
+  const session = await getSession();
+  if (!session?.user?.id) return null;
+  await supabase.rpc('ensure_my_workspace');
+  const [{ data: current, error: currentError }, { data: all, error: allError }] = await Promise.all([
+    supabase.rpc('get_current_workspace'),
+    supabase.rpc('list_my_workspaces'),
   ]);
+  if (currentError) throw currentError;
+  if (allError) throw allError;
+  const row = Array.isArray(current) ? current[0] : current;
+  workspaceCache = row ? {
+    workspaceId: row.workspace_id,
+    ownerId: row.owner_id,
+    name: row.workspace_name,
+    role: row.role,
+    isOwner: Boolean(row.is_owner),
+    canWrite: ['owner','admin','member'].includes(row.role),
+    canAdmin: ['owner','admin'].includes(row.role),
+    workspaces: (all || []).map((item) => ({ workspaceId: item.workspace_id, ownerId: item.owner_id, name: item.workspace_name, role: item.role, active: Boolean(item.is_active) })),
+  } : null;
+  return workspaceCache;
+}
 
-  for (const result of [customersResult, invoicesResult, estimatesResult, profileResult, subscriptionResult]) {
-    if (result.error) throw result.error;
-  }
+export async function setActiveWorkspace(workspaceId) {
+  const { error } = await supabase.rpc('set_active_workspace', { p_workspace_id: workspaceId });
+  if (error) throw error;
+  workspaceCache = null;
+  return getWorkspaceContext(true);
+}
 
+export async function getDataOwnerId() {
+  const context = await getWorkspaceContext();
+  return context?.ownerId || null;
+}
+
+async function ownerId(fallbackUserId = null) {
+  return (await getDataOwnerId()) || fallbackUserId;
+}
+
+export async function loadWorkspace(userId) {
+  const dataOwner = await ownerId(userId);
+  if (!dataOwner) throw new Error('Workspace not found.');
+  const [customersResult, invoicesResult, estimatesResult, profileResult, subscriptionResult] = await Promise.all([
+    supabase.from('customers').select('*').eq('user_id', dataOwner).eq('crm_archived', false).order('crm_updated_at', { ascending: false }),
+    supabase.from('invoices').select('*, invoice_items(*)').eq('user_id', dataOwner).order('created_at', { ascending: false }),
+    supabase.from('estimates').select('*, estimate_items(*)').eq('user_id', dataOwner).order('created_at', { ascending: false }),
+    supabase.from('profiles').select('id,email,full_name,plan').eq('id', dataOwner).maybeSingle(),
+    supabase.rpc('get_workspace_subscription_summary'),
+  ]);
+  for (const result of [customersResult, invoicesResult, estimatesResult, profileResult, subscriptionResult]) if (result.error) throw result.error;
+  const sub = Array.isArray(subscriptionResult.data) ? subscriptionResult.data[0] : subscriptionResult.data;
   const customers = (customersResult.data || []).map((row) => ({
     id: row.id, name: row.name, company: row.company || '', email: row.email || '', phone: row.phone || '',
-    status: crmFromDb[row.crm_status] || 'lead', notes: row.crm_notes || row.notes || '',
-    source: row.crm_source || '', followUp: row.crm_follow_up || '', nextAction: row.crm_next_action || '',
-    createdAt: row.created_at, updatedAt: row.crm_updated_at || row.created_at,
+    status: crmFromDb[row.crm_status] || 'lead', notes: row.crm_notes || row.notes || '', source: row.crm_source || '',
+    followUp: row.crm_follow_up || '', nextAction: row.crm_next_action || '', createdAt: row.created_at, updatedAt: row.crm_updated_at || row.created_at,
   }));
-
   const invoices = (invoicesResult.data || []).map((row) => ({
-    id: row.id, customerId: row.customer_id, number: row.invoice_number, issueDate: row.issue_date, dueDate: row.due_date || '',
-    status: row.status, currency: row.currency, taxRate: Number(row.invoice_items?.[0]?.tax_rate || 0),
-    lines: [...(row.invoice_items || [])].sort((a, b) => a.position - b.position).map((item) => ({ description: item.description, qty: Number(item.quantity), rate: Number(item.unit_price) })),
+    id: row.id, customerId: row.customer_id, number: row.invoice_number, issueDate: row.issue_date, dueDate: row.due_date || '', status: row.status,
+    currency: row.currency, taxRate: Number(row.invoice_items?.[0]?.tax_rate || 0),
+    lines: [...(row.invoice_items || [])].sort((a,b)=>a.position-b.position).map((item)=>({ description:item.description, qty:Number(item.quantity), rate:Number(item.unit_price) })),
     notes: row.notes || '', createdAt: row.created_at, updatedAt: row.updated_at,
   }));
-
   const estimates = (estimatesResult.data || []).map((row) => ({
-    id: row.id, customerId: row.customer_id, number: row.estimate_number, issueDate: row.issue_date, validUntil: row.valid_until || '',
-    status: row.status, currency: row.currency, taxRate: Number(row.estimate_items?.[0]?.tax_rate || 0), convertedInvoiceId: row.converted_invoice_id,
-    lines: [...(row.estimate_items || [])].sort((a, b) => a.position - b.position).map((item) => ({ description: item.description, qty: Number(item.quantity), rate: Number(item.unit_price) })),
+    id: row.id, customerId: row.customer_id, number: row.estimate_number, issueDate: row.issue_date, validUntil: row.valid_until || '', status: row.status,
+    currency: row.currency, taxRate: Number(row.estimate_items?.[0]?.tax_rate || 0), convertedInvoiceId: row.converted_invoice_id,
+    lines: [...(row.estimate_items || [])].sort((a,b)=>a.position-b.position).map((item)=>({ description:item.description, qty:Number(item.quantity), rate:Number(item.unit_price) })),
     notes: row.notes || '', createdAt: row.created_at, updatedAt: row.updated_at,
   }));
-
-  return { customers, invoices, estimates, profile: profileResult.data || null, subscription: subscriptionResult.data || null };
+  return { customers, invoices, estimates, profile: profileResult.data || null, subscription: sub || null, workspace: await getWorkspaceContext() };
 }
 
 export async function getCompanySettings(userId) {
-  const { data, error } = await supabase.from('company_settings').select('*').eq('user_id', userId).maybeSingle();
+  const dataOwner = await ownerId(userId);
+  const { data, error } = await supabase.from('company_settings').select('*').eq('user_id', dataOwner).maybeSingle();
   if (error) throw error;
-  if (!data) return {
-    companyName: '', companyEmail: '', phone: '', address: '', city: '', postalCode: '', country: '', taxNumber: '',
-    defaultCurrency: 'USD', defaultTax: 0, invoicePrefix: 'INV', estimatePrefix: 'EST-', paymentTermsDays: 14,
-    reminderScheduleDays: [0, 7, 14], bankAccount: '', iban: '', bicSwift: '', paymentReference: '', paymentDetails: '',
-  };
+  if (!data) return { companyName:'',companyEmail:'',phone:'',address:'',city:'',postalCode:'',country:'',taxNumber:'',defaultCurrency:'USD',defaultTax:0,invoicePrefix:'INV',estimatePrefix:'EST-',paymentTermsDays:14,reminderScheduleDays:[0,7,14],bankAccount:'',iban:'',bicSwift:'',paymentReference:'',paymentDetails:'' };
   return {
-    id: data.id,
-    companyName: data.business_name || data.company_name || '',
-    companyEmail: data.business_email || data.company_email || '',
-    phone: data.phone || '',
-    address: data.business_address || data.address || '',
-    city: data.city || '',
-    postalCode: data.postal_code || '',
-    country: data.country || '',
-    taxNumber: data.business_tax_id || data.tax_number || '',
-    defaultCurrency: data.default_currency || 'USD',
-    defaultTax: Number(data.default_tax || 0),
-    invoicePrefix: data.invoice_prefix || 'INV',
-    estimatePrefix: data.estimate_prefix || 'EST-',
-    paymentTermsDays: Number(data.payment_terms_days ?? 14),
-    reminderScheduleDays: Array.isArray(data.reminder_schedule_days) ? data.reminder_schedule_days : [0, 7, 14],
-    bankAccount: data.bank_account || '', iban: data.iban || '', bicSwift: data.bic_swift || '',
-    paymentReference: data.payment_reference || '', paymentDetails: data.payment_details || '',
+    id:data.id, companyName:data.business_name||data.company_name||'', companyEmail:data.business_email||data.company_email||'', phone:data.phone||'',
+    address:data.business_address||data.address||'', city:data.city||'', postalCode:data.postal_code||'', country:data.country||'', taxNumber:data.business_tax_id||data.tax_number||'',
+    defaultCurrency:data.default_currency||'USD', defaultTax:Number(data.default_tax||0), invoicePrefix:data.invoice_prefix||'INV', estimatePrefix:data.estimate_prefix||'EST-',
+    paymentTermsDays:Number(data.payment_terms_days??14), reminderScheduleDays:Array.isArray(data.reminder_schedule_days)?data.reminder_schedule_days:[0,7,14],
+    bankAccount:data.bank_account||'', iban:data.iban||'', bicSwift:data.bic_swift||'', paymentReference:data.payment_reference||'', paymentDetails:data.payment_details||'',
   };
 }
 
 export async function saveCompanySettings(userId, settings) {
+  const dataOwner = await ownerId(userId);
+  const context = await getWorkspaceContext();
+  if (!context?.canAdmin) throw new Error('Admin access is required to change business settings.');
   const payload = {
-    user_id: userId,
-    company_name: settings.companyName || null,
-    business_name: settings.companyName || null,
-    company_email: settings.companyEmail || null,
-    business_email: settings.companyEmail || null,
-    phone: settings.phone || null,
-    address: settings.address || null,
-    business_address: settings.address || null,
-    city: settings.city || null,
-    postal_code: settings.postalCode || null,
-    country: settings.country || null,
-    tax_number: settings.taxNumber || null,
-    business_tax_id: settings.taxNumber || null,
-    default_currency: settings.defaultCurrency || 'USD',
-    default_tax: Number(settings.defaultTax || 0),
-    invoice_prefix: settings.invoicePrefix || 'INV',
-    estimate_prefix: settings.estimatePrefix || 'EST-',
-    payment_terms_days: Math.max(0, Number(settings.paymentTermsDays ?? 14)),
-    ...(Array.isArray(settings.reminderScheduleDays) ? { reminder_schedule_days: settings.reminderScheduleDays } : {}),
-    bank_account: settings.bankAccount || null,
-    iban: settings.iban || '',
-    bic_swift: settings.bicSwift || '',
-    payment_reference: settings.paymentReference || '',
-    payment_details: settings.paymentDetails || '',
-    invoice_onboarding_completed: true,
-    onboarding_completed_at: new Date().toISOString(),
+    user_id:dataOwner, company_name:settings.companyName||null, business_name:settings.companyName||null, company_email:settings.companyEmail||null,
+    business_email:settings.companyEmail||null, phone:settings.phone||null, address:settings.address||null, business_address:settings.address||null,
+    city:settings.city||null, postal_code:settings.postalCode||null, country:settings.country||null, tax_number:settings.taxNumber||null,
+    business_tax_id:settings.taxNumber||null, default_currency:settings.defaultCurrency||'USD', default_tax:Number(settings.defaultTax||0), invoice_prefix:settings.invoicePrefix||'INV',
+    estimate_prefix:settings.estimatePrefix||'EST-', payment_terms_days:Math.max(0,Number(settings.paymentTermsDays??14)),
+    ...(Array.isArray(settings.reminderScheduleDays)?{reminder_schedule_days:settings.reminderScheduleDays}:{}), bank_account:settings.bankAccount||null,
+    iban:settings.iban||'', bic_swift:settings.bicSwift||'', payment_reference:settings.paymentReference||'', payment_details:settings.paymentDetails||'',
+    invoice_onboarding_completed:true, onboarding_completed_at:new Date().toISOString(),
   };
-  const { data, error } = await supabase.from('company_settings').upsert(payload, { onConflict: 'user_id' }).select('*').single();
+  const { data, error } = await supabase.from('company_settings').upsert(payload,{onConflict:'user_id'}).select('*').single();
   if (error) throw error;
   return data;
 }
 
 export async function saveCustomer(userId, customer) {
-  const payload = {
-    user_id: userId,
-    name: customer.name,
-    company: customer.company || null,
-    email: customer.email || null,
-    phone: customer.phone || null,
-    notes: customer.notes || null,
-    crm_enabled: true,
-    crm_status: crmToDb[customer.status] || 'lead',
-    crm_notes: customer.notes || null,
-    crm_source: customer.source || null,
-    crm_follow_up: customer.followUp || null,
-    crm_next_action: customer.nextAction || null,
-    crm_updated_at: new Date().toISOString(),
-  };
-  const query = customer.persisted
-    ? supabase.from('customers').update(payload).eq('id', customer.id).eq('user_id', userId)
-    : supabase.from('customers').insert(payload);
-  const { data, error } = await query.select('*').single();
-  if (error) throw error;
-  return {
-    ...customer,
-    id: data.id,
-    persisted: true,
-    source: data.crm_source || customer.source || '',
-    followUp: data.crm_follow_up || customer.followUp || '',
-    nextAction: data.crm_next_action || customer.nextAction || '',
-    createdAt: data.created_at,
-    updatedAt: data.crm_updated_at || data.created_at,
-  };
+  const dataOwner = await ownerId(userId);
+  const payload = { user_id:dataOwner,name:customer.name,company:customer.company||null,email:customer.email||null,phone:customer.phone||null,notes:customer.notes||null,crm_enabled:true,crm_status:crmToDb[customer.status]||'lead',crm_notes:customer.notes||null,crm_source:customer.source||null,crm_follow_up:customer.followUp||null,crm_next_action:customer.nextAction||null,crm_updated_at:new Date().toISOString() };
+  const query = customer.persisted ? supabase.from('customers').update(payload).eq('id',customer.id).eq('user_id',dataOwner) : supabase.from('customers').insert(payload);
+  const { data,error } = await query.select('*').single(); if(error)throw error;
+  return {...customer,id:data.id,persisted:true,source:data.crm_source||customer.source||'',followUp:data.crm_follow_up||customer.followUp||'',nextAction:data.crm_next_action||customer.nextAction||'',createdAt:data.created_at,updatedAt:data.crm_updated_at||data.created_at};
 }
 
-function totalsFromLines(lines, taxRate) {
-  const subtotal = lines.reduce((sum, line) => sum + Number(line.qty || 0) * Number(line.rate || 0), 0);
-  const taxTotal = subtotal * (Number(taxRate || 0) / 100);
-  return { subtotal, taxTotal, total: subtotal + taxTotal };
-}
-
-function addDaysISO(dateString, days) {
-  const date = new Date(`${dateString}T12:00:00`);
-  date.setDate(date.getDate() + Math.max(0, Number(days ?? 0)));
-  return date.toISOString().slice(0, 10);
-}
+function totalsFromLines(lines,taxRate){const subtotal=lines.reduce((sum,line)=>sum+Number(line.qty||0)*Number(line.rate||0),0);const taxTotal=subtotal*(Number(taxRate||0)/100);return{subtotal,taxTotal,total:subtotal+taxTotal};}
+function addDaysISO(dateString,days){const date=new Date(`${dateString}T12:00:00`);date.setDate(date.getDate()+Math.max(0,Number(days??0)));return date.toISOString().slice(0,10);}
 
 export async function saveInvoice(userId, invoice) {
-  const { subtotal, taxTotal, total } = totalsFromLines(invoice.lines, invoice.taxRate);
-  const payload = {
-    user_id: userId, customer_id: invoice.customerId || null, invoice_number: invoice.number, status: invoice.status,
-    currency: invoice.currency, issue_date: invoice.issueDate, due_date: invoice.dueDate || null, subtotal, tax_total: taxTotal,
-    discount_total: 0, discount_rate: 0, total, notes: invoice.notes || null, language: 'en', document_type: 'invoice', vat_mode: 'standard',
-    updated_at: new Date().toISOString(), paid_date: invoice.status === 'paid' ? new Date().toISOString().slice(0, 10) : null,
-  };
+  const dataOwner = await ownerId(userId);
+  const {subtotal,taxTotal,total}=totalsFromLines(invoice.lines,invoice.taxRate);
+  const payload={user_id:dataOwner,customer_id:invoice.customerId||null,invoice_number:invoice.number,status:invoice.status,currency:invoice.currency,issue_date:invoice.issueDate,due_date:invoice.dueDate||null,subtotal,tax_total:taxTotal,discount_total:0,discount_rate:0,total,notes:invoice.notes||null,language:'en',document_type:'invoice',vat_mode:'standard',updated_at:new Date().toISOString(),paid_date:invoice.status==='paid'?new Date().toISOString().slice(0,10):null};
   let saved;
-  if (invoice.persisted) {
-    const { data, error } = await supabase.from('invoices').update(payload).eq('id', invoice.id).eq('user_id', userId).select('*').single();
-    if (error) throw error;
-    saved = data;
-    const { error: deleteError } = await supabase.from('invoice_items').delete().eq('invoice_id', invoice.id).eq('user_id', userId);
-    if (deleteError) throw deleteError;
-  } else {
-    const { data, error } = await supabase.from('invoices').insert(payload).select('*').single();
-    if (error) throw error;
-    saved = data;
-  }
-  const items = invoice.lines.map((line, position) => ({ invoice_id: saved.id, user_id: userId, description: line.description || 'Service', quantity: Number(line.qty || 1), unit_price: Number(line.rate || 0), tax_rate: Number(invoice.taxRate || 0), discount: 0, position }));
-  const { error: itemsError } = await supabase.from('invoice_items').insert(items);
-  if (itemsError) throw itemsError;
-  return { ...invoice, id: saved.id, persisted: true, createdAt: saved.created_at, updatedAt: saved.updated_at };
+  if(invoice.persisted){const{data,error}=await supabase.from('invoices').update(payload).eq('id',invoice.id).eq('user_id',dataOwner).select('*').single();if(error)throw error;saved=data;const{error:deleteError}=await supabase.from('invoice_items').delete().eq('invoice_id',invoice.id).eq('user_id',dataOwner);if(deleteError)throw deleteError;}
+  else{const{data,error}=await supabase.from('invoices').insert(payload).select('*').single();if(error)throw error;saved=data;}
+  const items=invoice.lines.map((line,position)=>({invoice_id:saved.id,user_id:dataOwner,description:line.description||'Service',quantity:Number(line.qty||1),unit_price:Number(line.rate||0),tax_rate:Number(invoice.taxRate||0),discount:0,position}));
+  const{error:itemsError}=await supabase.from('invoice_items').insert(items);if(itemsError)throw itemsError;
+  return{...invoice,id:saved.id,persisted:true,createdAt:saved.created_at,updatedAt:saved.updated_at};
 }
 
 export async function saveEstimate(userId, estimate) {
-  const { subtotal, taxTotal, total } = totalsFromLines(estimate.lines, estimate.taxRate);
-  const payload = {
-    user_id: userId, customer_id: estimate.customerId || null, estimate_number: estimate.number, status: estimate.status,
-    currency: estimate.currency, language: 'en', issue_date: estimate.issueDate, valid_until: estimate.validUntil || null,
-    subtotal, tax_total: taxTotal, discount_total: 0, discount_rate: 0, total, notes: estimate.notes || null,
-    vat_mode: 'standard', updated_at: new Date().toISOString(),
-  };
+  const dataOwner = await ownerId(userId);
+  const{subtotal,taxTotal,total}=totalsFromLines(estimate.lines,estimate.taxRate);
+  const payload={user_id:dataOwner,customer_id:estimate.customerId||null,estimate_number:estimate.number,status:estimate.status,currency:estimate.currency,language:'en',issue_date:estimate.issueDate,valid_until:estimate.validUntil||null,subtotal,tax_total:taxTotal,discount_total:0,discount_rate:0,total,notes:estimate.notes||null,vat_mode:'standard',updated_at:new Date().toISOString()};
   let saved;
-  if (estimate.persisted) {
-    const { data, error } = await supabase.from('estimates').update(payload).eq('id', estimate.id).eq('user_id', userId).select('*').single();
-    if (error) throw error;
-    saved = data;
-    const { error: deleteError } = await supabase.from('estimate_items').delete().eq('estimate_id', estimate.id).eq('user_id', userId);
-    if (deleteError) throw deleteError;
-  } else {
-    const { data, error } = await supabase.from('estimates').insert(payload).select('*').single();
-    if (error) throw error;
-    saved = data;
-  }
-  const items = estimate.lines.map((line, position) => ({ estimate_id: saved.id, user_id: userId, description: line.description || 'Service', quantity: Number(line.qty || 1), unit_price: Number(line.rate || 0), tax_rate: Number(estimate.taxRate || 0), position }));
-  const { error: itemsError } = await supabase.from('estimate_items').insert(items);
-  if (itemsError) throw itemsError;
-  return { ...estimate, id: saved.id, persisted: true, createdAt: saved.created_at, updatedAt: saved.updated_at };
+  if(estimate.persisted){const{data,error}=await supabase.from('estimates').update(payload).eq('id',estimate.id).eq('user_id',dataOwner).select('*').single();if(error)throw error;saved=data;const{error:deleteError}=await supabase.from('estimate_items').delete().eq('estimate_id',estimate.id).eq('user_id',dataOwner);if(deleteError)throw deleteError;}
+  else{const{data,error}=await supabase.from('estimates').insert(payload).select('*').single();if(error)throw error;saved=data;}
+  const items=estimate.lines.map((line,position)=>({estimate_id:saved.id,user_id:dataOwner,description:line.description||'Service',quantity:Number(line.qty||1),unit_price:Number(line.rate||0),tax_rate:Number(estimate.taxRate||0),position}));
+  const{error:itemsError}=await supabase.from('estimate_items').insert(items);if(itemsError)throw itemsError;
+  return{...estimate,id:saved.id,persisted:true,createdAt:saved.created_at,updatedAt:saved.updated_at};
 }
 
-export async function convertEstimateToInvoice(userId, estimate, invoiceNumber) {
-  if (estimate.convertedInvoiceId || estimate.status === 'converted') throw new Error('Estimate has already been converted.');
-  const settings = await getCompanySettings(userId);
-  const issueDate = new Date().toISOString().slice(0, 10);
-  const invoice = await saveInvoice(userId, {
-    customerId: estimate.customerId, number: invoiceNumber, issueDate,
-    dueDate: addDaysISO(issueDate, settings.paymentTermsDays ?? 14), status: 'draft',
-    currency: estimate.currency, taxRate: estimate.taxRate, lines: estimate.lines, notes: estimate.notes || '', persisted: false,
-  });
-  const { error } = await supabase.from('estimates').update({ status: 'converted', converted_invoice_id: invoice.id, updated_at: new Date().toISOString() }).eq('id', estimate.id).eq('user_id', userId);
-  if (error) throw error;
-  return invoice;
-}
-
-export async function markInvoicePaid(userId, invoiceId) {
-  const { error } = await supabase.from('invoices').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10), updated_at: new Date().toISOString() }).eq('id', invoiceId).eq('user_id', userId);
-  if (error) throw error;
-}
+export async function convertEstimateToInvoice(userId,estimate,invoiceNumber){if(estimate.convertedInvoiceId||estimate.status==='converted')throw new Error('Estimate has already been converted.');const dataOwner=await ownerId(userId);const settings=await getCompanySettings(dataOwner);const issueDate=new Date().toISOString().slice(0,10);const invoice=await saveInvoice(dataOwner,{customerId:estimate.customerId,number:invoiceNumber,issueDate,dueDate:addDaysISO(issueDate,settings.paymentTermsDays??14),status:'draft',currency:estimate.currency,taxRate:estimate.taxRate,lines:estimate.lines,notes:estimate.notes||'',persisted:false});const{error}=await supabase.from('estimates').update({status:'converted',converted_invoice_id:invoice.id,updated_at:new Date().toISOString()}).eq('id',estimate.id).eq('user_id',dataOwner);if(error)throw error;return invoice;}
+export async function markInvoicePaid(userId,invoiceId){const dataOwner=await ownerId(userId);const{error}=await supabase.from('invoices').update({status:'paid',paid_date:new Date().toISOString().slice(0,10),updated_at:new Date().toISOString()}).eq('id',invoiceId).eq('user_id',dataOwner);if(error)throw error;}
