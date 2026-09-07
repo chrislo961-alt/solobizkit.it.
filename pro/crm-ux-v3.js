@@ -11,10 +11,10 @@ function daysSince(value) { const d = new Date(value || 0); if (Number.isNaN(d.g
 function invoiceStatus(invoice){ const s=String(invoice.status||'draft').toLowerCase(); if(s==='sent'&&invoice.dueDate&&invoice.dueDate<new Date().toISOString().slice(0,10)) return 'overdue'; return s; }
 function total(doc){ const subtotal=(doc.lines||[]).reduce((s,l)=>s+Number(l.qty||0)*Number(l.rate||0),0); return subtotal*(1+Number(doc.taxRate||0)/100); }
 function money(value,currency='USD'){ try{return new Intl.NumberFormat(undefined,{style:'currency',currency,maximumFractionDigits:0}).format(value)}catch{return `${currency} ${Number(value||0).toFixed(0)}`} }
-function totalsByCurrency(items){ const m=new Map(); items.forEach((i)=>m.set(i.currency||'USD',(m.get(i.currency||'USD')||0)+total(i))); return [...m.entries()].map(([c,v])=>money(v,c)).join(' · ')||'—'; }
+function totalsByCurrency(items){ const m=new Map(); items.forEach((i)=>m.set(i.currency||'USD',(m.get(i.currency||'USD')||0)+total(i))); return [...m.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([c,v])=>money(v,c)).join(' · ')||'—'; }
 
 async function getWorkspace(){
-  const { data:{ session } } = await (await import('./backend.js')).supabase.auth.getSession();
+  const session = await getSession();
   if(!session?.user?.id) return null;
   if(cache) return cache;
   cache = await loadWorkspace(session.user.id);
@@ -31,19 +31,46 @@ function nextAction(customer, invoices, estimates){
   return 'Customer is up to date';
 }
 
+function rowCustomerId(row, data){
+  if(row?.dataset?.customerId) return row.dataset.customerId;
+  const cells=row?.querySelectorAll('td');
+  if(!cells?.length) return '';
+  const name=cells[0]?.querySelector('strong')?.textContent?.trim()||'';
+  const company=cells[0]?.querySelector('.muted')?.textContent?.trim()||'';
+  const contact=cells[1]?.textContent?.replace(/\s+/g,' ').trim().toLowerCase()||'';
+  const candidates=(data.customers||[]).filter((customer)=>String(customer.name||'').trim()===name);
+  if(candidates.length===1) return candidates[0].id;
+  const scored=candidates.map((customer)=>{
+    let score=0;
+    if(company&&company!=='—'&&String(customer.company||'').trim()===company) score+=4;
+    if(customer.email&&contact.includes(String(customer.email).trim().toLowerCase())) score+=6;
+    if(customer.phone&&contact.includes(String(customer.phone).trim().toLowerCase())) score+=3;
+    return {id:customer.id,score};
+  }).sort((a,b)=>b.score-a.score);
+  return scored[0]?.score>0&&scored[0]?.score>Number(scored[1]?.score||-1)?scored[0].id:'';
+}
+
+function annotateRows(results, data){
+  results.querySelectorAll('tbody tr').forEach((row)=>{
+    const id=rowCustomerId(row,data);
+    if(!id) return;
+    row.dataset.customerId=id;
+    const cell=row.lastElementChild;
+    if(cell){cell.dataset.customerActions='';cell.dataset.customerId=id;}
+  });
+}
+
 function renderPanel(data, customerId){
   const customer=data.customers.find((c)=>c.id===customerId);
   const panel=app.querySelector('#crmCustomerPanel');
   if(!panel||!customer) return;
   currentCustomerId=customerId;
-  app.querySelectorAll('#customerResults tbody tr').forEach((row)=>{
-    const btn=row.querySelector('[data-edit-customer]');
-    row.classList.toggle('crm-selected',btn?.dataset.editCustomer===customerId);
-  });
+  app.querySelectorAll('#customerResults tbody tr').forEach((row)=>row.classList.toggle('crm-selected',row.dataset.customerId===customerId));
   const invoices=data.invoices.filter((i)=>i.customerId===customerId);
   const estimates=data.estimates.filter((e)=>e.customerId===customerId);
   const openInvoices=invoices.filter((i)=>['sent','overdue'].includes(invoiceStatus(i)));
   const paidInvoices=invoices.filter((i)=>invoiceStatus(i)==='paid');
+  const canWrite=Boolean(data.workspace?.canWrite);
   const docs=[
     ...invoices.map((i)=>({type:'Invoice',number:i.number,status:invoiceStatus(i),date:i.issueDate,currency:i.currency,amount:total(i)})),
     ...estimates.map((e)=>({type:'Estimate',number:e.number,status:e.status,date:e.issueDate,currency:e.currency,amount:total(e)})),
@@ -64,47 +91,55 @@ function renderPanel(data, customerId){
         <div class="crm-metric"><small>Paid</small><strong>${esc(totalsByCurrency(paidInvoices))}</strong></div>
       </div>
       <div class="crm-actions">
-        <button type="button" data-crm-edit="${customer.id}">Edit customer</button>
-        <button class="primary" type="button" data-crm-invoice="${customer.id}">+ Invoice</button>
-        <a href="/pro/estimates/?new=1">+ Estimate</a>
+        ${canWrite?`<button type="button" data-crm-edit="${customer.id}">Edit customer</button><button class="primary" type="button" data-crm-invoice="${customer.id}">+ Invoice</button><a href="/pro/estimates/?new=1">+ Estimate</a>`:'<span class="muted">Read only workspace access</span>'}
         <a href="/pro/?view=invoices">View invoices</a>
+        <a href="/pro/estimates/">View estimates</a>
       </div>
       ${customer.notes?`<div class="crm-doc-section"><h4>Notes</h4><div class="crm-notes">${esc(customer.notes)}</div></div>`:''}
       <div class="crm-doc-section"><h4>Recent documents</h4><div class="crm-doc-list">${docs.length?docs.map((d)=>`<div class="crm-doc"><div><strong>${esc(d.type)} ${esc(d.number)}</strong><span>${esc(d.status||'draft')} · ${esc(d.date||'')}</span></div><b>${esc(money(d.amount,d.currency))}</b></div>`).join(''):'<div class="crm-customer-empty" style="padding:14px">No documents yet.</div>'}</div></div>
       <div class="crm-age">Last CRM update ${daysSince(customer.updatedAt||customer.createdAt)} day${daysSince(customer.updatedAt||customer.createdAt)===1?'':'s'} ago</div>
     </div>`;
-  panel.querySelector('[data-crm-edit]')?.addEventListener('click',()=>app.querySelector(`[data-edit-customer="${customer.id}"]`)?.click());
-  panel.querySelector('[data-crm-invoice]')?.addEventListener('click',()=>app.querySelector(`[data-invoice-customer="${customer.id}"]`)?.click());
+  if(canWrite){
+    panel.querySelector('[data-crm-edit]')?.addEventListener('click',()=>app.querySelector(`[data-customer-actions][data-customer-id="${customer.id}"] [data-edit-customer]`)?.click());
+    panel.querySelector('[data-crm-invoice]')?.addEventListener('click',()=>app.querySelector(`[data-customer-actions][data-customer-id="${customer.id}"] [data-invoice-customer]`)?.click());
+  }
 }
 
 async function enhance(){
   if(pageTitle?.textContent!=='Customers') return;
   const results=app.querySelector('#customerResults');
   const card=results?.closest('.card');
-  if(!results||!card||app.querySelector('.crm-v3-shell')) return;
+  if(!results||!card) return;
   const data=await getWorkspace();
   if(!data) return;
-  const shell=document.createElement('div'); shell.className='crm-v3-shell';
-  card.parentNode.insertBefore(shell,card); shell.appendChild(card);
-  const panel=document.createElement('aside'); panel.id='crmCustomerPanel'; panel.className='crm-customer-panel';
-  panel.innerHTML='<div class="crm-customer-empty"><strong>Customer workspace</strong>Select a customer to see contact details, documents, money and the next action.</div>';
-  shell.appendChild(panel);
-  const bindRows=()=>{
-    results.querySelectorAll('tbody tr').forEach((row)=>{
-      const id=row.querySelector('[data-edit-customer]')?.dataset.editCustomer;
-      if(!id||row.dataset.crmV3Bound) return;
-      row.dataset.crmV3Bound='1';
-      row.addEventListener('click',(event)=>{ if(event.target.closest('button,a,input,select')) return; renderPanel(data,id); });
-    });
-    if(currentCustomerId) renderPanel(data,currentCustomerId);
-  };
-  const observer=new MutationObserver(bindRows); observer.observe(results,{childList:true,subtree:true}); bindRows();
-  const first=data.customers[0]; if(first) renderPanel(data,first.id);
+  annotateRows(results,data);
+  let shell=app.querySelector('.crm-v3-shell');
+  if(!shell){
+    shell=document.createElement('div'); shell.className='crm-v3-shell';
+    card.parentNode.insertBefore(shell,card); shell.appendChild(card);
+    const panel=document.createElement('aside'); panel.id='crmCustomerPanel'; panel.className='crm-customer-panel';
+    panel.innerHTML='<div class="crm-customer-empty"><strong>Customer workspace</strong>Select a customer to see contact details, documents, money and the next action.</div>';
+    shell.appendChild(panel);
+    const bindRows=()=>{
+      annotateRows(results,data);
+      results.querySelectorAll('tbody tr').forEach((row)=>{
+        const id=row.dataset.customerId;
+        if(!id||row.dataset.crmV3Bound) return;
+        row.dataset.crmV3Bound='1';
+        row.addEventListener('click',(event)=>{ if(event.target.closest('button,a,input,select')) return; renderPanel(data,id); });
+      });
+      if(currentCustomerId) renderPanel(data,currentCustomerId);
+    };
+    const rowObserver=new MutationObserver(bindRows); rowObserver.observe(results,{childList:true,subtree:true}); bindRows();
+  }
+  const firstId=currentCustomerId||results.querySelector('tbody tr')?.dataset.customerId||data.customers[0]?.id;
+  if(firstId) renderPanel(data,firstId);
 }
 
+async function refresh(){cache=null;try{await enhance();}catch{} }
 const observer=new MutationObserver(()=>requestAnimationFrame(()=>enhance().catch(()=>{})));
 observer.observe(app,{childList:true,subtree:true});
 observer.observe(pageTitle,{childList:true,subtree:true,characterData:true});
-window.addEventListener('focus',()=>{cache=null;enhance().catch(()=>{})});
-window.addEventListener('solobizkit:workspace-updated',()=>{cache=null;enhance().catch(()=>{})});
+window.addEventListener('focus',refresh);
+window.addEventListener('solobizkit:workspace-updated',refresh);
 enhance().catch(()=>{});
