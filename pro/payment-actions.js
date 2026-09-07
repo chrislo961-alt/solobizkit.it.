@@ -24,7 +24,8 @@ export async function ensurePaymentLink(id) {
   await ensureContext();
   if (!workspace?.canWrite) throw new Error('Editor access is required to create payment links.');
   const invoice = await getInvoice(id);
-  if (['paid', 'void'].includes(String(invoice.status).toLowerCase())) throw new Error(`Invoice is already ${invoice.status}.`);
+  const status = String(invoice.status || '').toLowerCase();
+  if (!['sent', 'overdue'].includes(status)) throw new Error(status === 'paid' ? 'Invoice is already paid.' : status === 'void' ? 'Invoice is void.' : 'Send the invoice before creating a Stripe payment link.');
   const { data, error } = await supabase.functions.invoke('create-solobizkit-invoice-checkout', { body: { invoiceId: id } });
   if (error) throw error;
   if (!data?.url) throw new Error(data?.error || 'Could not create payment link.');
@@ -59,13 +60,13 @@ async function injectButtons(root = document) {
     const cell = edit.parentElement;
     if (!id || !row || !cell || cell.querySelector(`[data-pay-link="${id}"]`)) return;
     const status = row.querySelector('.status')?.textContent?.trim().toLowerCase() || '';
-    if (['paid', 'void'].includes(status)) return;
+    if (!['sent', 'overdue'].includes(status)) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'mini-btn';
     button.dataset.payLink = id;
     button.textContent = 'Stripe pay link';
-    button.title = 'Optional: create a Stripe card-payment link for this invoice';
+    button.title = 'Optional: create a Stripe card-payment link for this issued invoice';
     cell.appendChild(document.createTextNode(' '));
     cell.appendChild(button);
   });
