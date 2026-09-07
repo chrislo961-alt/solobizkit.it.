@@ -1,4 +1,4 @@
-import { getSession, supabase } from './backend.js';
+import { getDataOwnerId, getSession, supabase } from './backend.js';
 
 const params = new URLSearchParams(window.location.search);
 const invoiceId = params.get('invoice_id') || params.get('invoiceId') || params.get('invoice') || '';
@@ -27,20 +27,20 @@ function notice(message, tone = 'info') {
   el.textContent = message;
 }
 
-async function fetchStatus(userId) {
+async function fetchStatus(ownerId) {
   const { data, error } = await supabase
     .from('invoices')
     .select('id,invoice_number,status,paid_date')
     .eq('id', invoiceId)
-    .eq('user_id', userId)
+    .eq('user_id', ownerId)
     .maybeSingle();
   if (error) throw error;
   return data;
 }
 
-async function waitForWebhook(userId) {
+async function waitForWebhook(ownerId) {
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const invoice = await fetchStatus(userId);
+    const invoice = await fetchStatus(ownerId);
     if (!invoice) throw new Error('Invoice not found.');
     if (String(invoice.status || '').toLowerCase() === 'paid') return invoice;
     if (attempt < 7) await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -61,9 +61,11 @@ async function waitForWebhook(userId) {
   try {
     const session = await getSession();
     if (!session?.user?.id) return;
+    const ownerId = await getDataOwnerId();
+    if (!ownerId) throw new Error('Workspace not found.');
 
     notice('Payment completed. Syncing invoice status…');
-    const paidInvoice = await waitForWebhook(session.user.id);
+    const paidInvoice = await waitForWebhook(ownerId);
 
     if (paidInvoice) {
       notice(`Invoice ${paidInvoice.invoice_number || ''} is marked paid.`, 'success');
