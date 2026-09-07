@@ -1,4 +1,4 @@
-import { getSession, supabase } from './backend.js';
+import { getDataOwnerId, getSession, supabase } from './backend.js';
 
 let session = null;
 
@@ -33,7 +33,8 @@ function ensureDialog() {
 async function loadHistory(customerId) {
   if (!session?.user?.id) session = await getSession();
   if (!session?.user?.id) throw new Error('Sign in to view customer history.');
-  const userId = session.user.id;
+  const userId = await getDataOwnerId();
+  if (!userId) throw new Error('Workspace not found.');
   const [customerResult, invoicesResult, estimatesResult, deliveriesResult] = await Promise.all([
     supabase.from('customers').select('*').eq('id', customerId).eq('user_id', userId).maybeSingle(),
     supabase.from('invoices').select('id,invoice_number,status,currency,total,issue_date,due_date,paid_date,sent_date,created_at,updated_at').eq('customer_id', customerId).eq('user_id', userId),
@@ -64,9 +65,7 @@ function buildEvents({ customer, invoices, estimates, deliveries }) {
     if (invoice.sent_date) events.push({ date: invoice.sent_date, type: 'sent', title: `Invoice sent`, meta: invoice.invoice_number, status: 'sent', link: '/pro/' });
     if (invoice.paid_date) events.push({ date: invoice.paid_date, type: 'paid', title: `Payment recorded`, meta: `${invoice.invoice_number} · ${money(invoice.total, invoice.currency)}`, status: 'paid', link: '/pro/' });
   }
-  for (const delivery of deliveries) {
-    events.push({ date: delivery.sent_at || delivery.created_at, type: 'email', title: delivery.kind === 'estimate' ? 'Estimate email' : delivery.kind === 'reminder' ? 'Payment reminder' : 'Invoice email', meta: `${delivery.recipient || 'Recipient'}${delivery.subject ? ` · ${delivery.subject}` : ''}`, status: delivery.status });
-  }
+  for (const delivery of deliveries) events.push({ date: delivery.sent_at || delivery.created_at, type: 'email', title: delivery.kind === 'estimate' ? 'Estimate email' : delivery.kind === 'reminder' ? 'Payment reminder' : 'Invoice email', meta: `${delivery.recipient || 'Recipient'}${delivery.subject ? ` · ${delivery.subject}` : ''}`, status: delivery.status });
   return events.filter((event) => event.date).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
@@ -117,5 +116,3 @@ document.addEventListener('click', (event) => {
 const observer = new MutationObserver(addHistoryButtons);
 observer.observe(document.body, { childList: true, subtree: true });
 addHistoryButtons();
-
-(async () => { try { session = await getSession(); } catch {} })();
