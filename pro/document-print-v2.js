@@ -1,31 +1,7 @@
-import { getCompanySettings, getDataOwnerId, getSession, supabase } from './backend.js';
+import { getSession, loadWorkspace, supabase } from './backend.js';
 
 let session = null;
-let settings = null;
-
-const esc = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
-const money = (value, currency = 'USD') => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(Number(value) || 0); } catch { return `${currency} ${(Number(value) || 0).toFixed(2)}`; } };
-const date = (value) => value ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(`${value}T12:00:00`)) : '—';
-
-async function load(type, id) {
-  session ||= await getSession();
-  if (!session?.user?.id) throw new Error('Sign in to continue.');
-  const dataOwner = await getDataOwnerId();
-  if (!dataOwner) throw new Error('Workspace not found.');
-  settings ||= await getCompanySettings(session.user.id);
-  const isInvoice = type === 'invoice';
-  const table = isInvoice ? 'invoices' : 'estimates';
-  const itemTable = isInvoice ? 'invoice_items' : 'estimate_items';
-  const { data: doc, error } = await supabase.from(table).select(`*, ${itemTable}(*)`).eq('id', id).eq('user_id', dataOwner).single();
-  if (error) throw error;
-  let customer = null;
-  if (doc.customer_id) {
-    const result = await supabase.from('customers').select('*').eq('id', doc.customer_id).eq('user_id', dataOwner).maybeSingle();
-    if (result.error) throw result.error;
-    customer = result.data;
-  }
-  return { doc, customer, items: [...(doc[itemTable] || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0)) };
-}
+let workspaceCache = null;
 
 function base64Bytes(content) {
   const binary = atob(String(content || ''));
@@ -34,46 +10,56 @@ function base64Bytes(content) {
   return bytes;
 }
 
-async function openCanonicalInvoicePdf(id, popup) {
+async function ensureSession() {
   session ||= await getSession();
   if (!session?.user?.id) throw new Error('Sign in to continue.');
-  const { data, error } = await supabase.functions.invoke('send-invoice-message', {
-    body: { invoiceId: id, kind: 'invoice', action: 'download', product: 'solobizkit' },
-  });
+  return session;
+}
+
+async function openPdfFromFunction(kind, id, popup) {
+  await ensureSession();
+  const request = kind === 'invoice'
+    ? supabase.functions.invoke('send-invoice-message', { body: { invoiceId: id, kind: 'invoice', action: 'download', product: 'solobizkit' } })
+    : supabase.functions.invoke('send-estimate-email', { body: { estimateId: id, action: 'download', product: 'solobizkit' } });
+  const { data, error } = await request;
   if (error) throw error;
-  if (!data?.content) throw new Error(data?.error || 'Invoice PDF could not be generated.');
+  if (!data?.content) throw new Error(data?.error || `${kind === 'invoice' ? 'Invoice' : 'Estimate'} PDF could not be generated.`);
   const blob = new Blob([base64Bytes(data.content)], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   popup.location.replace(url);
   setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
 
-function business() {
-  const rows = [settings?.address, [settings?.postalCode, settings?.city].filter(Boolean).join(' '), settings?.country, settings?.companyEmail, settings?.phone].filter(Boolean);
-  return `<strong class="business">${esc(settings?.companyName || 'Your business')}</strong>${rows.map((row) => `<div>${esc(row)}</div>`).join('')}${settings?.taxNumber ? `<div>VAT / Tax ID: ${esc(settings.taxNumber)}</div>` : ''}`;
+async function loadWorkspaceData() {
+  await ensureSession();
+  if (!workspaceCache) workspaceCache = await loadWorkspace(session.user.id);
+  return workspaceCache;
 }
 
-function client(customer) {
-  if (!customer) return '<span class="muted">No customer selected</span>';
-  const title = customer.company || customer.name || 'Customer';
-  const rows = [customer.company && customer.name ? customer.name : null, customer.address, [customer.postal_code, customer.city].filter(Boolean).join(' '), customer.country, customer.email, customer.phone].filter(Boolean);
-  return `<strong class="client">${esc(title)}</strong>${rows.map((row) => `<div>${esc(row)}</div>`).join('')}`;
+function estimateNumberFromRow(row) {
+  return row?.querySelector('td strong')?.textContent?.trim() || '';
 }
 
-function css() { return `
-@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;background:#fff;color:#17211b;font-family:Arial,sans-serif;font-size:12px;line-height:1.45}.page{min-height:297mm;padding:17mm 18mm 15mm;position:relative}.bar{position:absolute;left:0;right:0;top:0;height:5px;background:#183c2b}.top{display:grid;grid-template-columns:1fr auto;gap:30px;margin-bottom:30px}.business{display:block;font-size:20px;margin-bottom:7px}.title{text-align:right}.title h1{margin:0;color:#183c2b;font-size:34px}.number{font-weight:800;font-size:14px}.status{display:inline-block;margin-top:8px;padding:5px 9px;border-radius:999px;background:#eef4f0;font-size:10px;font-weight:800;text-transform:uppercase}.cards{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-bottom:24px}.card{border:1px solid #dde5df;border-radius:12px;padding:15px;min-height:118px}.label{font-size:9px;font-weight:800;letter-spacing:.12em;color:#728078;margin-bottom:8px}.client{display:block;font-size:15px;margin-bottom:5px}.meta{display:flex;justify-content:space-between;gap:20px;padding:4px 0}.meta span,.muted{color:#6c7971}table{width:100%;border-collapse:collapse}th{background:#f2f6f3;color:#617067;font-size:9px;letter-spacing:.09em;text-transform:uppercase;padding:9px 10px;text-align:left}td{padding:11px 10px;border-bottom:1px solid #e5eae6}.num{text-align:right;white-space:nowrap}.summary{display:grid;grid-template-columns:1fr 260px;gap:26px;margin-top:22px}.notes{padding:14px;background:#f6f8f6;border-radius:10px}.totals{border:1px solid #dce4de;border-radius:12px;overflow:hidden}.totals div{display:flex;justify-content:space-between;padding:8px 12px}.totals .grand{background:#183c2b;color:#fff;font-size:15px;font-weight:800;padding:12px}.footer{margin-top:34px;padding-top:12px;border-top:1px solid #e4e9e5;display:flex;justify-content:space-between;color:#7b8780;font-size:9px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{min-height:auto}}
-`; }
-
-function openEstimate(doc, customer, items) {
-  const number = doc.estimate_number;
-  const currency = doc.currency || settings?.defaultCurrency || 'USD';
-  const popup = window.open('', '_blank', 'width=1000,height=860');
-  if (!popup) throw new Error('Allow pop-ups to print documents.');
-  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(number)}</title><style>${css()}</style></head><body><main class="page"><div class="bar"></div><header class="top"><div>${business()}</div><div class="title"><h1>Estimate</h1><div class="number">${esc(number)}</div><span class="status">${esc(doc.status || 'draft')}</span></div></header><section class="cards"><div class="card"><div class="label">PREPARED FOR</div>${client(customer)}</div><div class="card"><div class="label">DOCUMENT DETAILS</div><div class="meta"><span>Issued</span><strong>${esc(date(doc.issue_date))}</strong></div><div class="meta"><span>Valid until</span><strong>${esc(date(doc.valid_until))}</strong></div><div class="meta"><span>Currency</span><strong>${esc(currency)}</strong></div></div></section><table><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Tax</th><th class="num">Amount</th></tr></thead><tbody>${items.map((item) => { const qty = Number(item.quantity || 0); const rate = Number(item.unit_price || 0); const amount = qty * rate; return `<tr><td><strong>${esc(item.description || 'Service')}</strong></td><td class="num">${qty}</td><td class="num">${money(rate, currency)}</td><td class="num">${Number(item.tax_rate || 0)}%</td><td class="num"><strong>${money(amount, currency)}</strong></td></tr>`; }).join('')}</tbody></table><section class="summary"><div>${doc.notes ? `<div class="notes"><strong>Notes</strong><br>${esc(doc.notes).replace(/\n/g, '<br>')}</div>` : ''}</div><div class="totals"><div><span>Subtotal</span><strong>${money(doc.subtotal, currency)}</strong></div><div><span>Tax / VAT</span><strong>${money(doc.tax_total, currency)}</strong></div><div class="grand"><span>Total</span><strong>${money(doc.total, currency)}</strong></div></div></section><footer class="footer"><span>${esc(settings?.companyName || 'Your business')}</span><strong>Created with SoloBizKit Pro</strong></footer></main><script>window.onload=()=>setTimeout(()=>window.print(),100)<\/script></body></html>`);
-  popup.document.close();
+async function injectEstimatePdfButtons(root = document) {
+  if (!location.pathname.startsWith('/pro/estimates')) return;
+  const actions = [...root.querySelectorAll('.estimate-actions')];
+  if (!actions.length) return;
+  let data;
+  try { data = await loadWorkspaceData(); } catch { return; }
+  const byNumber = new Map((data.estimates || []).map((estimate) => [String(estimate.number || '').trim(), estimate.id]));
+  for (const host of actions) {
+    if (host.querySelector('[data-print-estimate]')) continue;
+    const id = byNumber.get(estimateNumberFromRow(host.closest('tr')));
+    if (!id) continue;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'mini-btn';
+    button.dataset.printEstimate = id;
+    button.textContent = 'PDF';
+    button.title = 'Open the exact PDF used when this estimate is emailed';
+    host.prepend(button, document.createTextNode(' '));
+  }
 }
-
-async function printEstimate(id) { const { doc, customer, items } = await load('estimate', id); openEstimate(doc, customer, items); }
 
 function labelInvoiceButtons(root = document) {
   root.querySelectorAll('[data-print-invoice]').forEach((button) => {
@@ -82,28 +68,37 @@ function labelInvoiceButtons(root = document) {
   });
 }
 
+async function openCanonical(kind, id) {
+  const popup = window.open('', '_blank', 'width=1000,height=860');
+  if (!popup) throw new Error(`Allow pop-ups to open ${kind} PDFs.`);
+  popup.document.write(`<!doctype html><title>Preparing ${kind} PDF…</title><body style="font:14px Arial,sans-serif;padding:32px">Preparing the exact ${kind} PDF…</body>`);
+  popup.document.close();
+  try { await openPdfFromFunction(kind, id, popup); }
+  catch (error) { popup.close(); throw error; }
+}
+
 document.addEventListener('click', async (event) => {
   const button = event.target.closest('button');
   if (!button) return;
   const invoiceId = button.dataset.printInvoice;
   const estimateId = button.dataset.printEstimate;
   if (!invoiceId && !estimateId) return;
-  event.preventDefault(); event.stopImmediatePropagation();
-  try {
-    if (invoiceId) {
-      const popup = window.open('', '_blank', 'width=1000,height=860');
-      if (!popup) throw new Error('Allow pop-ups to open invoice PDFs.');
-      popup.document.write('<!doctype html><title>Preparing invoice PDF…</title><body style="font:14px Arial,sans-serif;padding:32px">Preparing the exact invoice PDF…</body>');
-      popup.document.close();
-      try { await openCanonicalInvoicePdf(invoiceId, popup); }
-      catch (error) { popup.close(); throw error; }
-    } else {
-      await printEstimate(estimateId);
-    }
-  } catch (error) { console.error(error); alert(error?.message || 'Could not open document.'); }
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  try { await openCanonical(invoiceId ? 'invoice' : 'estimate', invoiceId || estimateId); }
+  catch (error) { console.error(error); alert(error?.message || 'Could not open document.'); }
 }, true);
 
-const observer = new MutationObserver(() => labelInvoiceButtons());
+let scheduled = false;
+async function enhance() {
+  labelInvoiceButtons();
+  await injectEstimatePdfButtons();
+}
+const observer = new MutationObserver(() => {
+  if (scheduled) return;
+  scheduled = true;
+  requestAnimationFrame(async () => { scheduled = false; await enhance(); });
+});
 observer.observe(document.body, { childList: true, subtree: true });
-labelInvoiceButtons();
-window.addEventListener('solobizkit:workspace-updated', () => { session = null; settings = null; labelInvoiceButtons(); });
+window.addEventListener('solobizkit:workspace-updated', () => { session = null; workspaceCache = null; enhance(); });
+enhance();
