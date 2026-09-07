@@ -9,7 +9,7 @@ const ALLOWED_TYPES = new Set([
 
 const isEstimatePage = window.location.pathname.startsWith('/pro/estimates');
 const config = isEstimatePage
-  ? { table: 'estimate_attachments', idColumn: 'estimate_id', bucket: 'estimate-attachments', selector: '[data-edit]' }
+  ? { table: 'estimate_attachments', idColumn: 'estimate_id', bucket: 'estimate-attachments', selector: '.estimate-actions' }
   : { table: 'invoice_attachments', idColumn: 'invoice_id', bucket: 'invoice-attachments', selector: '[data-edit-invoice]' };
 
 let workspace = null;
@@ -146,12 +146,15 @@ async function openManager(documentId) {
   } catch (error) { status.textContent = ''; showError(error); }
 }
 
+function estimateIdFromHost(host) {
+  return host?.dataset?.estimateId || host?.querySelector('[data-print-estimate]')?.dataset.printEstimate || host?.querySelector('[data-edit]')?.dataset.edit || '';
+}
+
 function enhance(root = document) {
-  root.querySelectorAll(config.selector).forEach((editButton) => {
-    const documentId = isEstimatePage ? editButton.dataset.edit : editButton.dataset.editInvoice;
-    if (!documentId) return;
-    const host = editButton.parentElement;
-    if (!host || host.querySelector(`[data-attachments-for="${documentId}"]`)) return;
+  root.querySelectorAll(config.selector).forEach((anchor) => {
+    const host = isEstimatePage ? anchor : anchor.parentElement;
+    const documentId = isEstimatePage ? estimateIdFromHost(host) : anchor.dataset.editInvoice;
+    if (!documentId || !host || host.querySelector(`[data-attachments-for="${documentId}"]`)) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'mini-btn';
@@ -163,9 +166,5 @@ function enhance(root = document) {
 }
 
 enhance();
-new MutationObserver((mutations) => {
-  for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) if (node.nodeType === 1) enhance(node.matches?.(config.selector) ? node.parentElement || node : node);
-  }
-}).observe(document.body, { childList: true, subtree: true });
-window.addEventListener('solobizkit:workspace-updated', () => { workspace = null; dataOwner = null; });
+new MutationObserver(() => enhance()).observe(document.body, { childList: true, subtree: true });
+window.addEventListener('solobizkit:workspace-updated', () => { workspace = null; dataOwner = null; enhance(); });
