@@ -1,5 +1,5 @@
-import { calculateInvoice, customerOutstanding, money, nextInvoiceNumber, normalizeInvoiceStatus } from './pro-core.js';
-import { getSession, loadWorkspace, markInvoicePaid, onAuthChange, saveCustomer, saveInvoice, signIn, signOut, signUp, supabase } from './backend.js';
+import { calculateInvoice, money, nextInvoiceNumber, normalizeInvoiceStatus } from './pro-core.js';
+import { getCompanySettings, getSession, loadWorkspace, markInvoicePaid, onAuthChange, saveCustomer, saveInvoice, signIn, signOut, signUp, supabase } from './backend.js';
 
 const app = document.querySelector('#app');
 const pageTitle = document.querySelector('#pageTitle');
@@ -18,25 +18,49 @@ let profile = null;
 let subscription = null;
 let workspaceContext = null;
 let modalAction = null;
-let state = { customers: [], invoices: [], settings: { currency: 'USD', taxRate: 0 } };
+let state = { customers: [], invoices: [], settings: { currency: 'USD', taxRate: 0, paymentTermsDays: 14, invoicePrefix: 'INV-' } };
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
 }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
-function plusDaysISO(days) { const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); }
+function plusDaysISO(days) { const d = new Date(); d.setDate(d.getDate() + Math.max(0, Number(days || 0))); return d.toISOString().slice(0, 10); }
+function normalizedPrefix(value, fallback = 'INV-') { const raw = String(value || fallback).trim().replace(/\s+/g, ''); return raw.endsWith('-') ? raw : `${raw}-`; }
 function customerName(id) { return state.customers.find((c) => c.id === id)?.name || 'Unknown customer'; }
 function setBusy(message = 'Loading…') { app.innerHTML = `<div class="auth-stage"><div class="auth-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>${esc(message)}</h2></div></div>`; }
 function showError(error) { console.error(error); alert(error?.message || 'Something went wrong. Please try again.'); }
 function hasProAccess() { return ['active', 'trialing'].includes(String(subscription?.status || '').toLowerCase()) && String(subscription?.plan || '').toLowerCase() === 'pro'; }
 function canWrite() { return Boolean(workspaceContext?.canWrite); }
+function openInvoices(items = state.invoices) { return items.filter((invoice) => ['sent', 'overdue'].includes(normalizeInvoiceStatus(invoice))); }
+function currencyTotals(items, emptyCurrency = state.settings.currency) {
+  const totals = new Map();
+  for (const item of items) {
+    const currency = String(item.currency || emptyCurrency || 'USD').toUpperCase();
+    totals.set(currency, (totals.get(currency) || 0) + calculateInvoice(item).total);
+  }
+  if (!totals.size) return money(0, emptyCurrency || 'USD');
+  return [...totals.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([currency, total]) => money(total, currency)).join(' · ');
+}
+function customerOutstandingText(customerId) {
+  return currencyTotals(openInvoices(state.invoices.filter((invoice) => invoice.customerId === customerId)));
+}
 
 async function hydrate() {
   if (!session?.user?.id) return;
   setBusy('Loading your workspace…');
-  const workspace = await loadWorkspace(session.user.id);
+  const [workspace, companySettings] = await Promise.all([
+    loadWorkspace(session.user.id),
+    getCompanySettings(session.user.id),
+  ]);
   state.customers = workspace.customers.map((c) => ({ ...c, persisted: true }));
   state.invoices = workspace.invoices.map((i) => ({ ...i, persisted: true }));
+  state.settings = {
+    currency: companySettings.defaultCurrency || 'USD',
+    taxRate: Number(companySettings.defaultTax || 0),
+    paymentTermsDays: Math.max(0, Number(companySettings.paymentTermsDays ?? 14)),
+    invoicePrefix: normalizedPrefix(companySettings.invoicePrefix, 'INV-'),
+  };
+  window.__solobizkitInvoicePrefix = state.settings.invoicePrefix;
   profile = workspace.profile;
   subscription = workspace.subscription;
   workspaceContext = workspace.workspace || null;
@@ -126,13 +150,12 @@ function render() {
 }
 
 function renderDashboard() {
-  const currency = state.settings.currency;
-  const paid = state.invoices.filter((i) => normalizeInvoiceStatus(i) === 'paid').reduce((sum, invoice) => sum + calculateInvoice(invoice).total, 0);
-  const outstanding = state.invoices.filter((i) => ['sent', 'overdue'].includes(normalizeInvoiceStatus(i))).reduce((sum, invoice) => sum + calculateInvoice(invoice).total, 0);
-  const openCount = state.invoices.filter((i) => ['sent', 'overdue'].includes(normalizeInvoiceStatus(i))).length;
+  const paidInvoices = state.invoices.filter((invoice) => normalizeInvoiceStatus(invoice) === 'paid');
+  const outstandingInvoices = openInvoices();
+  const openCount = outstandingInvoices.length;
   const recent = state.invoices.slice(0, 6);
   const followUps = state.customers.filter((customer) => customer.status !== 'client').slice(0, 6);
-  app.innerHTML = `<div class="grid stats"><div class="stat"><div class="label">Customers</div><div class="value">${state.customers.length}</div></div><div class="stat"><div class="label">Paid revenue</div><div class="value">${money(paid, currency)}</div></div><div class="stat"><div class="label">Outstanding</div><div class="value">${money(outstanding, currency)}</div></div><div class="stat"><div class="label">Open invoices</div><div class="value">${openCount}</div></div></div><div class="grid dashboard-grid"><section class="card"><div class="card-head"><h2>Recent invoices</h2><button class="mini-btn" data-jump="invoices">View all</button></div>${recent.length ? invoiceTable(recent, true) : '<div class="empty">No invoices yet.</div>'}</section><section class="card"><div class="card-head"><h2>CRM follow-up</h2><button class="mini-btn" data-jump="customers">Customers</button></div><div class="activity">${followUps.length ? followUps.map((customer) => `<div class="activity-item"><strong>${esc(customer.name)}</strong><span>${esc(customer.company || customer.email || 'No company')} · <span class="status ${esc(customer.status)}">${esc(customer.status)}</span></span></div>`).join('') : '<div class="empty">No leads waiting.</div>'}</div></section></div>`;
+  app.innerHTML = `<div class="grid stats"><div class="stat"><div class="label">Customers</div><div class="value">${state.customers.length}</div></div><div class="stat"><div class="label">Paid revenue</div><div class="value">${esc(currencyTotals(paidInvoices))}</div></div><div class="stat"><div class="label">Outstanding</div><div class="value">${esc(currencyTotals(outstandingInvoices))}</div></div><div class="stat"><div class="label">Open invoices</div><div class="value">${openCount}</div></div></div><div class="grid dashboard-grid"><section class="card"><div class="card-head"><h2>Recent invoices</h2><button class="mini-btn" data-jump="invoices">View all</button></div>${recent.length ? invoiceTable(recent, true) : '<div class="empty">No invoices yet.</div>'}</section><section class="card"><div class="card-head"><h2>CRM follow-up</h2><button class="mini-btn" data-jump="customers">Customers</button></div><div class="activity">${followUps.length ? followUps.map((customer) => `<div class="activity-item"><strong>${esc(customer.name)}</strong><span>${esc(customer.company || customer.email || 'No company')} · <span class="status ${esc(customer.status)}">${esc(customer.status)}</span></span></div>`).join('') : '<div class="empty">No leads waiting.</div>'}</div></section></div>`;
   app.querySelectorAll('[data-jump]').forEach((button) => button.onclick = () => { currentView = button.dataset.jump; render(); });
 }
 
@@ -144,7 +167,7 @@ function renderCustomers() {
   const update = () => {
     const q = search.value.trim().toLowerCase();
     const items = state.customers.filter((customer) => !status.value || customer.status === status.value).filter((customer) => [customer.name, customer.company, customer.email, customer.phone].some((value) => String(value || '').toLowerCase().includes(q)));
-    results.innerHTML = items.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Customer</th><th>Contact</th><th>Status</th><th>Outstanding</th><th></th></tr></thead><tbody>${items.map((customer) => `<tr><td><strong>${esc(customer.name)}</strong><br><span class="muted">${esc(customer.company || '—')}</span></td><td>${esc(customer.email || '—')}<br><span class="muted">${esc(customer.phone || '')}</span></td><td><span class="status ${esc(customer.status)}">${esc(customer.status)}</span></td><td>${money(customerOutstanding(customer.id, state.invoices), state.settings.currency)}</td><td>${canWrite() ? `<button class="mini-btn" data-edit-customer="${customer.id}">Edit</button> <button class="mini-btn" data-invoice-customer="${customer.id}">Invoice</button>` : '<span class="muted">Read only</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No customers found.</div>';
+    results.innerHTML = items.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Customer</th><th>Contact</th><th>Status</th><th>Outstanding</th><th></th></tr></thead><tbody>${items.map((customer) => `<tr><td><strong>${esc(customer.name)}</strong><br><span class="muted">${esc(customer.company || '—')}</span></td><td>${esc(customer.email || '—')}<br><span class="muted">${esc(customer.phone || '')}</span></td><td><span class="status ${esc(customer.status)}">${esc(customer.status)}</span></td><td>${esc(customerOutstandingText(customer.id))}</td><td>${canWrite() ? `<button class="mini-btn" data-edit-customer="${customer.id}">Edit</button> <button class="mini-btn" data-invoice-customer="${customer.id}">Invoice</button>` : '<span class="muted">Read only</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No customers found.</div>';
     results.querySelectorAll('[data-edit-customer]').forEach((button) => button.onclick = () => openCustomerModal(button.dataset.editCustomer));
     results.querySelectorAll('[data-invoice-customer]').forEach((button) => button.onclick = () => openInvoiceModal(null, button.dataset.invoiceCustomer));
   };
@@ -203,7 +226,7 @@ function openInvoiceModal(invoiceId = null, presetCustomerId = null) {
   if (!canWrite()) return showError(new Error('This workspace role is read only.'));
   const existing = state.invoices.find((invoice) => invoice.id === invoiceId);
   if (!state.customers.length) { openCustomerModal(); return; }
-  const invoice = existing || { customerId: presetCustomerId || state.customers[0].id, number: nextInvoiceNumber(state.invoices), issueDate: todayISO(), dueDate: plusDaysISO(14), status: 'draft', currency: state.settings.currency, taxRate: 0, lines: [{ description: '', qty: 1, rate: 0 }], notes: '' };
+  const invoice = existing || { customerId: presetCustomerId || state.customers[0].id, number: nextInvoiceNumber(state.invoices), issueDate: todayISO(), dueDate: plusDaysISO(state.settings.paymentTermsDays), status: 'draft', currency: state.settings.currency, taxRate: state.settings.taxRate, lines: [{ description: '', qty: 1, rate: 0 }], notes: '' };
   modalTitle.textContent = existing ? `Edit ${existing.number}` : 'New invoice';
   modalBody.innerHTML = `<div class="form-grid"><div class="field"><label>Customer *</label><select class="select" name="customerId">${state.customers.map((customer) => `<option value="${customer.id}" ${customer.id === invoice.customerId ? 'selected' : ''}>${esc(customer.name)}</option>`).join('')}</select></div><div class="field"><label>Invoice number *</label><input class="input" name="number" required value="${esc(invoice.number)}"></div><div class="field"><label>Issue date</label><input class="input" name="issueDate" type="date" value="${esc(invoice.issueDate)}"></div><div class="field"><label>Due date</label><input class="input" name="dueDate" type="date" value="${esc(invoice.dueDate)}"></div><div class="field"><label>Status</label><select class="select" name="status">${['draft', 'sent', 'paid'].map((status) => `<option value="${status}" ${invoice.status === status ? 'selected' : ''}>${status[0].toUpperCase() + status.slice(1)}</option>`).join('')}</select></div><div class="field"><label>Currency</label><select class="select" name="currency">${['USD', 'EUR', 'GBP', 'NOK', 'SEK', 'DKK'].map((currency) => `<option ${currency === invoice.currency ? 'selected' : ''}>${currency}</option>`).join('')}</select></div><div class="field full"><div class="split"><label>Line items</label><button type="button" class="mini-btn" id="addLine">+ Line</button></div><div class="invoice-lines" id="invoiceLines">${invoice.lines.map(invoiceLineMarkup).join('')}</div></div><div class="field"><label>Tax / VAT %</label><input class="input" name="taxRate" type="number" min="0" max="100" step="0.01" value="${Number(invoice.taxRate) || 0}"></div><div class="field full"><label>Notes</label><textarea class="textarea" name="notes">${esc(invoice.notes || '')}</textarea></div><div class="field full"><div class="totals" id="liveTotals"></div></div></div>`;
   const linesEl = modalBody.querySelector('#invoiceLines');
@@ -228,7 +251,7 @@ function openInvoiceModal(invoiceId = null, presetCustomerId = null) {
     const number = String(form.get('number') || '').trim();
     if (!number) return false;
     const lines = [...linesEl.querySelectorAll('.invoice-line')].map((row) => ({ description: row.querySelector('[name="description"]').value.trim() || 'Service', qty: Number(row.querySelector('[name="qty"]').value) || 1, rate: Number(row.querySelector('[name="rate"]').value) || 0 }));
-    const draft = { ...(existing || {}), customerId: String(form.get('customerId')), number, issueDate: String(form.get('issueDate') || todayISO()), dueDate: String(form.get('dueDate') || ''), status: String(form.get('status') || 'draft'), currency: String(form.get('currency') || 'USD'), taxRate: Number(form.get('taxRate')) || 0, lines, notes: String(form.get('notes') || '').trim() };
+    const draft = { ...(existing || {}), customerId: String(form.get('customerId')), number, issueDate: String(form.get('issueDate') || todayISO()), dueDate: String(form.get('dueDate') || ''), status: String(form.get('status') || 'draft'), currency: String(form.get('currency') || state.settings.currency || 'USD'), taxRate: Number(form.get('taxRate')) || 0, lines, notes: String(form.get('notes') || '').trim() };
     const saved = await saveInvoice(session.user.id, draft);
     if (existing) state.invoices = state.invoices.map((item) => item.id === existing.id ? saved : item); else state.invoices.unshift(saved);
     render();
@@ -281,7 +304,8 @@ onAuthChange(async (_event, nextSession) => {
     profile = null;
     subscription = null;
     workspaceContext = null;
-    state = { customers: [], invoices: [], settings: { currency: 'USD', taxRate: 0 } };
+    window.__solobizkitInvoicePrefix = null;
+    state = { customers: [], invoices: [], settings: { currency: 'USD', taxRate: 0, paymentTermsDays: 14, invoicePrefix: 'INV-' } };
     renderAuth();
   }
 });
