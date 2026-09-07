@@ -20,11 +20,15 @@ for (const file of ['payment-actions.js','reminder-actions.js','customer-history
   forbid(file,".eq('user_id', session.user.id)",'direct session.user.id data filter');
 }
 need('document-attachments.js','workspace.canWrite');
+need('document-attachments.js',"selector: '.estimate-actions'",'read-only estimate attachment anchor');
+need('document-attachments.js','data-print-estimate','estimate id fallback for read-only attachments');
 need('spreadsheet-transfer-workspace.js','workspace.canWrite');
 need('email-actions-v2.js','getDataOwnerId');
 need('email-actions-v2.js','lifecycleSynced','server invoice lifecycle acknowledgement');
 need('payment-actions.js','allowDraft','send-flow Stripe link exception');
 need('document-print-v2.js',"action: 'download'",'canonical server PDF download');
+need('document-print-v2.js',"send-estimate-email",'canonical estimate PDF endpoint');
+need('document-print-v2.js',"data.printEstimate",'estimate PDF action');
 need('document-print-v2.js',"button.textContent = 'PDF'",'canonical PDF action label');
 need('pro-app.js','workspaceContext?.canWrite','workspace write gate');
 need('pro-app.js','workspaceContext?.isOwner','owner billing gate');
@@ -32,12 +36,12 @@ need('customer-portal-actions.js','getWorkspaceContext','portal role gate');
 need('customer-workspace-actions.js','getWorkspaceContext','customer workspace role gate');
 if(!estimates.includes('workspaceContext?.canWrite')) errors.push('estimates.js: missing workspace write gate');
 if(!estimates.includes('workspaceContext?.isOwner')) errors.push('estimates.js: missing owner billing gate');
-need('bootstrap.js',"20260907-8",'current cache version');
-need('bootstrap.js','version: 19','boot version 19');
+need('bootstrap.js',"20260907-9",'current cache version');
+need('bootstrap.js','version: 20','boot version 20');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: active workspace ownership, roles, invitations, payments, reminders, attachments, activity, Excel paths, canonical invoice PDF and read-only UI are workspace-aware.');
+console.log('Pro team/workspace audit passed: active workspace ownership, roles, invitations, payments, reminders, attachments, activity, Excel paths, canonical invoice/estimate PDFs and read-only document access are workspace-aware.');
