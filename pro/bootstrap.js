@@ -43,7 +43,7 @@ async function safeImport(path) {
   }
 }
 
-const V = '20260907-2';
+const V = '20260907-3';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
@@ -82,8 +82,9 @@ if (!coreReady) {
     safeImport(`./lead-followups.js?v=${V}`),
     safeImport(`./document-ux-v2.js?v=${V}`),
     safeImport(`./document-editor-v3.js?v=${V}`),
+    safeImport(`./spreadsheet-ui.js?v=${V}`),
     safeImport(`./funnel-analytics.js?v=${V}`),
   ]);
 }
 
-window.sbkProBoot = { version: 13, coreReady, bootedAt: new Date().toISOString() };
+window.sbkProBoot = { version: 14, coreReady, bootedAt: new Date().toISOString() };
