@@ -17,10 +17,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Test calculator core
+        run: node --test tests/calculator-core.test.mjs tests/growth-calculators.test.mjs tests/use-case-calculators.test.mjs
       - name: Test VAT promoted route
         run: node --test tests/vat-calculator.test.mjs
-      - name: Test calculator logic
-        run: node --test tests/*.test.mjs
+      - name: Test public navigation and search
+        run: node --test tests/home-search.test.mjs tests/site-parity.test.mjs
+      - name: Test public localization
+        run: node --test tests/localization.test.mjs tests/public-i18n-coverage.test.mjs
+      - name: Test Pro product flows
+        run: node --test tests/pro-activation.test.mjs tests/pro-crm.test.mjs
       - name: Audit public static site
         run: node scripts/site-audit.mjs
       - name: Audit accessibility
