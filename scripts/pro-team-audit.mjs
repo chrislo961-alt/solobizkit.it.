@@ -28,7 +28,7 @@ need('email-actions-v2.js','lifecycleSynced','server invoice lifecycle acknowled
 need('payment-actions.js','allowDraft','send-flow Stripe link exception');
 need('document-print-v2.js',"action: 'download'",'canonical server PDF download');
 need('document-print-v2.js',"send-estimate-email",'canonical estimate PDF endpoint');
-need('document-print-v2.js',"data.printEstimate",'estimate PDF action');
+need('document-print-v2.js',"dataset.printEstimate",'estimate PDF action');
 need('document-print-v2.js',"button.textContent = 'PDF'",'canonical PDF action label');
 need('pro-app.js','workspaceContext?.canWrite','workspace write gate');
 need('pro-app.js','workspaceContext?.isOwner','owner billing gate');
