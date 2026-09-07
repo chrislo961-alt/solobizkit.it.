@@ -20,12 +20,13 @@ async function getInvoice(id) {
   return data;
 }
 
-export async function ensurePaymentLink(id) {
+export async function ensurePaymentLink(id, { allowDraft = false } = {}) {
   await ensureContext();
   if (!workspace?.canWrite) throw new Error('Editor access is required to create payment links.');
   const invoice = await getInvoice(id);
   const status = String(invoice.status || '').toLowerCase();
-  if (!['sent', 'overdue'].includes(status)) throw new Error(status === 'paid' ? 'Invoice is already paid.' : status === 'void' ? 'Invoice is void.' : 'Send the invoice before creating a Stripe payment link.');
+  const allowed = ['sent', 'overdue'].includes(status) || (allowDraft && status === 'draft');
+  if (!allowed) throw new Error(status === 'paid' ? 'Invoice is already paid.' : status === 'void' ? 'Invoice is void.' : 'Send the invoice before creating a Stripe payment link.');
   const { data, error } = await supabase.functions.invoke('create-solobizkit-invoice-checkout', { body: { invoiceId: id } });
   if (error) throw error;
   if (!data?.url) throw new Error(data?.error || 'Could not create payment link.');
