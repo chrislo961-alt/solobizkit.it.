@@ -1,4 +1,4 @@
-import { commitSpreadsheetImport, downloadSpreadsheetTemplate, exportWorkspaceExcel, previewSpreadsheetImport } from './spreadsheet-transfer.js';
+import { commitSpreadsheetImport, downloadSpreadsheetTemplate, exportWorkspaceExcel, previewSpreadsheetImport } from './spreadsheet-transfer-workspace.js';
 
 const lang=(()=>{try{return localStorage.getItem('sbk_language')||'en'}catch{return'en'}})();
 const C={
