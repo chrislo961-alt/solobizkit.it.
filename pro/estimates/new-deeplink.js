@@ -2,6 +2,7 @@ const params = new URLSearchParams(location.search);
 const wantsNew = params.get('new') === '1';
 const presetCustomer = params.get('customer') || '';
 const requestedEstimate = params.get('estimate') || '';
+const wantsEdit = params.get('edit') === '1';
 let opened = false;
 let highlighted = false;
 
@@ -29,13 +30,15 @@ function openWhenReady(){
 
 function highlightEstimate(){
   if (!requestedEstimate || highlighted) return;
-  const anchor = document.querySelector(`[data-print-estimate="${CSS.escape(requestedEstimate)}"]`)
-    || document.querySelector(`[data-edit="${CSS.escape(requestedEstimate)}"]`);
-  const row = anchor?.closest('tr');
+  const row = document.querySelector(`tr[data-estimate-id="${CSS.escape(requestedEstimate)}"]`);
   if (!row) return;
   highlighted = true;
   row.classList.add('sbk-deeplink-target');
   row.scrollIntoView({ block:'center', behavior:'smooth' });
+  if (wantsEdit) {
+    const edit = row.querySelector(`[data-edit="${CSS.escape(requestedEstimate)}"]`);
+    if (edit && !edit.disabled) setTimeout(() => edit.click(), 120);
+  }
   setTimeout(() => row.classList.remove('sbk-deeplink-target'), 5000);
 }
 
@@ -44,5 +47,5 @@ function sync(){
   if (opened) selectPresetCustomer();
   highlightEstimate();
 }
-new MutationObserver(sync).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','disabled','open','data-print-estimate']});
+new MutationObserver(sync).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','disabled','open','data-estimate-id']});
 sync();
