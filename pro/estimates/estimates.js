@@ -1,5 +1,5 @@
 import { calculateInvoice, money, nextInvoiceNumber } from '../pro-core.js';
-import { convertEstimateToInvoice, getSession, loadWorkspace, onAuthChange, saveEstimate, signIn, signOut, signUp, supabase } from '../backend.js';
+import { convertEstimateToInvoice, getCompanySettings, getSession, loadWorkspace, onAuthChange, saveEstimate, signIn, signOut, signUp, supabase } from '../backend.js';
 
 const app = document.querySelector('#app');
 const shell = document.querySelector('#shell');
@@ -13,18 +13,19 @@ const modalBody = document.querySelector('#modalBody');
 let session = null;
 let subscription = null;
 let workspaceContext = null;
-let state = { customers: [], invoices: [], estimates: [] };
+let state = { customers: [], invoices: [], estimates: [], settings: { currency:'USD', taxRate:0, estimatePrefix:'EST-' } };
 let modalAction = null;
 
 function esc(value = '') { return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]); }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
-function plusDaysISO(days) { const date = new Date(); date.setDate(date.getDate() + days); return date.toISOString().slice(0, 10); }
+function plusDaysISO(days) { const date = new Date(); date.setDate(date.getDate() + Math.max(0, Number(days || 0))); return date.toISOString().slice(0, 10); }
+function normalizedPrefix(value, fallback='EST-') { const raw=String(value||fallback).trim().replace(/\s+/g,''); return raw.endsWith('-') ? raw : `${raw}-`; }
 function hasProAccess() { return ['active', 'trialing'].includes(String(subscription?.status || '').toLowerCase()) && String(subscription?.plan || '').toLowerCase() === 'pro'; }
 function canWrite() { return Boolean(workspaceContext?.canWrite); }
 function customerName(id) { return state.customers.find((customer) => customer.id === id)?.name || 'Unknown customer'; }
 function nextEstimateNumber() {
   const used = state.estimates.map((estimate) => Number(String(estimate.number || '').match(/(\d+)$/)?.[1] || 0));
-  return `EST-${String(Math.max(1000, ...used) + 1).padStart(4, '0')}`;
+  return `${state.settings.estimatePrefix}${String(Math.max(1000, ...used) + 1).padStart(4, '0')}`;
 }
 function setBusy(message) { app.innerHTML = `<div class="auth-stage"><div class="auth-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>${esc(message)}</h2></div></div>`; }
 function showError(error) { console.error(error); alert(error?.message || 'Something went wrong.'); }
@@ -32,11 +33,12 @@ function showError(error) { console.error(error); alert(error?.message || 'Somet
 async function hydrate() {
   if (!session?.user?.id) return;
   setBusy('Loading estimates…');
-  const workspace = await loadWorkspace(session.user.id);
+  const [workspace, settings] = await Promise.all([loadWorkspace(session.user.id), getCompanySettings(session.user.id)]);
   state = {
     customers: workspace.customers.map((item) => ({ ...item, persisted: true })),
     invoices: workspace.invoices.map((item) => ({ ...item, persisted: true })),
     estimates: workspace.estimates.map((item) => ({ ...item, persisted: true })),
+    settings: { currency: settings.defaultCurrency || 'USD', taxRate: Number(settings.defaultTax || 0), estimatePrefix: normalizedPrefix(settings.estimatePrefix, 'EST-') },
   };
   subscription = workspace.subscription;
   workspaceContext = workspace.workspace || null;
@@ -140,7 +142,7 @@ function openEstimateModal(estimateId = null) {
   if (!canWrite()) return showError(new Error('This workspace role is read only.'));
   if (!state.customers.length) { alert('Add a customer first from the Pro dashboard.'); return; }
   const existing = state.estimates.find((estimate) => estimate.id === estimateId);
-  const estimate = existing || { customerId: state.customers[0].id, number: nextEstimateNumber(), issueDate: todayISO(), validUntil: plusDaysISO(30), status: 'draft', currency: 'USD', taxRate: 0, lines: [{ description: '', qty: 1, rate: 0 }], notes: '' };
+  const estimate = existing || { customerId: state.customers[0].id, number: nextEstimateNumber(), issueDate: todayISO(), validUntil: plusDaysISO(30), status: 'draft', currency: state.settings.currency, taxRate: state.settings.taxRate, lines: [{ description: '', qty: 1, rate: 0 }], notes: '' };
   modalTitle.textContent = existing ? `Edit ${estimate.number}` : 'New estimate';
   modalBody.innerHTML = `<div class="form-grid"><div class="field"><label>Customer *</label><select class="select" name="customerId">${state.customers.map((customer) => `<option value="${customer.id}" ${customer.id === estimate.customerId ? 'selected' : ''}>${esc(customer.name)}</option>`).join('')}</select></div><div class="field"><label>Estimate number *</label><input class="input" name="number" required value="${esc(estimate.number)}"></div><div class="field"><label>Issue date</label><input class="input" name="issueDate" type="date" value="${esc(estimate.issueDate)}"></div><div class="field"><label>Valid until</label><input class="input" name="validUntil" type="date" value="${esc(estimate.validUntil)}"></div><div class="field"><label>Status</label><select class="select" name="status">${['draft','sent','accepted','declined'].map((status) => `<option value="${status}" ${estimate.status === status ? 'selected' : ''}>${status[0].toUpperCase() + status.slice(1)}</option>`).join('')}</select></div><div class="field"><label>Currency</label><select class="select" name="currency">${['USD','EUR','GBP','NOK','SEK','DKK'].map((currency) => `<option ${currency === estimate.currency ? 'selected' : ''}>${currency}</option>`).join('')}</select></div><div class="field full"><div class="split"><label>Line items</label><button class="mini-btn" type="button" id="addLine">+ Line</button></div><div class="estimate-lines" id="estimateLines">${estimate.lines.map(lineMarkup).join('')}</div></div><div class="field"><label>Tax / VAT %</label><input class="input" name="taxRate" type="number" min="0" max="100" step="0.01" value="${Number(estimate.taxRate) || 0}"></div><div class="field full"><label>Notes</label><textarea class="textarea" name="notes">${esc(estimate.notes || '')}</textarea></div><div class="field full"><div class="estimate-summary" id="estimateSummary"></div></div></div>`;
   const linesEl = modalBody.querySelector('#estimateLines');
@@ -165,7 +167,7 @@ function openEstimateModal(estimateId = null) {
     const number = String(form.get('number') || '').trim();
     if (!number) return false;
     const lines = [...linesEl.querySelectorAll('.estimate-line')].map((row) => ({ description: row.querySelector('[name="description"]').value.trim() || 'Service', qty: Number(row.querySelector('[name="qty"]').value) || 1, rate: Number(row.querySelector('[name="rate"]').value) || 0 }));
-    const draft = { ...(existing || {}), customerId: String(form.get('customerId')), number, issueDate: String(form.get('issueDate') || todayISO()), validUntil: String(form.get('validUntil') || ''), status: String(form.get('status') || 'draft'), currency: String(form.get('currency') || 'USD'), taxRate: Number(form.get('taxRate')) || 0, lines, notes: String(form.get('notes') || '').trim() };
+    const draft = { ...(existing || {}), customerId: String(form.get('customerId')), number, issueDate: String(form.get('issueDate') || todayISO()), validUntil: String(form.get('validUntil') || ''), status: String(form.get('status') || 'draft'), currency: String(form.get('currency') || state.settings.currency || 'USD'), taxRate: Number(form.get('taxRate')) || 0, lines, notes: String(form.get('notes') || '').trim() };
     const saved = await saveEstimate(session.user.id, draft);
     if (existing) state.estimates = state.estimates.map((item) => item.id === existing.id ? saved : item); else state.estimates.unshift(saved);
     render();
@@ -185,7 +187,7 @@ window.addEventListener('solobizkit:workspace-updated', () => { if (session) hyd
 onAuthChange(async (_event, nextSession) => {
   session = nextSession;
   if (session) { try { await hydrate(); } catch (error) { showError(error); } }
-  else { subscription = null; workspaceContext = null; state = { customers: [], invoices: [], estimates: [] }; renderAuth(); }
+  else { subscription = null; workspaceContext = null; state = { customers: [], invoices: [], estimates: [], settings: { currency:'USD', taxRate:0, estimatePrefix:'EST-' } }; renderAuth(); }
 });
 
 (async () => {
