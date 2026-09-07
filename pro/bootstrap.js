@@ -43,7 +43,7 @@ async function safeImport(path) {
   }
 }
 
-const V = '20260907-17';
+const V = '20260907-18';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
@@ -80,6 +80,7 @@ if (!coreReady) {
   await Promise.allSettled([
     safeImport(`./crm-dashboard-v2.js?v=${V}`),
     safeImport(`./crm-ux-v3.js?v=${V}`),
+    safeImport(`./crm-customer-intelligence.js?v=${V}`),
     safeImport(`./lead-followups.js?v=${V}`),
     safeImport(`./today-center.js?v=${V}`),
     safeImport(`./crm-next-actions.js?v=${V}`),
@@ -91,4 +92,4 @@ if (!coreReady) {
   ]);
 }
 
-window.sbkProBoot = { version: 28, coreReady, bootedAt: new Date().toISOString() };
+window.sbkProBoot = { version: 29, coreReady, bootedAt: new Date().toISOString() };
