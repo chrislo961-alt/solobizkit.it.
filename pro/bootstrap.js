@@ -43,11 +43,12 @@ async function safeImport(path) {
   }
 }
 
-const V = '20260907-3';
+const V = '20260907-4';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
 await import(`./pro-app.js?v=${V}`);
+await safeImport(`./workspace-ui.js?v=${V}`);
 
 const coreReady = await waitForCoreReady();
 
@@ -87,4 +88,4 @@ if (!coreReady) {
   ]);
 }
 
-window.sbkProBoot = { version: 14, coreReady, bootedAt: new Date().toISOString() };
+window.sbkProBoot = { version: 15, coreReady, bootedAt: new Date().toISOString() };
