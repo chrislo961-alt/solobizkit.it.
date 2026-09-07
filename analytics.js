@@ -111,6 +111,10 @@
     }
     const script=document.createElement('script');script.src='/assistant-widget-v2.js?v=20260905-2';script.defer=true;script.dataset.sbkAssistant='1';document.head.appendChild(script);
   }
-  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2();installSeoTrustLayer();installAssistant()}
+  function installWindowsInterest(){
+    if(document.querySelector('script[data-windows-interest]'))return;
+    const script=document.createElement('script');script.src='/windows-interest.js?v=20260907-1';script.defer=true;script.dataset.windowsInterest='1';document.head.appendChild(script);
+  }
+  function boot(){banner();installProEntry();installHomepageV2();installFreeInvoiceOptionsV2();installSeoTrustLayer();installAssistant();installWindowsInterest()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
