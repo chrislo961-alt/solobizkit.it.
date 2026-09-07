@@ -1,7 +1,6 @@
-import { getSession, loadWorkspace, supabase } from './backend.js';
+import { getSession, supabase } from './backend.js';
 
 let session = null;
-let workspaceCache = null;
 
 function base64Bytes(content) {
   const binary = atob(String(content || ''));
@@ -30,27 +29,11 @@ async function openPdfFromFunction(kind, id, popup) {
   setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
 
-async function loadWorkspaceData() {
-  await ensureSession();
-  if (!workspaceCache) workspaceCache = await loadWorkspace(session.user.id);
-  return workspaceCache;
-}
-
-function estimateNumberFromRow(row) {
-  return row?.querySelector('td strong')?.textContent?.trim() || '';
-}
-
-async function injectEstimatePdfButtons(root = document) {
+function injectEstimatePdfButtons(root = document) {
   if (!location.pathname.startsWith('/pro/estimates')) return;
-  const actions = [...root.querySelectorAll('.estimate-actions')];
-  if (!actions.length) return;
-  let data;
-  try { data = await loadWorkspaceData(); } catch { return; }
-  const byNumber = new Map((data.estimates || []).map((estimate) => [String(estimate.number || '').trim(), estimate.id]));
-  for (const host of actions) {
-    if (host.querySelector('[data-print-estimate]')) continue;
-    const id = byNumber.get(estimateNumberFromRow(host.closest('tr')));
-    if (!id) continue;
+  root.querySelectorAll('.estimate-actions[data-estimate-id]').forEach((host) => {
+    const id = host.dataset.estimateId;
+    if (!id || host.querySelector(`[data-print-estimate="${CSS.escape(id)}"]`)) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'mini-btn';
@@ -58,7 +41,7 @@ async function injectEstimatePdfButtons(root = document) {
     button.textContent = 'PDF';
     button.title = 'Open the exact PDF used when this estimate is emailed';
     host.prepend(button, document.createTextNode(' '));
-  }
+  });
 }
 
 function labelInvoiceButtons(root = document) {
@@ -90,15 +73,15 @@ document.addEventListener('click', async (event) => {
 }, true);
 
 let scheduled = false;
-async function enhance() {
+function enhance() {
   labelInvoiceButtons();
-  await injectEstimatePdfButtons();
+  injectEstimatePdfButtons();
 }
 const observer = new MutationObserver(() => {
   if (scheduled) return;
   scheduled = true;
-  requestAnimationFrame(async () => { scheduled = false; await enhance(); });
+  requestAnimationFrame(() => { scheduled = false; enhance(); });
 });
 observer.observe(document.body, { childList: true, subtree: true });
-window.addEventListener('solobizkit:workspace-updated', () => { session = null; workspaceCache = null; enhance(); });
+window.addEventListener('solobizkit:workspace-updated', () => { session = null; enhance(); });
 enhance();
