@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 
 const files = await Promise.all([
-  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-defaults.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','lead-followups.js','today-center.js','bootstrap.js'
+  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-defaults.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','lead-followups.js','today-center.js','crm-next-actions.js','crm-automation-rules.js','bootstrap.js'
 ].map(async (name) => [name, await readFile(new URL(`../pro/${name}`, import.meta.url), 'utf8')]));
 const src = Object.fromEntries(files);
 const estimates = await readFile(new URL('../pro/estimates/estimates.js', import.meta.url), 'utf8');
@@ -94,18 +94,27 @@ if(!pipeline.includes("dragstart") || !pipeline.includes("drop")) errors.push('p
 if(!pipeline.includes("lead_score")) errors.push('pipeline.js: missing lead scoring');
 if(!pipeline.includes("sync_crm_automation")) errors.push('pipeline.js: missing CRM automation sync');
 if(!pipeline.includes("engagement_count")) errors.push('pipeline.js: missing estimate engagement signal');
-if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-15')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
+if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-16')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
+if(!pipelineHtml.includes('/pro/crm-automation-rules.js?v=20260907-16')) errors.push('pipeline/index.html: missing automation rules UI');
 need('today-center.js',"supabase.from('crm_tasks')",'Today task data');
 need('today-center.js',"sync_crm_automation",'Today automation sync');
 need('today-center.js','Hot opportunities','Today hot lead handling');
 need('today-center.js','Open pipeline','Today pipeline handoff');
-need('bootstrap.js',"20260907-15",'current cache version');
-need('bootstrap.js','version: 26','boot version 26');
+need('crm-next-actions.js',"supabase.rpc('get_crm_next_actions'",'ranked next best action RPC');
+need('crm-next-actions.js','NEXT BEST ACTION','next best action dashboard');
+need('crm-next-actions.js','Automation rules','next action rules handoff');
+need('crm-automation-rules.js','crm_automation_settings','automation settings storage');
+need('crm-automation-rules.js','context?.canAdmin','admin-only automation settings');
+need('crm-automation-rules.js',"supabase.rpc('sync_crm_automation'",'rule resync');
+need('crm-automation-rules.js','SoloBizKit does not automatically email or call customers','safe task-only automation contract');
+need('bootstrap.js',"20260907-16",'current cache version');
+need('bootstrap.js','version: 27','boot version 27');
 need('bootstrap.js','today-center.js','Today center bootstrap');
+need('bootstrap.js','crm-next-actions.js','next best action bootstrap');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, canonical documents, atomic saves, Pipeline, Today, lead scoring and CRM automation are enforced.');
+console.log('Pro team/workspace audit passed: workspace roles, canonical documents, Pipeline, Today, lead scoring, automation rules and next best actions are enforced.');
