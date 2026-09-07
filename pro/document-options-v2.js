@@ -1,11 +1,12 @@
-import { getCompanySettings, getDataOwnerId, getSession, supabase } from './backend.js';
+import { getCompanySettings, getDataOwnerId, getSession, getWorkspaceContext, supabase } from './backend.js';
 
 const languages = [
-  ['en','English'],['no','Norsk'],['sv','Svenska'],['da','Dansk'],['de','Deutsch']
+  ['en','English'],['no','Norsk'],['sv','Svenska'],['da','Dansk'],['de','Deutsch'],['es','Español'],['fr','Français']
 ];
 let settings = null;
 let session = null;
 let dataOwner = null;
+let workspace = null;
 let installing = false;
 
 function esc(value='') { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
@@ -13,6 +14,7 @@ function esc(value='') { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;
 async function ensureContext() {
   session ||= await getSession();
   if (!session?.user?.id) throw new Error('Sign in first.');
+  workspace ||= await getWorkspaceContext();
   dataOwner ||= await getDataOwnerId();
   if (!dataOwner) throw new Error('Workspace not found.');
   if (!settings) settings = await getCompanySettings(session.user.id);
@@ -27,9 +29,10 @@ function paymentSummary() {
     settings.paymentReference && `Reference: ${settings.paymentReference}`,
     settings.paymentDetails
   ].filter(Boolean);
+  const editLink = workspace?.canWrite ? '<a class="mini-btn" href="/pro/settings/">Edit in Settings</a>' : '<span class="muted">Read only</span>';
   return rows.length
-    ? `<div class="document-payment-summary"><div><strong>Payment details</strong><span>${rows.map(esc).join(' · ')}</span></div><a class="mini-btn" href="/pro/settings/">Edit in Settings</a></div>`
-    : `<div class="document-payment-summary empty"><div><strong>Payment details</strong><span>No bank or payment instructions added yet.</span></div><a class="mini-btn" href="/pro/settings/">Add in Settings</a></div>`;
+    ? `<div class="document-payment-summary"><div><strong>Payment details</strong><span>${rows.map(esc).join(' · ')}</span></div>${editLink}</div>`
+    : `<div class="document-payment-summary empty"><div><strong>Payment details</strong><span>No bank or payment instructions added yet.</span></div>${workspace?.canWrite ? '<a class="mini-btn" href="/pro/settings/">Add in Settings</a>' : '<span class="muted">Read only</span>'}</div>`;
 }
 
 async function readLanguage(kind, number) {
@@ -59,7 +62,7 @@ async function install() {
     if (currencyField) {
       const field = document.createElement('div');
       field.className = 'field';
-      field.innerHTML = `<label>Document language</label><select class="select" name="documentLanguage">${languages.map(([code,label])=>`<option value="${code}" ${code===currentLanguage?'selected':''}>${label}</option>`).join('')}</select>`;
+      field.innerHTML = `<label>Document language</label><select class="select" name="documentLanguage" ${workspace?.canWrite ? '' : 'disabled'}>${languages.map(([code,label])=>`<option value="${code}" ${code===currentLanguage?'selected':''}>${label}</option>`).join('')}</select>${workspace?.canWrite ? '' : '<small class="muted">Read only</small>'}`;
       currencyField.insertAdjacentElement('afterend', field);
     }
     if (!isEstimate) {
@@ -80,6 +83,7 @@ async function persistLanguage() {
   const number = body.querySelector('[name="number"]')?.value?.trim();
   if (!select || !number) return;
   await ensureContext();
+  if (!workspace?.canWrite) return;
   const isEstimate = location.pathname.includes('/pro/estimates/');
   const table = isEstimate ? 'estimates' : 'invoices';
   const numberColumn = isEstimate ? 'estimate_number' : 'invoice_number';
@@ -95,5 +99,5 @@ async function persistLanguage() {
 document.querySelector('#modalForm')?.addEventListener('submit', persistLanguage, true);
 const observer = new MutationObserver(() => { clearTimeout(observer._t); observer._t=setTimeout(install,40); });
 observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});
-window.addEventListener('solobizkit:workspace-updated',()=>{dataOwner=null;settings=null;install();});
+window.addEventListener('solobizkit:workspace-updated',()=>{dataOwner=null;settings=null;workspace=null;install();});
 install();
