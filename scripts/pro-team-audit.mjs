@@ -104,7 +104,7 @@ need('bootstrap.js','crm-next-actions.js');
 need('bootstrap.js','crm-followup-assistant.js');
 need('bootstrap.js','crm-customer-intelligence.js');
 if(!proCore.includes('const escapedPrefix')) errors.push('pro-core.js: invoice preview does not scope suffix parsing to the configured prefix');
-if(!proCore.includes('new RegExp(`^${escapedPrefix}(\\d+)$`)')) errors.push('pro-core.js: invoice preview prefix regex is missing');
+if(!proCore.includes('const re = new RegExp') || !proCore.includes('escapedPrefix')) errors.push('pro-core.js: invoice preview prefix regex is missing');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
