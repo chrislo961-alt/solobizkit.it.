@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VAT Calculator | Add or Remove VAT | SoloBizKit</title>
+<meta name="description" content="Free VAT calculator to add VAT to a net price or remove VAT from a gross total. Choose a VAT rate, see net, VAT and total instantly, no signup required.">
+<link rel="canonical" href="https://solobizkit.it.com/vat-calculator/">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+<meta property="og:title" content="VAT Calculator | Add or Remove VAT | SoloBizKit">
+<meta property="og:description" content="Add VAT to a price or remove VAT from a VAT-inclusive total. Free, instant and no signup required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://solobizkit.it.com/vat-calculator/">
+<meta name="twitter:title" content="VAT Calculator | Add or Remove VAT | SoloBizKit">
+<meta name="twitter:description" content="Add or remove VAT from any amount and see the net amount, VAT and total instantly.">
+<link rel="stylesheet" href="/finance-seo.css">
+<link rel="stylesheet" href="/growth-calculators.css">
+<link rel="stylesheet" href="/analytics-consent.css">
+<link rel="stylesheet" href="/global-shell.css">
+<link rel="stylesheet" href="/visual-polish.css">
+<link rel="stylesheet" href="/theme-warm-green.css">
+<link rel="stylesheet" href="/language-switcher.css">
+<script src="/analytics.js" defer></script>
+<script src="/language-switcher.js" defer></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9212084765206199" crossorigin="anonymous"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"VAT Calculator","url":"https://solobizkit.it.com/vat-calculator/","description":"Free VAT calculator to add VAT to a net price or remove VAT from a VAT-inclusive total.","applicationCategory":"BusinessApplication","operatingSystem":"Any","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://solobizkit.it.com/"},{"@type":"ListItem","position":2,"name":"Business Calculators","item":"https://solobizkit.it.com/business-calculators/"},{"@type":"ListItem","position":3,"name":"VAT Calculator","item":"https://solobizkit.it.com/vat-calculator/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I add VAT to a price?","acceptedAnswer":{"@type":"Answer","text":"Multiply the net amount by the VAT rate, then add the VAT amount to the net amount."}},{"@type":"Question","name":"How do I remove VAT from a VAT-inclusive price?","acceptedAnswer":{"@type":"Answer","text":"Divide the VAT-inclusive total by one plus the VAT rate expressed as a decimal. The difference between the gross and net amount is the VAT."}},{"@type":"Question","name":"Can I use a custom VAT rate?","acceptedAnswer":{"@type":"Answer","text":"Yes. Select a common rate or choose Custom and enter the VAT percentage you need."}}]}]}</script>
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:site_name" content="SoloBizKit">
+<meta property="og:image" content="https://solobizkit.it.com/assets/images/solobizkit-social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://solobizkit.it.com/assets/images/solobizkit-social-preview.png">
+<style>
+.vat-mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 18px}.vat-mode button{border:1px solid #d8e0ec;background:#fff;color:#27354d;border-radius:10px;padding:11px 10px;font-weight:750;cursor:pointer}.vat-mode button[aria-pressed="true"]{border-color:#2563eb;background:#eef4ff;color:#174fc4;box-shadow:0 0 0 1px #2563eb inset}.vat-rate-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.vat-result-primary{margin-bottom:14px}.vat-result-primary .big{font-size:2.35rem}.vat-note{font-size:12px;color:#68758a;line-height:1.5;margin-top:14px}.vat-calculate{width:100%;margin-top:6px;border:0;border-radius:10px;padding:12px 16px;background:#2563eb;color:#fff;font-weight:800;cursor:pointer}.vat-calculate:hover{background:#1859d7}.vat-custom[hidden]{display:none}@media(max-width:620px){.vat-rate-row{grid-template-columns:1fr}.vat-result-primary .big{font-size:2rem}}
+</style>
+</head>
+<body>
+<header class="sbk-global-header"><div class="sbk-global-nav"><a class="sbk-global-brand" href="/" aria-label="SoloBizKit home"><img class="sbk-brand-icon" src="/favicon.svg" width="29" height="29" alt="">SoloBiz<span>Kit</span></a><nav class="sbk-global-links" aria-label="Primary navigation"><a href="/business-calculators/">Calculators</a><a href="/invoice-generator/">Invoices</a><a href="/pdf-tools/">PDF Tools</a><a href="/qr-code-generator/">QR Codes</a><a href="/guides/">Guides</a><a href="/about/">About</a></nav><a class="sbk-global-tools" href="/tools/">All Tools</a></div></header>
+<main>
+<nav class="breadcrumbs wrap" aria-label="Breadcrumb"><a href="/">Home</a><span>›</span><a href="/business-calculators/">Business calculators</a><span>›</span><span aria-current="page">VAT Calculator</span></nav>
+<section class="hero"><div class="wrap"><span class="pill">FREE VAT CALCULATOR</span><h1>VAT Calculator</h1><p>Add VAT to a net amount or remove VAT from a VAT-inclusive total in seconds.</p></div></section>
+<section class="wrap app" aria-label="VAT Calculator">
+<div class="card">
+<h2>Enter your numbers</h2>
+<div class="vat-mode" role="group" aria-label="Calculation type"><button id="addMode" type="button" aria-pressed="true">Add VAT</button><button id="removeMode" type="button" aria-pressed="false">Remove VAT</button></div>
+<div class="field"><label for="amount" id="amountLabel">Net amount</label><input id="amount" type="number" inputmode="decimal" value="1000" min="0" step="any"></div>
+<div class="vat-rate-row"><div class="field"><label for="vatRate">VAT rate</label><select id="vatRate"><option value="25" selected>25%</option><option value="20">20%</option><option value="15">15%</option><option value="10">10%</option><option value="8">8%</option><option value="5">5%</option><option value="custom">Custom</option></select></div><div class="field vat-custom" id="customRateField" hidden><label for="customRate">Custom VAT %</label><input id="customRate" type="number" inputmode="decimal" value="25" min="0" max="1000" step="any"></div></div>
+<div class="field"><label for="currency">Currency</label><select id="currency"><option value="USD" selected>USD — $</option><option value="EUR">EUR — €</option><option value="GBP">GBP — £</option><option value="NOK">NOK — kr</option><option value="SEK">SEK — kr</option><option value="DKK">DKK — kr</option><option value="CHF">CHF</option></select></div>
+<p class="hint">Results update instantly. Your entries stay in your browser and are not stored.</p>
+<button class="vat-calculate" id="calculateBtn" type="button">Calculate VAT</button>
+<button class="reset" id="reset" type="button">Reset example</button>
+</div>
+<div class="card" aria-live="polite">
+<div class="result vat-result-primary"><small id="primaryLabel">TOTAL AMOUNT</small><div class="big" id="primary">—</div></div>
+<div class="line"><span>Net amount</span><b id="netAmount">—</b></div>
+<div class="line"><span id="vatLineLabel">VAT (25%)</span><b id="vatAmount">—</b></div>
+<div class="line"><span>Total amount</span><b id="totalAmount">—</b></div>
+<p class="vat-note">Planning calculator only. VAT rules and applicable rates depend on the country, product or service, transaction and business status. Confirm the correct treatment for your situation.</p>
+</div>
+</section>
+<section class="content"><article class="wrap">
+<h2>How to use the VAT Calculator</h2>
+<p>Choose <strong>Add VAT</strong> when you know the net price before VAT. Choose <strong>Remove VAT</strong> when you have a VAT-inclusive total and want to find the net amount and VAT portion. Select a common VAT rate or enter your own custom percentage.</p>
+<h3>VAT formulas</h3>
+<p><strong>Add VAT:</strong> VAT = net amount × VAT rate ÷ 100. Total = net amount + VAT.</p>
+<p><strong>Remove VAT:</strong> net amount = VAT-inclusive total ÷ (1 + VAT rate ÷ 100). VAT = total − net amount.</p>
+<div class="example"><strong>Example</strong><p>With a net amount of $1,000 and a 25% VAT rate, VAT is $250 and the VAT-inclusive total is $1,250. If you remove 25% VAT from a $1,250 gross total, the net amount is $1,000.</p></div>
+<h3>Questions people ask</h3><div class="faq">
+<details><summary>How do I add 25% VAT?</summary><p>Multiply the net amount by 0.25 to find the VAT, then add that VAT amount to the net price.</p></details>
+<details><summary>Why can’t I remove VAT by simply subtracting 25%?</summary><p>Because the VAT percentage is calculated from the net amount, not from the VAT-inclusive total. Divide the gross total by 1.25 to remove 25% VAT correctly.</p></details>
+<details><summary>Can I use another VAT rate?</summary><p>Yes. Choose one of the common rates or select Custom and enter the percentage you need.</p></details>
+</div>
+<h3>Related business tools</h3><div class="related"><a href="/invoice-generator/">Free Invoice Generator →</a><a href="/profit-margin-calculator/">Profit Margin Calculator →</a><a href="/markup-calculator/">Markup Calculator →</a><a href="/discount-calculator/">Discount Calculator →</a><a href="/business-calculators/">All Business Calculators →</a></div>
+</article></section>
+</main>
+<footer class="sbk-global-footer"><div class="sbk-global-footer-inner"><div class="sbk-global-bottom"><span>© 2026 SoloBizKit</span><span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/contact/">Contact</a></span></div></div></footer>
+<script>
+const $=id=>document.getElementById(id);
+let mode='add';
+function rate(){const selected=$('vatRate').value;const raw=selected==='custom'?parseFloat($('customRate').value):parseFloat(selected);return Number.isFinite(raw)?Math.max(0,raw):0}
+function amount(){const value=parseFloat($('amount').value);return Number.isFinite(value)?Math.max(0,value):0}
+function money(value){const currency=$('currency').value||'USD';try{return new Intl.NumberFormat(undefined,{style:'currency',currency,maximumFractionDigits:2}).format(Number(value)||0)}catch{return `${(Number(value)||0).toFixed(2)} ${currency}`}}
+function calculate(track=false){const a=amount(),r=rate();let net,vat,total;if(mode==='remove'){total=a;net=r===0?total:total/(1+r/100);vat=total-net}else{net=a;vat=net*r/100;total=net+vat}$('netAmount').textContent=money(net);$('vatAmount').textContent=money(vat);$('totalAmount').textContent=money(total);$('vatLineLabel').textContent=`VAT (${r.toLocaleString(undefined,{maximumFractionDigits:2})}%)`;$('primaryLabel').textContent=mode==='remove'?'NET AMOUNT':'TOTAL AMOUNT';$('primary').textContent=money(mode==='remove'?net:total);$('amountLabel').textContent=mode==='remove'?'VAT-inclusive amount':'Net amount';if(track&&window.sbkTrack)window.sbkTrack('vat_calculator_calculated',{vat_rate:r,calculation_type:mode,currency:$('currency').value})}
+function setMode(next){mode=next;$('addMode').setAttribute('aria-pressed',String(mode==='add'));$('removeMode').setAttribute('aria-pressed',String(mode==='remove'));calculate()}
+$('addMode').addEventListener('click',()=>setMode('add'));$('removeMode').addEventListener('click',()=>setMode('remove'));
+$('vatRate').addEventListener('change',()=>{$('customRateField').hidden=$('vatRate').value!=='custom';if($('vatRate').value==='custom')$('customRate').focus();calculate()});
+['amount','customRate'].forEach(id=>$(id).addEventListener('input',()=>calculate()));$('currency').addEventListener('change',()=>calculate());$('calculateBtn').addEventListener('click',()=>calculate(true));
+$('reset').addEventListener('click',()=>{mode='add';$('amount').value=1000;$('vatRate').value='25';$('customRate').value=25;$('currency').value='USD';$('customRateField').hidden=true;$('addMode').setAttribute('aria-pressed','true');$('removeMode').setAttribute('aria-pressed','false');calculate();$('amount').focus()});
+calculate();
+</script>
+</body>
+</html>
