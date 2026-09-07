@@ -1,7 +1,8 @@
-import { getCompanySettings, getSession, onAuthChange, supabase } from './backend.js';
+import { getCompanySettings, getDataOwnerId, getSession, onAuthChange, supabase } from './backend.js';
 
 let settings = null;
 let session = null;
+let dataOwner = null;
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
@@ -31,6 +32,7 @@ function applyPrefix(input, prefix) {
 
 async function refreshSettings() {
   if (!session?.user?.id) return;
+  dataOwner = await getDataOwnerId();
   settings = await getCompanySettings(session.user.id);
   window.__solobizkitInvoicePrefix = normalizedPrefix(settings.invoicePrefix, 'INV');
 }
@@ -108,11 +110,12 @@ function documentStyles() {
 }
 
 async function fetchInvoice(id) {
-  const { data, error } = await supabase.from('invoices').select('*, invoice_items(*)').eq('id', id).single();
+  if (!dataOwner) dataOwner = await getDataOwnerId();
+  const { data, error } = await supabase.from('invoices').select('*, invoice_items(*)').eq('id', id).eq('user_id', dataOwner).single();
   if (error) throw error;
   let customer = null;
   if (data.customer_id) {
-    const result = await supabase.from('customers').select('*').eq('id', data.customer_id).maybeSingle();
+    const result = await supabase.from('customers').select('*').eq('id', data.customer_id).eq('user_id', dataOwner).maybeSingle();
     if (result.error) throw result.error;
     customer = result.data;
   }
@@ -120,11 +123,12 @@ async function fetchInvoice(id) {
 }
 
 async function fetchEstimate(id) {
-  const { data, error } = await supabase.from('estimates').select('*, estimate_items(*)').eq('id', id).single();
+  if (!dataOwner) dataOwner = await getDataOwnerId();
+  const { data, error } = await supabase.from('estimates').select('*, estimate_items(*)').eq('id', id).eq('user_id', dataOwner).single();
   if (error) throw error;
   let customer = null;
   if (data.customer_id) {
-    const result = await supabase.from('customers').select('*').eq('id', data.customer_id).maybeSingle();
+    const result = await supabase.from('customers').select('*').eq('id', data.customer_id).eq('user_id', dataOwner).maybeSingle();
     if (result.error) throw result.error;
     customer = result.data;
   }
@@ -212,6 +216,7 @@ addEstimatePrintButtons();
 
 onAuthChange(async (_event, nextSession) => {
   session = nextSession;
+  dataOwner = null;
   if (session) {
     try { await refreshSettings(); } catch (error) { console.error('Could not load document defaults', error); }
   } else {
@@ -219,6 +224,7 @@ onAuthChange(async (_event, nextSession) => {
     window.__solobizkitInvoicePrefix = null;
   }
 });
+window.addEventListener('solobizkit:workspace-updated', async () => { dataOwner = null; try { await refreshSettings(); } catch {} });
 
 (async () => {
   try {
