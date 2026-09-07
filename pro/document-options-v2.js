@@ -1,17 +1,21 @@
-import { getCompanySettings, getSession, supabase } from './backend.js';
+import { getCompanySettings, getDataOwnerId, getSession, supabase } from './backend.js';
 
 const languages = [
   ['en','English'],['no','Norsk'],['sv','Svenska'],['da','Dansk'],['de','Deutsch']
 ];
 let settings = null;
 let session = null;
+let dataOwner = null;
 let installing = false;
 
 function esc(value='') { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
 async function ensureContext() {
   session ||= await getSession();
-  if (session?.user?.id && !settings) settings = await getCompanySettings(session.user.id);
+  if (!session?.user?.id) throw new Error('Sign in first.');
+  dataOwner ||= await getDataOwnerId();
+  if (!dataOwner) throw new Error('Workspace not found.');
+  if (!settings) settings = await getCompanySettings(session.user.id);
 }
 
 function paymentSummary() {
@@ -29,10 +33,11 @@ function paymentSummary() {
 }
 
 async function readLanguage(kind, number) {
-  if (!session?.user?.id || !number) return 'en';
+  if (!number) return 'en';
+  await ensureContext();
   const table = kind === 'estimate' ? 'estimates' : 'invoices';
   const numberColumn = kind === 'estimate' ? 'estimate_number' : 'invoice_number';
-  const { data } = await supabase.from(table).select('language').eq('user_id', session.user.id).eq(numberColumn, number).maybeSingle();
+  const { data } = await supabase.from(table).select('language').eq('user_id', dataOwner).eq(numberColumn, number).maybeSingle();
   return data?.language || 'en';
 }
 
@@ -75,14 +80,14 @@ async function persistLanguage() {
   const number = body.querySelector('[name="number"]')?.value?.trim();
   if (!select || !number) return;
   await ensureContext();
-  if (!session?.user?.id) return;
   const isEstimate = location.pathname.includes('/pro/estimates/');
   const table = isEstimate ? 'estimates' : 'invoices';
   const numberColumn = isEstimate ? 'estimate_number' : 'invoice_number';
   const language = select.value || 'en';
   setTimeout(async () => {
     try {
-      await supabase.from(table).update({ language }).eq('user_id', session.user.id).eq(numberColumn, number);
+      const { error } = await supabase.from(table).update({ language }).eq('user_id', dataOwner).eq(numberColumn, number);
+      if (error) throw error;
     } catch (error) { console.warn('Could not save document language', error); }
   }, 700);
 }
@@ -90,4 +95,5 @@ async function persistLanguage() {
 document.querySelector('#modalForm')?.addEventListener('submit', persistLanguage, true);
 const observer = new MutationObserver(() => { clearTimeout(observer._t); observer._t=setTimeout(install,40); });
 observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});
+window.addEventListener('solobizkit:workspace-updated',()=>{dataOwner=null;settings=null;install();});
 install();
