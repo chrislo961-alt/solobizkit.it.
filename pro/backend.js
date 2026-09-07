@@ -87,6 +87,12 @@ async function ownerId(fallbackUserId = null) {
   return (await getDataOwnerId()) || fallbackUserId;
 }
 
+async function requireWriteAccess() {
+  const context = await getWorkspaceContext();
+  if (!context?.canWrite) throw new Error('Editor access is required to change workspace data.');
+  return context;
+}
+
 export async function loadWorkspace(userId) {
   const dataOwner = await ownerId(userId);
   if (!dataOwner) throw new Error('Workspace not found.');
@@ -153,6 +159,7 @@ export async function saveCompanySettings(userId, settings) {
 }
 
 export async function saveCustomer(userId, customer) {
+  await requireWriteAccess();
   const dataOwner = await ownerId(userId);
   const payload = { user_id:dataOwner,name:customer.name,company:customer.company||null,email:customer.email||null,phone:customer.phone||null,notes:customer.notes||null,crm_enabled:true,crm_status:crmToDb[customer.status]||'lead',crm_notes:customer.notes||null,crm_source:customer.source||null,crm_follow_up:customer.followUp||null,crm_next_action:customer.nextAction||null,crm_updated_at:new Date().toISOString() };
   const query = customer.persisted ? supabase.from('customers').update(payload).eq('id',customer.id).eq('user_id',dataOwner) : supabase.from('customers').insert(payload);
@@ -164,6 +171,7 @@ function totalsFromLines(lines,taxRate){const subtotal=lines.reduce((sum,line)=>
 function addDaysISO(dateString,days){const date=new Date(`${dateString}T12:00:00`);date.setDate(date.getDate()+Math.max(0,Number(days??0)));return date.toISOString().slice(0,10);}
 
 export async function saveInvoice(userId, invoice) {
+  await requireWriteAccess();
   const dataOwner = await ownerId(userId);
   const {subtotal,taxTotal,total}=totalsFromLines(invoice.lines,invoice.taxRate);
   const payload={user_id:dataOwner,customer_id:invoice.customerId||null,invoice_number:invoice.number,status:invoice.status,currency:invoice.currency,issue_date:invoice.issueDate,due_date:invoice.dueDate||null,subtotal,tax_total:taxTotal,discount_total:0,discount_rate:0,total,notes:invoice.notes||null,language:'en',document_type:'invoice',vat_mode:'standard',updated_at:new Date().toISOString(),paid_date:invoice.status==='paid'?new Date().toISOString().slice(0,10):null};
@@ -176,6 +184,7 @@ export async function saveInvoice(userId, invoice) {
 }
 
 export async function saveEstimate(userId, estimate) {
+  await requireWriteAccess();
   const dataOwner = await ownerId(userId);
   const{subtotal,taxTotal,total}=totalsFromLines(estimate.lines,estimate.taxRate);
   const payload={user_id:dataOwner,customer_id:estimate.customerId||null,estimate_number:estimate.number,status:estimate.status,currency:estimate.currency,language:'en',issue_date:estimate.issueDate,valid_until:estimate.validUntil||null,subtotal,tax_total:taxTotal,discount_total:0,discount_rate:0,total,notes:estimate.notes||null,vat_mode:'standard',updated_at:new Date().toISOString()};
@@ -187,5 +196,5 @@ export async function saveEstimate(userId, estimate) {
   return{...estimate,id:saved.id,persisted:true,createdAt:saved.created_at,updatedAt:saved.updated_at};
 }
 
-export async function convertEstimateToInvoice(userId,estimate,invoiceNumber){if(estimate.convertedInvoiceId||estimate.status==='converted')throw new Error('Estimate has already been converted.');const dataOwner=await ownerId(userId);const settings=await getCompanySettings(dataOwner);const issueDate=new Date().toISOString().slice(0,10);const invoice=await saveInvoice(dataOwner,{customerId:estimate.customerId,number:invoiceNumber,issueDate,dueDate:addDaysISO(issueDate,settings.paymentTermsDays??14),status:'draft',currency:estimate.currency,taxRate:estimate.taxRate,lines:estimate.lines,notes:estimate.notes||'',persisted:false});const{error}=await supabase.from('estimates').update({status:'converted',converted_invoice_id:invoice.id,updated_at:new Date().toISOString()}).eq('id',estimate.id).eq('user_id',dataOwner);if(error)throw error;return invoice;}
-export async function markInvoicePaid(userId,invoiceId){const dataOwner=await ownerId(userId);const{error}=await supabase.from('invoices').update({status:'paid',paid_date:new Date().toISOString().slice(0,10),updated_at:new Date().toISOString()}).eq('id',invoiceId).eq('user_id',dataOwner);if(error)throw error;}
+export async function convertEstimateToInvoice(userId,estimate,invoiceNumber){await requireWriteAccess();if(estimate.convertedInvoiceId||estimate.status==='converted')throw new Error('Estimate has already been converted.');const dataOwner=await ownerId(userId);const settings=await getCompanySettings(dataOwner);const issueDate=new Date().toISOString().slice(0,10);const invoice=await saveInvoice(dataOwner,{customerId:estimate.customerId,number:invoiceNumber,issueDate,dueDate:addDaysISO(issueDate,settings.paymentTermsDays??14),status:'draft',currency:estimate.currency,taxRate:estimate.taxRate,lines:estimate.lines,notes:estimate.notes||'',persisted:false});const{error}=await supabase.from('estimates').update({status:'converted',converted_invoice_id:invoice.id,updated_at:new Date().toISOString()}).eq('id',estimate.id).eq('user_id',dataOwner);if(error)throw error;return invoice;}
+export async function markInvoicePaid(userId,invoiceId){await requireWriteAccess();const dataOwner=await ownerId(userId);const{error}=await supabase.from('invoices').update({status:'paid',paid_date:new Date().toISOString().slice(0,10),updated_at:new Date().toISOString()}).eq('id',invoiceId).eq('user_id',dataOwner);if(error)throw error;}
