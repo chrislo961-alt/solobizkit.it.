@@ -22,7 +22,7 @@ test('industry use-case calculator pages have complete SEO and product structure
 test('business calculator hub links to every industry calculator',()=>{
   const hub=fs.readFileSync('business-calculators/index.html','utf8');
   for(const slug of slugs)assert.match(hub,new RegExp(`href="/${slug}/"`));
-  assert.match(hub,/"numberOfItems":31/);
+  assert.match(hub,/"numberOfItems":32/);
 });
 
 const defaultResults=[
