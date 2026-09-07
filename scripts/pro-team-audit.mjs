@@ -51,6 +51,14 @@ need('customer-workspace-actions.js','getWorkspaceContext','customer workspace r
 need('deep-links.js','requestedCustomer','customer CRM deep link');
 need('deep-links.js','wantsNew','new invoice deep link');
 need('deep-links.js','sbk-deeplink-target','viewer-safe deep link highlight');
+
+need('backend.js',"supabase.rpc('save_invoice_with_items'",'atomic invoice save RPC');
+need('backend.js',"supabase.rpc('save_estimate_with_items'",'atomic estimate save RPC');
+need('backend.js',"supabase.rpc('convert_estimate_to_invoice'",'server-side estimate conversion RPC');
+need('backend.js','shouldUseAutomaticNumber','automatic/manual numbering guard');
+forbid('backend.js',"supabase.from('invoice_items').delete()",'client-side invoice line rewrite');
+forbid('backend.js',"supabase.from('estimate_items').delete()",'client-side estimate line rewrite');
+
 if(!estimates.includes('workspaceContext?.canWrite')) errors.push('estimates.js: missing workspace write gate');
 if(!estimates.includes('workspaceContext?.isOwner')) errors.push('estimates.js: missing owner billing gate');
 if(!estimateDeepLinks.includes('presetCustomer')) errors.push('new-deeplink.js: missing estimate customer preset');
@@ -58,12 +66,12 @@ if(!estimateDeepLinks.includes('requestedEstimate')) errors.push('new-deeplink.j
 if(!leads.includes('matchedCustomer')) errors.push('leads.js: missing submission-to-CRM matching');
 if(!leads.includes('Create estimate')) errors.push('leads.js: missing lead-to-estimate action');
 if(!leads.includes('customer=${encodeURIComponent(customer.id)}')) errors.push('leads.js: missing exact CRM customer handoff');
-need('bootstrap.js',"20260907-11",'current cache version');
-need('bootstrap.js','version: 22','boot version 22');
+need('bootstrap.js',"20260907-12",'current cache version');
+need('bootstrap.js','version: 23','boot version 23');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, canonical documents, read-only CRM controls and lead → customer → estimate/invoice deep links are workspace-aware.');
+console.log('Pro team/workspace audit passed: workspace roles, canonical documents, atomic invoice/estimate saves and lead → customer → estimate/invoice deep links are workspace-aware.');
