@@ -12,12 +12,14 @@ export function calculateInvoice(invoice = {}) {
 }
 
 export function nextInvoiceNumber(invoices = []) {
-  const highest = invoices.reduce((max, invoice) => {
-    const match = String(invoice.number || '').match(/(\d+)$/);
-    return match ? Math.max(max, Number(match[1])) : max;
-  }, 1000);
   const rawPrefix = typeof window !== 'undefined' && window.__solobizkitInvoicePrefix ? String(window.__solobizkitInvoicePrefix) : 'INV-';
   const prefix = rawPrefix.endsWith('-') ? rawPrefix : `${rawPrefix}-`;
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`^${escapedPrefix}(\\d+)$`);
+  const highest = invoices.reduce((max, invoice) => {
+    const match = String(invoice.number || '').match(re);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 1000);
   return `${prefix}${highest + 1}`;
 }
 
