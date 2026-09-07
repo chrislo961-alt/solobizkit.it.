@@ -19,8 +19,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Normalize metadata, shared navigation and sitemap
+      - name: Repair hubs, normalize metadata and sitemap
         run: |
+          node scripts/repair-public-hubs.mjs
           node scripts/normalize-heads.mjs
           node scripts/generate-sitemap.mjs
       - name: Commit normalized public files
