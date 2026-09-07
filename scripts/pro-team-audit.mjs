@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 
 const files = await Promise.all([
-  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-defaults.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','lead-followups.js','today-center.js','crm-next-actions.js','crm-automation-rules.js','crm-followup-assistant.js','bootstrap.js'
+  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-defaults.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','lead-followups.js','today-center.js','crm-next-actions.js','crm-automation-rules.js','crm-followup-assistant.js','crm-customer-intelligence.js','bootstrap.js'
 ].map(async (name) => [name, await readFile(new URL(`../pro/${name}`, import.meta.url), 'utf8')]));
 const src = Object.fromEntries(files);
 const estimates = await readFile(new URL('../pro/estimates/estimates.js', import.meta.url), 'utf8');
@@ -85,15 +85,24 @@ need('crm-automation-rules.js','auto_invoice_view_followup');
 need('crm-followup-assistant.js',"kind:'followup'");
 need('crm-followup-assistant.js','data-draft-followup');
 need('crm-followup-assistant.js','Review and edit before sending');
-need('bootstrap.js',"20260907-17",'current cache version');
-need('bootstrap.js','version: 28','boot version 28');
+need('crm-customer-intelligence.js',"supabase.rpc('find_customer_duplicates'",'duplicate detection RPC');
+need('crm-customer-intelligence.js',"supabase.rpc('merge_customers'",'customer merge RPC');
+need('crm-customer-intelligence.js','custom_fields','customer custom fields');
+need('crm-customer-intelligence.js','tags','customer tags');
+need('crm-customer-intelligence.js',"supabase.rpc('start_crm_sequence'",'follow-up sequence start');
+need('crm-customer-intelligence.js',"supabase.rpc('stop_crm_sequence'",'follow-up sequence stop');
+need('crm-customer-intelligence.js','context?.canWrite','customer intelligence write-role gate');
+need('crm-customer-intelligence.js','sbk_language','customer intelligence localization');
+need('bootstrap.js',"20260907-18",'current cache version');
+need('bootstrap.js','version: 29','boot version 29');
 need('bootstrap.js','today-center.js');
 need('bootstrap.js','crm-next-actions.js');
 need('bootstrap.js','crm-followup-assistant.js');
+need('bootstrap.js','crm-customer-intelligence.js');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, canonical documents, CRM intelligence, invoice engagement, outcome reporting, automation rules and approval-based follow-ups are enforced.');
+console.log('Pro team/workspace audit passed: workspace roles, canonical documents, CRM intelligence, customer duplicate merge, tags/custom fields, follow-up sequences, invoice engagement and approval-based follow-ups are enforced.');
