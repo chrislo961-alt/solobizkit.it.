@@ -1,4 +1,4 @@
-import { getCompanySettings, getSession, supabase } from './backend.js';
+import { getCompanySettings, getDataOwnerId, getSession, supabase } from './backend.js';
 
 let session = null;
 let settings = null;
@@ -10,15 +10,17 @@ const date = (value) => value ? new Intl.DateTimeFormat(undefined, { year: 'nume
 async function load(type, id) {
   session ||= await getSession();
   if (!session?.user?.id) throw new Error('Sign in to continue.');
+  const dataOwner = await getDataOwnerId();
+  if (!dataOwner) throw new Error('Workspace not found.');
   settings ||= await getCompanySettings(session.user.id);
   const isInvoice = type === 'invoice';
   const table = isInvoice ? 'invoices' : 'estimates';
   const itemTable = isInvoice ? 'invoice_items' : 'estimate_items';
-  const { data: doc, error } = await supabase.from(table).select(`*, ${itemTable}(*)`).eq('id', id).eq('user_id', session.user.id).single();
+  const { data: doc, error } = await supabase.from(table).select(`*, ${itemTable}(*)`).eq('id', id).eq('user_id', dataOwner).single();
   if (error) throw error;
   let customer = null;
   if (doc.customer_id) {
-    const result = await supabase.from('customers').select('*').eq('id', doc.customer_id).eq('user_id', session.user.id).maybeSingle();
+    const result = await supabase.from('customers').select('*').eq('id', doc.customer_id).eq('user_id', dataOwner).maybeSingle();
     if (result.error) throw result.error;
     customer = result.data;
   }
