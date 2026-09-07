@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Pipeline · SoloBizKit Pro</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/pro/pro.css">
+  <link rel="stylesheet" href="/pro/pro-auth.css">
+  <link rel="stylesheet" href="/pro/pipeline/pipeline.css?v=20260907-14">
+  <link rel="stylesheet" href="/pro/pro-i18n.css">
+  <script src="/analytics.js" defer></script>
+</head>
+<body>
+  <div class="app-shell signed-out" id="shell">
+    <aside class="sidebar">
+      <a class="brand" href="/pro/" aria-label="SoloBizKit Pro home"><span class="brand-mark">SB</span><span><strong>SoloBizKit</strong><small>PRO</small></span></a>
+      <nav class="nav" aria-label="Pro navigation">
+        <a class="nav-item" href="/pro/?view=dashboard">Dashboard</a>
+        <a class="nav-item" href="/pro/leads/">Leads</a>
+        <a class="nav-item active" href="/pro/pipeline/">Pipeline</a>
+        <a class="nav-item" href="/pro/?view=customers">Customers</a>
+        <a class="nav-item" href="/pro/?view=invoices">Invoices</a>
+        <a class="nav-item" href="/pro/estimates/">Estimates</a>
+        <a class="nav-item" href="/pro/recurring/">Recurring</a>
+        <a class="nav-item" href="/pro/catalog/">Catalog</a>
+        <a class="nav-item" href="/pro/settings/">Settings</a>
+      </nav>
+      <div class="sidebar-footer"><span class="pro-pill">Pro workspace</span><p>Move opportunities from lead to won without losing the customer context.</p></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h1>Pipeline</h1></div><div class="top-actions"><div id="authActions"></div></div></header>
+      <section id="app" class="content" aria-live="polite"><div class="auth-stage"><section class="auth-card"><h2>Loading pipeline…</h2><p class="muted">Loading your workspace opportunities.</p></section></div></section>
+    </main>
+  </div>
+  <dialog id="dealModal" class="modal"><form method="dialog" class="modal-card" id="dealForm"><div class="modal-head"><div><p class="eyebrow">CRM PIPELINE</p><h2 id="dealModalTitle">New deal</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div></form></dialog>
+  <script type="module" src="/pro/pipeline/pipeline.js?v=20260907-14"></script>
+  <script type="module" src="/pro/workspace-ui.js?v=20260907-14"></script>
+  <script src="/pro/leads-nav.js?v=20260907-14" defer></script>
+  <script src="/pro/pro-i18n.js?v=20260907-14" defer></script>
+  <script src="/pro/pro-workspace-i18n-extra.js?v=20260907-14" defer></script>
+</body>
+</html>
