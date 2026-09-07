@@ -10,6 +10,7 @@ const estimateDeepLinks = await readFile(new URL('../pro/estimates/new-deeplink.
 const leads = await readFile(new URL('../pro/leads/leads.js', import.meta.url), 'utf8');
 const pipeline = await readFile(new URL('../pro/pipeline/pipeline.js', import.meta.url), 'utf8');
 const pipelineHtml = await readFile(new URL('../pro/pipeline/index.html', import.meta.url), 'utf8');
+const proCore = await readFile(new URL('../pro/pro-core.js', import.meta.url), 'utf8');
 const errors=[];
 const need=(file,text,label=text)=>{ if(!src[file]?.includes(text)) errors.push(`${file}: missing ${label}`); };
 const forbid=(file,text,label=text)=>{ if(src[file]?.includes(text)) errors.push(`${file}: still contains ${label}`); };
@@ -70,11 +71,14 @@ if(!leads.includes('matchedCustomer')) errors.push('leads.js: missing submission
 if(!leads.includes('Create estimate')) errors.push('leads.js: missing lead-to-estimate action');
 
 for(const token of ["supabase.from('crm_deals')","supabase.from('crm_tasks')","context?.canWrite",'dragstart','drop','lead_score','sync_crm_automation','engagement_count','get_crm_pipeline_report','lost_reason','save_crm_followup_task','pipeline-stage-select']) if(!pipeline.includes(token)) errors.push(`pipeline.js: missing ${token}`);
-if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-17')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
-if(!pipelineHtml.includes('/pro/crm-automation-rules.js?v=20260907-17')) errors.push('pipeline/index.html: missing current automation rules UI');
-if(!pipelineHtml.includes('/pro/crm-followup-assistant.js?v=20260907-17')) errors.push('pipeline/index.html: missing CRM follow-up assistant');
+if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-19')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
+if(!pipelineHtml.includes('/pro/crm-automation-rules.js?v=20260907-19')) errors.push('pipeline/index.html: missing current automation rules UI');
+if(!pipelineHtml.includes('/pro/crm-followup-assistant.js?v=20260907-19')) errors.push('pipeline/index.html: missing CRM follow-up assistant');
 need('today-center.js',"supabase.from('crm_tasks')");
 need('today-center.js',"sync_crm_automation");
+need('today-center.js','data-snooze-task','Today task snooze');
+need('today-center.js','sbk_language','Today localization refresh');
+need('today-center.js','priorityRank','semantic task priority ordering');
 need('crm-next-actions.js',"supabase.rpc('get_crm_next_actions'");
 need('crm-next-actions.js','invoice_viewed');
 need('crm-next-actions.js','data-draft-followup');
@@ -93,16 +97,18 @@ need('crm-customer-intelligence.js',"supabase.rpc('start_crm_sequence'",'follow-
 need('crm-customer-intelligence.js',"supabase.rpc('stop_crm_sequence'",'follow-up sequence stop');
 need('crm-customer-intelligence.js','context?.canWrite','customer intelligence write-role gate');
 need('crm-customer-intelligence.js','sbk_language','customer intelligence localization');
-need('bootstrap.js',"20260907-18",'current cache version');
-need('bootstrap.js','version: 29','boot version 29');
+need('bootstrap.js',"20260907-19",'current cache version');
+need('bootstrap.js','version: 30','boot version 30');
 need('bootstrap.js','today-center.js');
 need('bootstrap.js','crm-next-actions.js');
 need('bootstrap.js','crm-followup-assistant.js');
 need('bootstrap.js','crm-customer-intelligence.js');
+if(!proCore.includes('const escapedPrefix')) errors.push('pro-core.js: invoice preview does not scope suffix parsing to the configured prefix');
+if(!proCore.includes('new RegExp(`^${escapedPrefix}(\\d+)$`)')) errors.push('pro-core.js: invoice preview prefix regex is missing');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, canonical documents, CRM intelligence, customer duplicate merge, tags/custom fields, follow-up sequences, invoice engagement and approval-based follow-ups are enforced.');
+console.log('Pro team/workspace audit passed: workspace roles, canonical documents, CRM intelligence, localized Today controls, customer duplicate merge, tags/custom fields, follow-up sequences, invoice engagement and safe number previews are enforced.');
