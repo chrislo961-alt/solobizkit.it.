@@ -49,7 +49,7 @@ test('localized calculator hub is rendered from the complete shared catalog',()=
   const required=[
     '/profit-margin-calculator/','/break-even-calculator/','/roi-calculator/','/markup-calculator/','/gross-profit-calculator/','/target-profit-margin-calculator/',
     '/roas-calculator/','/customer-acquisition-cost-calculator/','/customer-lifetime-value-calculator/','/cpm-calculator/','/cpc-calculator/','/conversion-rate-calculator/',
-    '/percentage-increase-calculator/','/percentage-change-calculator/','/discount-calculator/','/price-increase-calculator/',
+    '/percentage-increase-calculator/','/percentage-change-calculator/','/discount-calculator/','/price-increase-calculator/','/vat-calculator/',
     '/business-loan-calculator/','/cash-flow-calculator/','/invoice-generator/','/hourly-rate-calculator/','/freelance-day-rate-calculator/','/consultant-hourly-rate-calculator/',
     '/cleaning-business-profit-calculator/','/restaurant-profit-margin-calculator/','/ecommerce-profit-margin-calculator/','/ecommerce-conversion-rate-calculator/','/saas-cac-calculator/','/ecommerce-customer-lifetime-value-calculator/','/google-ads-cpc-calculator/','/social-media-cpm-calculator/','/ecommerce-roas-calculator/','/price-increase-calculator-for-small-business/'
   ];
