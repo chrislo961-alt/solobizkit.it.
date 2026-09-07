@@ -10,7 +10,7 @@ const ALLOWED_TYPES = new Set([
 const isEstimatePage = window.location.pathname.startsWith('/pro/estimates');
 const config = isEstimatePage
   ? { table: 'estimate_attachments', idColumn: 'estimate_id', bucket: 'estimate-attachments', selector: '.estimate-actions' }
-  : { table: 'invoice_attachments', idColumn: 'invoice_id', bucket: 'invoice-attachments', selector: '[data-edit-invoice]' };
+  : { table: 'invoice_attachments', idColumn: 'invoice_id', bucket: 'invoice-attachments', selector: '[data-print-invoice]' };
 
 let workspace = null;
 let dataOwner = null;
@@ -153,8 +153,12 @@ function estimateIdFromHost(host) {
 function enhance(root = document) {
   root.querySelectorAll(config.selector).forEach((anchor) => {
     const host = isEstimatePage ? anchor : anchor.parentElement;
-    const documentId = isEstimatePage ? estimateIdFromHost(host) : anchor.dataset.editInvoice;
+    const documentId = isEstimatePage ? estimateIdFromHost(host) : anchor.dataset.printInvoice;
     if (!documentId || !host || host.querySelector(`[data-attachments-for="${documentId}"]`)) return;
+    if (!isEstimatePage) {
+      host.dataset.invoiceActions = '';
+      host.dataset.invoiceId = documentId;
+    }
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'mini-btn';
