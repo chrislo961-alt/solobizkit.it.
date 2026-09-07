@@ -539,5 +539,11 @@ window.SBK_PUBLIC_I18N_EXTRA={"languages":["no","sv","de","es","fr"],"items":{
 "Custom VAT %":["Egendefinert MVA %","Anpassad moms %","Eigene MwSt. %","IVA personalizado %","TVA personnalisée %"],
 "Custom":["Egendefinert","Anpassad","Benutzerdefiniert","Personalizado","Personnalisé"],
 "Currency":["Valuta","Valuta","Währung","Moneda","Devise"],
-"Calculate VAT":["Beregn MVA","Beräkna moms","MwSt. berechnen","Calcular IVA","Calculer la TVA"]
+"Calculate VAT":["Beregn MVA","Beräkna moms","MwSt. berechnen","Calcular IVA","Calculer la TVA"],
+"USD — $":["USD — $","USD — $","USD — $","USD — $","USD — $"],
+"EUR — €":["EUR — €","EUR — €","EUR — €","EUR — €","EUR — €"],
+"GBP — £":["GBP — £","GBP — £","GBP — £","GBP — £","GBP — £"],
+"NOK — kr":["NOK — kr","NOK — kr","NOK — kr","NOK — kr","NOK — kr"],
+"SEK — kr":["SEK — kr","SEK — kr","SEK — kr","SEK — kr","SEK — kr"],
+"DKK — kr":["DKK — kr","DKK — kr","DKK — kr","DKK — kr","DKK — kr"]
 }};
