@@ -19,7 +19,10 @@ const rows={
   'GBP — £':['GBP — £','GBP — £','GBP — £','GBP — £','GBP — £'],
   'NOK — kr':['NOK — kr','NOK — kr','NOK — kr','NOK — kr','NOK — kr'],
   'SEK — kr':['SEK — kr','SEK — kr','SEK — kr','SEK — kr','SEK — kr'],
-  'DKK — kr':['DKK — kr','DKK — kr','DKK — kr','DKK — kr','DKK — kr']
+  'DKK — kr':['DKK — kr','DKK — kr','DKK — kr','DKK — kr','DKK — kr'],
+  'How do I add 25% VAT?':['Hvordan legger jeg til 25 % MVA?','Hur lägger jag till 25 % moms?','Wie füge ich 25 % MwSt. hinzu?','¿Cómo añado un 25 % de IVA?','Comment ajouter 25 % de TVA ?'],
+  'Why can’t I remove VAT by simply subtracting 25%?':['Hvorfor kan jeg ikke fjerne MVA ved bare å trekke fra 25 %?','Varför kan jag inte ta bort moms genom att bara dra av 25 %?','Warum kann ich die MwSt. nicht einfach durch Abzug von 25 % entfernen?','¿Por qué no puedo quitar el IVA restando simplemente un 25 %?','Pourquoi ne puis-je pas retirer la TVA en soustrayant simplement 25 % ?'],
+  'Can I use another VAT rate?':['Kan jeg bruke en annen MVA-sats?','Kan jag använda en annan momssats?','Kann ich einen anderen MwSt.-Satz verwenden?','¿Puedo usar otro tipo de IVA?','Puis-je utiliser un autre taux de TVA ?']
 };
 
 const additions=[];
