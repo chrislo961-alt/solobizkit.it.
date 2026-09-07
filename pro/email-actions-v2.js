@@ -1,5 +1,4 @@
 import { getCompanySettings, getDataOwnerId, getSession, getWorkspaceContext, supabase } from './backend.js';
-import { scheduleInvoiceReminders } from './reminder-actions.js';
 import { ensurePaymentLink } from './payment-actions.js';
 
 let session = null;
@@ -48,7 +47,7 @@ function dialog(type, number, to, subject, body, { invoice = false, hasExistingP
       <label class="field"><span>Subject</span><input class="input" id="sendSubject" value="${esc(subject)}"></label>
       <label class="field"><span>Message</span><textarea class="textarea" id="sendBody" rows="7">${esc(body)}</textarea></label>
       ${invoice ? `<div class="payment-choice"><div><strong>How should the customer pay?</strong><span>Bank/KID/IBAN from your invoice is always available. Stripe is optional.</span></div><label class="stripe-choice"><input type="checkbox" id="includeStripeLink" ${hasExistingPayLink ? 'checked' : ''}><span>Add a Stripe “Pay invoice” button</span></label></div>` : ''}
-      <div class="send-trust"><span>✓ PDF attached</span><span>✓ Reply-to uses your business email</span>${invoice ? '<span>✓ Stripe only when you choose it</span>' : '<span>✓ Customer response link included</span>'}</div>
+      <div class="send-trust"><span>✓ Exact PDF attached</span><span>✓ Reply-to uses your business email</span>${invoice ? '<span>✓ Sent status + reminders sync automatically</span>' : '<span>✓ Customer response link included</span>'}</div>
       <p class="auth-message" id="sendMessage"></p>
     </div>
     <div class="modal-actions"><button class="btn secondary" type="button" data-own>Use my email</button><button class="btn primary" type="button" data-secure>Send with SoloBizKit + PDF</button></div>
@@ -72,8 +71,8 @@ async function selectedPaymentUrl(d, doc, existingUrl) {
   if (!wantsStripe || ['paid','void'].includes(String(doc.status).toLowerCase())) return '';
   if (existingUrl) return existingUrl;
   const msg = d.querySelector('#sendMessage');
-  if (msg) msg.textContent = 'Creating optional Stripe payment link…';
-  return ensurePaymentLink(doc.id);
+  if (msg) msg.textContent = 'Preparing optional Stripe payment link…';
+  return ensurePaymentLink(doc.id, { allowDraft: true });
 }
 
 async function sendInvoice(id) {
@@ -114,18 +113,10 @@ async function sendInvoice(id) {
       if (error) throw error;
       if (!data?.sent) throw new Error(data?.error || 'Could not send invoice.');
 
-      const today = new Date().toISOString().slice(0,10);
-      const currentStatus = String(doc.status || 'draft').toLowerCase();
-      const terminal = ['paid','void'].includes(currentStatus);
-      const nextStatus = terminal ? currentStatus : 'sent';
-      const { error:updateError } = await supabase.from('invoices').update({ status:nextStatus, sent_date:today, updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', dataOwner);
-      if (updateError) console.warn('Invoice email sent but status sync failed', updateError);
-
-      if (!terminal) {
-        try { await scheduleInvoiceReminders(id, doc.due_date); } catch (reminderError) { console.warn('Invoice sent, reminder scheduling skipped', reminderError); }
-      }
-      msg.textContent = `Sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Replies go to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
-      window.sbkTrack?.('pro_invoice_sent', { stripe_link:Boolean(paymentUrl), preserved_status:terminal });
+      msg.textContent = data.lifecycleSynced === false
+        ? `Invoice sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Status sync is still catching up; refresh shortly.`
+        : `Sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Status and reminders are synced. Replies go to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
+      window.sbkTrack?.('pro_invoice_sent', { stripe_link:Boolean(paymentUrl), lifecycle_synced:data.lifecycleSynced !== false });
       setTimeout(() => { d.close(); location.reload(); }, 900);
     } catch (error) {
       console.error(error);
@@ -187,8 +178,11 @@ async function inject(root = document) {
     const id = edit.dataset.editInvoice;
     const cell = edit.parentElement;
     if (!cell || cell.querySelector(`[data-send-invoice="${id}"]`)) return;
+    const row = edit.closest('tr');
+    const status = row?.querySelector('.status')?.textContent?.trim().toLowerCase() || '';
+    if (['paid','void'].includes(status)) return;
     const button = document.createElement('button');
-    button.type = 'button'; button.className = 'mini-btn'; button.dataset.sendInvoice = id; button.textContent = 'Send';
+    button.type = 'button'; button.className = 'mini-btn'; button.dataset.sendInvoice = id; button.textContent = status === 'draft' ? 'Send invoice' : 'Send again';
     cell.insertBefore(button, edit.nextSibling);
   });
   root.querySelectorAll('.estimate-actions').forEach((actions) => {
