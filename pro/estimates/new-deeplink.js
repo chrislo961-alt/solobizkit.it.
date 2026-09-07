@@ -1,7 +1,13 @@
 const params = new URLSearchParams(location.search);
 const wantsNew = params.get('new') === '1';
 const presetCustomer = params.get('customer') || '';
+const requestedEstimate = params.get('estimate') || '';
 let opened = false;
+let highlighted = false;
+
+const style = document.createElement('style');
+style.textContent = '.sbk-deeplink-target{outline:2px solid rgba(36,87,245,.45);outline-offset:-2px;background:#f7faff!important;transition:outline .2s ease,background .2s ease}';
+document.head.appendChild(style);
 
 function selectPresetCustomer() {
   if (!presetCustomer) return;
@@ -20,8 +26,23 @@ function openWhenReady(){
   requestAnimationFrame(selectPresetCustomer);
   history.replaceState({}, '', '/pro/estimates/');
 }
-new MutationObserver(() => {
+
+function highlightEstimate(){
+  if (!requestedEstimate || highlighted) return;
+  const anchor = document.querySelector(`[data-print-estimate="${CSS.escape(requestedEstimate)}"]`)
+    || document.querySelector(`[data-edit="${CSS.escape(requestedEstimate)}"]`);
+  const row = anchor?.closest('tr');
+  if (!row) return;
+  highlighted = true;
+  row.classList.add('sbk-deeplink-target');
+  row.scrollIntoView({ block:'center', behavior:'smooth' });
+  setTimeout(() => row.classList.remove('sbk-deeplink-target'), 5000);
+}
+
+function sync(){
   openWhenReady();
   if (opened) selectPresetCustomer();
-}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','disabled','open']});
-openWhenReady();
+  highlightEstimate();
+}
+new MutationObserver(sync).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','disabled','open','data-print-estimate']});
+sync();
