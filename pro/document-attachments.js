@@ -1,4 +1,4 @@
-import { supabase } from './backend.js';
+import { getDataOwnerId, getWorkspaceContext, supabase } from './backend.js';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -11,6 +11,9 @@ const isEstimatePage = window.location.pathname.startsWith('/pro/estimates');
 const config = isEstimatePage
   ? { table: 'estimate_attachments', idColumn: 'estimate_id', bucket: 'estimate-attachments', selector: '[data-edit]' }
   : { table: 'invoice_attachments', idColumn: 'invoice_id', bucket: 'invoice-attachments', selector: '[data-edit-invoice]' };
+
+let workspace = null;
+let dataOwner = null;
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
@@ -27,6 +30,12 @@ function safeName(name) {
 function showError(error) {
   console.error(error);
   alert(error?.message || 'Could not manage attachment.');
+}
+async function ensureContext() {
+  workspace = workspace || await getWorkspaceContext();
+  dataOwner = dataOwner || await getDataOwnerId();
+  if (!workspace || !dataOwner) throw new Error('Workspace not found.');
+  return workspace;
 }
 
 const dialog = document.createElement('dialog');
@@ -47,28 +56,29 @@ const title = dialog.querySelector('#attachmentTitle');
 const list = dialog.querySelector('#attachmentList');
 const status = dialog.querySelector('#attachmentStatus');
 const input = dialog.querySelector('#attachmentInput');
+const chooseButton = dialog.querySelector('#attachmentChoose');
 let currentDocumentId = null;
 
 dialog.querySelector('#attachmentClose').onclick = () => dialog.close();
-dialog.querySelector('#attachmentChoose').onclick = () => input.click();
-
-async function getUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  if (!data.user) throw new Error('Sign in to manage attachments.');
-  return data.user;
-}
+chooseButton.onclick = async () => {
+  try {
+    await ensureContext();
+    if (!workspace.canWrite) throw new Error('Editor access is required to upload attachments.');
+    input.click();
+  } catch (error) { showError(error); }
+};
 
 async function loadAttachments() {
   if (!currentDocumentId) return;
+  await ensureContext();
   status.textContent = 'Loading attachments…';
-  const { data, error } = await supabase.from(config.table).select('*').eq(config.idColumn, currentDocumentId).order('created_at', { ascending: false });
+  const { data, error } = await supabase.from(config.table).select('*').eq(config.idColumn, currentDocumentId).eq('user_id', dataOwner).order('created_at', { ascending: false });
   if (error) throw error;
   status.textContent = '';
   const rows = data || [];
   list.innerHTML = rows.length ? `<div class="attachment-list">${rows.map((item) => `<div class="attachment-row">
     <div><strong title="${esc(item.file_name)}">${esc(item.file_name)}</strong><div class="attachment-meta">${bytes(item.size_bytes)}${item.mime_type ? ` · ${esc(item.mime_type)}` : ''}</div></div>
-    <div class="attachment-actions"><button class="mini-btn" type="button" data-open-attachment="${item.id}">Open</button><button class="mini-btn" type="button" data-delete-attachment="${item.id}">Remove</button></div>
+    <div class="attachment-actions"><button class="mini-btn" type="button" data-open-attachment="${item.id}">Open</button>${workspace.canWrite ? `<button class="mini-btn" type="button" data-delete-attachment="${item.id}">Remove</button>` : ''}</div>
   </div>`).join('')}</div>` : '<div class="attachment-empty">No attachments yet.</div>';
 
   list.querySelectorAll('[data-open-attachment]').forEach((button) => button.onclick = async () => {
@@ -88,9 +98,11 @@ async function loadAttachments() {
     if (!item || !confirm(`Remove ${item.file_name}?`)) return;
     button.disabled = true;
     try {
+      await ensureContext();
+      if (!workspace.canWrite) throw new Error('Editor access is required to remove attachments.');
       const { error: storageError } = await supabase.storage.from(config.bucket).remove([item.storage_path]);
       if (storageError) throw storageError;
-      const { error: rowError } = await supabase.from(config.table).delete().eq('id', item.id);
+      const { error: rowError } = await supabase.from(config.table).delete().eq('id', item.id).eq('user_id', dataOwner);
       if (rowError) throw rowError;
       await loadAttachments();
     } catch (error) { showError(error); button.disabled = false; }
@@ -102,15 +114,16 @@ input.onchange = async () => {
   input.value = '';
   if (!files.length || !currentDocumentId) return;
   try {
-    const user = await getUser();
+    await ensureContext();
+    if (!workspace.canWrite) throw new Error('Editor access is required to upload attachments.');
     for (const file of files) {
       if (file.size > MAX_BYTES) throw new Error(`${file.name} is larger than 10 MB.`);
       if (file.type && !ALLOWED_TYPES.has(file.type)) throw new Error(`${file.name} is not a supported file type.`);
       status.textContent = `Uploading ${file.name}…`;
-      const path = `${user.id}/${currentDocumentId}/${crypto.randomUUID()}-${safeName(file.name)}`;
+      const path = `${dataOwner}/${currentDocumentId}/${crypto.randomUUID()}-${safeName(file.name)}`;
       const { error: uploadError } = await supabase.storage.from(config.bucket).upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type || undefined });
       if (uploadError) throw uploadError;
-      const payload = { user_id: user.id, [config.idColumn]: currentDocumentId, file_name: file.name, storage_path: path, mime_type: file.type || null, size_bytes: file.size };
+      const payload = { user_id: dataOwner, [config.idColumn]: currentDocumentId, file_name: file.name, storage_path: path, mime_type: file.type || null, size_bytes: file.size };
       const { error: rowError } = await supabase.from(config.table).insert(payload);
       if (rowError) {
         await supabase.storage.from(config.bucket).remove([path]);
@@ -126,7 +139,11 @@ async function openManager(documentId) {
   title.textContent = isEstimatePage ? 'Estimate attachments' : 'Invoice attachments';
   list.innerHTML = '';
   dialog.showModal();
-  try { await loadAttachments(); } catch (error) { status.textContent = ''; showError(error); }
+  try {
+    await ensureContext();
+    chooseButton.hidden = !workspace.canWrite;
+    await loadAttachments();
+  } catch (error) { status.textContent = ''; showError(error); }
 }
 
 function enhance(root = document) {
@@ -151,3 +168,4 @@ new MutationObserver((mutations) => {
     for (const node of mutation.addedNodes) if (node.nodeType === 1) enhance(node.matches?.(config.selector) ? node.parentElement || node : node);
   }
 }).observe(document.body, { childList: true, subtree: true });
+window.addEventListener('solobizkit:workspace-updated', () => { workspace = null; dataOwner = null; });
