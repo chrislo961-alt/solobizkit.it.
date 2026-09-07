@@ -8,7 +8,7 @@ const root=process.cwd();
 const publicI18n=fs.readFileSync(path.join(root,'public-i18n.js'),'utf8');
 const publicExtra=fs.readFileSync(path.join(root,'public-i18n-extra.js'),'utf8');
 const invoiceI18n=fs.readFileSync(path.join(root,'invoice-i18n.js'),'utf8');
-const skip=new Set(['USD','EUR','GBP','NOK','SEK','DKK','CAD','AUD','CHF','JPY','WPA / WPA2','WEP','WPA','PNG','JPG','SVG','PDF','A4','US Letter','Net 7','Net 14','Net 30','Net 60']);
+const skip=new Set(['USD','EUR','GBP','NOK','SEK','DKK','CAD','AUD','CHF','JPY','USD — $','EUR — €','GBP — £','NOK — kr','SEK — kr','DKK — kr','WPA / WPA2','WEP','WPA','PNG','JPG','SVG','PDF','A4','US Letter','Net 7','Net 14','Net 30','Net 60']);
 const decode=(s)=>s.replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim().replace(/^[^\p{L}\p{N}+]+/u,'').trim();
 const escapeRe=(s)=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const stripNonVisible=(html)=>html.replace(/<script\b[\s\S]*?<\/script>/gi,'').replace(/<style\b[\s\S]*?<\/style>/gi,'').replace(/<template\b[\s\S]*?<\/template>/gi,'').replace(/<noscript\b[\s\S]*?<\/noscript>/gi,'');
