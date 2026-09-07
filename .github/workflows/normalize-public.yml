@@ -23,6 +23,7 @@ jobs:
         run: |
           node scripts/repair-public-hubs.mjs
           node scripts/repair-vat-i18n.mjs
+          node scripts/repair-vat-parity.mjs
           node scripts/normalize-heads.mjs
           node scripts/generate-sitemap.mjs
       - name: Commit normalized public files
