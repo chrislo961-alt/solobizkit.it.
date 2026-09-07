@@ -2,12 +2,14 @@ import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 
 const files = await Promise.all([
-  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-defaults.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','lead-followups.js','bootstrap.js'
+  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-defaults.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','lead-followups.js','today-center.js','bootstrap.js'
 ].map(async (name) => [name, await readFile(new URL(`../pro/${name}`, import.meta.url), 'utf8')]));
 const src = Object.fromEntries(files);
 const estimates = await readFile(new URL('../pro/estimates/estimates.js', import.meta.url), 'utf8');
 const estimateDeepLinks = await readFile(new URL('../pro/estimates/new-deeplink.js', import.meta.url), 'utf8');
 const leads = await readFile(new URL('../pro/leads/leads.js', import.meta.url), 'utf8');
+const pipeline = await readFile(new URL('../pro/pipeline/pipeline.js', import.meta.url), 'utf8');
+const pipelineHtml = await readFile(new URL('../pro/pipeline/index.html', import.meta.url), 'utf8');
 const errors=[];
 const need=(file,text,label=text)=>{ if(!src[file]?.includes(text)) errors.push(`${file}: missing ${label}`); };
 const forbid=(file,text,label=text)=>{ if(src[file]?.includes(text)) errors.push(`${file}: still contains ${label}`); };
@@ -85,12 +87,21 @@ if(!estimateDeepLinks.includes('wantsEdit')) errors.push('new-deeplink.js: missi
 if(!leads.includes('matchedCustomer')) errors.push('leads.js: missing submission-to-CRM matching');
 if(!leads.includes('Create estimate')) errors.push('leads.js: missing lead-to-estimate action');
 if(!leads.includes('customer=${encodeURIComponent(customer.id)}')) errors.push('leads.js: missing exact CRM customer handoff');
-need('bootstrap.js',"20260907-13",'current cache version');
-need('bootstrap.js','version: 24','boot version 24');
+if(!pipeline.includes("supabase.from('crm_deals')")) errors.push('pipeline.js: missing workspace deal storage');
+if(!pipeline.includes("supabase.from('crm_tasks')")) errors.push('pipeline.js: missing task integration');
+if(!pipeline.includes("context?.canWrite")) errors.push('pipeline.js: missing write-role gate');
+if(!pipeline.includes("dragstart") || !pipeline.includes("drop")) errors.push('pipeline.js: missing drag-and-drop pipeline');
+if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-14')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
+need('today-center.js',"supabase.from('crm_tasks')",'Today task data');
+need('today-center.js','Overdue','Today overdue handling');
+need('today-center.js','Open pipeline','Today pipeline handoff');
+need('bootstrap.js',"20260907-14",'current cache version');
+need('bootstrap.js','version: 25','boot version 25');
+need('bootstrap.js','today-center.js','Today center bootstrap');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, native CRM/document anchors, canonical PDFs, atomic saves and exact customer/document handoffs are enforced.');
+console.log('Pro team/workspace audit passed: workspace roles, native CRM/document anchors, canonical PDFs, atomic saves, Pipeline and Today actions are enforced.');
