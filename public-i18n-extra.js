@@ -528,5 +528,16 @@ window.SBK_PUBLIC_I18N_EXTRA={"languages":["no","sv","de","es","fr"],"items":{
 "Wi-Fi password":["Wi-Fi-passord","Wi-Fi-lösenord","WLAN-Passwort","Contraseña Wi-Fi","Mot de passe Wi-Fi"],
 "Worksheet layout":["Regnearkoppsett","Kalkylbladslayout","Arbeitsblattlayout","Diseño de hoja de cálculo","Mise en page de la feuille"],
 "Year":["År","År","Jahr","Año","Année"],
-"Your business name and contact details":["Bedriftsnavn og kontaktopplysninger","Företagsnamn och kontaktuppgifter","Firmenname und Kontaktdaten","Nombre del negocio y datos de contacto","Nom de l’entreprise et coordonnées"]
+"Your business name and contact details":["Bedriftsnavn og kontaktopplysninger","Företagsnamn och kontaktuppgifter","Firmenname und Kontaktdaten","Nombre del negocio y datos de contacto","Nom de l’entreprise et coordonnées"],
+"VAT Calculator":["MVA-kalkulator","Moms-kalkylator","MwSt.-Rechner","Calculadora de IVA","Calculateur de TVA"],
+"Calculation type":["Beregningstype","Beräkningstyp","Berechnungsart","Tipo de cálculo","Type de calcul"],
+"Add VAT":["Legg til MVA","Lägg till moms","MwSt. hinzufügen","Añadir IVA","Ajouter la TVA"],
+"Remove VAT":["Fjern MVA","Ta bort moms","MwSt. herausrechnen","Quitar IVA","Retirer la TVA"],
+"Net amount":["Nettobeløp","Nettobelopp","Nettobetrag","Importe neto","Montant net"],
+"VAT-inclusive amount":["Beløp inkl. MVA","Belopp inkl. moms","Bruttobetrag inkl. MwSt.","Importe con IVA","Montant TTC"],
+"VAT rate":["MVA-sats","Momssats","MwSt.-Satz","Tipo de IVA","Taux de TVA"],
+"Custom VAT %":["Egendefinert MVA %","Anpassad moms %","Eigene MwSt. %","IVA personalizado %","TVA personnalisée %"],
+"Custom":["Egendefinert","Anpassad","Benutzerdefiniert","Personalizado","Personnalisé"],
+"Currency":["Valuta","Valuta","Währung","Moneda","Devise"],
+"Calculate VAT":["Beregn MVA","Beräkna moms","MwSt. berechnen","Calcular IVA","Calculer la TVA"]
 }};
