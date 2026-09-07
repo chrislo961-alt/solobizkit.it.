@@ -1,14 +1,14 @@
-import { supabase } from './backend.js';
+import { getDataOwnerId, getWorkspaceContext, supabase } from './backend.js';
 
 const app = document.querySelector('#app');
 const STORAGE_PREFIX = 'solobizkit_activity_last_seen';
 let loading = false;
 let lastSignature = '';
-let activeUserId = '';
+let activeWorkspaceId = '';
 
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char]);
 const money = (value, currency = 'USD') => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(Number(value || 0)); } catch { return `${Number(value || 0).toFixed(2)} ${currency}`; } };
-const storageKey = () => activeUserId ? `${STORAGE_PREFIX}:${activeUserId}` : STORAGE_PREFIX;
+const storageKey = () => activeWorkspaceId ? `${STORAGE_PREFIX}:${activeWorkspaceId}` : STORAGE_PREFIX;
 
 function relativeTime(value) {
   if (!value) return '';
@@ -35,72 +35,41 @@ function buildActivities({ invoices, estimates, recurring, customers }) {
 
   for (const row of invoices || []) {
     if (row.status === 'paid') {
-      items.push({
-        id: `invoice-paid:${row.id}:${row.updated_at || row.paid_date || ''}`,
-        type: 'paid',
-        title: `Invoice ${row.invoice_number} paid`,
-        detail: `${customerLabel(names, row.customer_id)} · ${money(row.total, row.currency)}`,
-        at: row.updated_at || (row.paid_date ? `${row.paid_date}T12:00:00Z` : row.created_at),
-        href: `/pro/?view=invoices&invoice=${encodeURIComponent(row.id)}`,
-      });
+      items.push({ id: `invoice-paid:${row.id}:${row.updated_at || row.paid_date || ''}`, type: 'paid', title: `Invoice ${row.invoice_number} paid`, detail: `${customerLabel(names, row.customer_id)} · ${money(row.total, row.currency)}`, at: row.updated_at || (row.paid_date ? `${row.paid_date}T12:00:00Z` : row.created_at), href: `/pro/?view=invoices&invoice=${encodeURIComponent(row.id)}` });
     } else if (row.status === 'overdue') {
-      items.push({
-        id: `invoice-overdue:${row.id}:${row.updated_at || ''}`,
-        type: 'overdue',
-        title: `Invoice ${row.invoice_number} is overdue`,
-        detail: `${customerLabel(names, row.customer_id)} · ${money(row.total, row.currency)}`,
-        at: row.updated_at || row.created_at,
-        href: `/pro/?view=invoices&invoice=${encodeURIComponent(row.id)}`,
-      });
+      items.push({ id: `invoice-overdue:${row.id}:${row.updated_at || ''}`, type: 'overdue', title: `Invoice ${row.invoice_number} is overdue`, detail: `${customerLabel(names, row.customer_id)} · ${money(row.total, row.currency)}`, at: row.updated_at || row.created_at, href: `/pro/?view=invoices&invoice=${encodeURIComponent(row.id)}` });
     }
   }
 
   for (const row of estimates || []) {
     if (!['accepted', 'declined'].includes(row.status) || !row.responded_at) continue;
-    items.push({
-      id: `estimate-response:${row.id}:${row.responded_at}`,
-      type: row.status,
-      title: `Estimate ${row.estimate_number} ${row.status}`,
-      detail: `${customerLabel(names, row.customer_id)} · ${money(row.total, row.currency)}`,
-      at: row.responded_at,
-      href: '/pro/estimates/',
-    });
+    items.push({ id: `estimate-response:${row.id}:${row.responded_at}`, type: row.status, title: `Estimate ${row.estimate_number} ${row.status}`, detail: `${customerLabel(names, row.customer_id)} · ${money(row.total, row.currency)}`, at: row.responded_at, href: '/pro/estimates/' });
   }
 
   for (const row of recurring || []) {
     if (!row.last_generated_at || !row.last_invoice_id) continue;
-    items.push({
-      id: `recurring-generated:${row.id}:${row.last_generated_at}`,
-      type: 'generated',
-      title: `${row.name || 'Recurring invoice'} generated`,
-      detail: customerLabel(names, row.customer_id),
-      at: row.last_generated_at,
-      href: `/pro/?view=invoices&invoice=${encodeURIComponent(row.last_invoice_id)}`,
-    });
+    items.push({ id: `recurring-generated:${row.id}:${row.last_generated_at}`, type: 'generated', title: `${row.name || 'Recurring invoice'} generated`, detail: customerLabel(names, row.customer_id), at: row.last_generated_at, href: `/pro/?view=invoices&invoice=${encodeURIComponent(row.last_invoice_id)}` });
   }
 
-  return items
-    .filter((item) => item.at && Number.isFinite(new Date(item.at).getTime()))
-    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
-    .slice(0, 12);
+  return items.filter((item) => item.at && Number.isFinite(new Date(item.at).getTime())).sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, 12);
 }
 
 async function loadActivity() {
   if (loading || !app.querySelector('.dashboard-grid')) return;
   loading = true;
   try {
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData?.user?.id;
-    if (!userId) return;
-    if (activeUserId !== userId) {
-      activeUserId = userId;
+    const workspace = await getWorkspaceContext();
+    const ownerId = await getDataOwnerId();
+    if (!workspace?.workspaceId || !ownerId) return;
+    if (activeWorkspaceId !== workspace.workspaceId) {
+      activeWorkspaceId = workspace.workspaceId;
       lastSignature = '';
     }
     const [invoiceRes, estimateRes, recurringRes, customerRes] = await Promise.all([
-      supabase.from('invoices').select('id,customer_id,invoice_number,status,currency,total,paid_date,created_at,updated_at').eq('user_id', userId).in('status', ['paid', 'overdue']).order('updated_at', { ascending: false }).limit(20),
-      supabase.from('estimates').select('id,customer_id,estimate_number,status,currency,total,responded_at').eq('user_id', userId).in('status', ['accepted', 'declined']).not('responded_at', 'is', null).order('responded_at', { ascending: false }).limit(20),
-      supabase.from('recurring_invoice_profiles').select('id,customer_id,name,last_generated_at,last_invoice_id').eq('user_id', userId).not('last_generated_at', 'is', null).order('last_generated_at', { ascending: false }).limit(20),
-      supabase.from('customers').select('id,name,company').eq('user_id', userId).limit(500),
+      supabase.from('invoices').select('id,customer_id,invoice_number,status,currency,total,paid_date,created_at,updated_at').eq('user_id', ownerId).in('status', ['paid', 'overdue']).order('updated_at', { ascending: false }).limit(20),
+      supabase.from('estimates').select('id,customer_id,estimate_number,status,currency,total,responded_at').eq('user_id', ownerId).in('status', ['accepted', 'declined']).not('responded_at', 'is', null).order('responded_at', { ascending: false }).limit(20),
+      supabase.from('recurring_invoice_profiles').select('id,customer_id,name,last_generated_at,last_invoice_id').eq('user_id', ownerId).not('last_generated_at', 'is', null).order('last_generated_at', { ascending: false }).limit(20),
+      supabase.from('customers').select('id,name,company').eq('user_id', ownerId).limit(500),
     ]);
     for (const result of [invoiceRes, estimateRes, recurringRes, customerRes]) if (result.error) throw result.error;
     const items = buildActivities({ invoices: invoiceRes.data, estimates: estimateRes.data, recurring: recurringRes.data, customers: customerRes.data });
@@ -117,7 +86,7 @@ function renderActivity(items) {
   if (!dashboard) return;
   const lastSeen = Number(localStorage.getItem(storageKey()) || 0);
   const unread = items.filter((item) => new Date(item.at).getTime() > lastSeen).length;
-  const signature = `${activeUserId}|${items.map((item) => item.id).join('|')}|unread:${unread}`;
+  const signature = `${activeWorkspaceId}|${items.map((item) => item.id).join('|')}|unread:${unread}`;
   if (signature === lastSignature && app.querySelector('#businessActivity')) return;
   lastSignature = signature;
   document.querySelector('#businessActivity')?.remove();
@@ -137,10 +106,9 @@ function renderActivity(items) {
   });
 }
 
-const observer = new MutationObserver(() => {
-  if (app.querySelector('.dashboard-grid')) loadActivity();
-});
+const observer = new MutationObserver(() => { if (app.querySelector('.dashboard-grid')) loadActivity(); });
 observer.observe(app, { childList: true, subtree: true });
 window.addEventListener('focus', loadActivity);
+window.addEventListener('solobizkit:workspace-updated', () => { activeWorkspaceId = ''; lastSignature = ''; loadActivity(); });
 setInterval(() => { if (document.visibilityState === 'visible') loadActivity(); }, 60000);
 loadActivity();
