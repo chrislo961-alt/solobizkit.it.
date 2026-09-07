@@ -23,8 +23,10 @@
   };
   const t=text[locale]||text.en;
   const KEY='sbk_windows_crm_invoice_interest_v1';
+  const INTEREST_URL='https://eaqddwqprhofpizbpziq.supabase.co/functions/v1/product-interest';
   const hasInterest=()=>{try{return localStorage.getItem(KEY)==='yes'}catch(_){return false}};
   const track=(name,extra)=>window.sbkTrack?.(name,Object.assign({interest_product:'windows_crm_invoice',interest_locale:locale},extra||{}));
+  const recordInterest=()=>fetch(INTEREST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productKey:'windows_crm_invoice',locale,pagePath:location.pathname}),keepalive:true}).catch(()=>null);
 
   const style=document.createElement('style');
   style.id='sbkWindowsInterestStyle';
@@ -70,7 +72,9 @@
     dialog.innerHTML=`<div class="sbk-win-dialog"><h2>${t.title}</h2><p>${t.copy}</p><div class="sbk-win-dialog-actions"><button type="button" class="sbk-win-no">${t.no}</button><button type="button" class="sbk-win-yes">${t.yes}</button></div></div>`;
     dialog.querySelector('.sbk-win-no').onclick=()=>{track('windows_interest_not_now');dialog.close()};
     dialog.querySelector('.sbk-win-yes').onclick=()=>{
+      if(hasInterest())return;
       try{localStorage.setItem(KEY,'yes')}catch(_){}
+      recordInterest();
       track('windows_interest_yes');
       cta.textContent=t.recorded;cta.disabled=true;
       dialog.innerHTML=`<div class="sbk-win-thanks"><strong>${t.thanks}</strong><button type="button" class="sbk-win-yes">${t.close}</button></div>`;
