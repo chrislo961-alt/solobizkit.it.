@@ -16,6 +16,7 @@ let currentView = 'dashboard';
 let session = null;
 let profile = null;
 let subscription = null;
+let workspaceContext = null;
 let modalAction = null;
 let state = { customers: [], invoices: [], settings: { currency: 'USD', taxRate: 0 } };
 
@@ -28,6 +29,7 @@ function customerName(id) { return state.customers.find((c) => c.id === id)?.nam
 function setBusy(message = 'Loading…') { app.innerHTML = `<div class="auth-stage"><div class="auth-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>${esc(message)}</h2></div></div>`; }
 function showError(error) { console.error(error); alert(error?.message || 'Something went wrong. Please try again.'); }
 function hasProAccess() { return ['active', 'trialing'].includes(String(subscription?.status || '').toLowerCase()) && String(subscription?.plan || '').toLowerCase() === 'pro'; }
+function canWrite() { return Boolean(workspaceContext?.canWrite); }
 
 async function hydrate() {
   if (!session?.user?.id) return;
@@ -37,6 +39,7 @@ async function hydrate() {
   state.invoices = workspace.invoices.map((i) => ({ ...i, persisted: true }));
   profile = workspace.profile;
   subscription = workspace.subscription;
+  workspaceContext = workspace.workspace || null;
   renderAuthActions();
   render();
 }
@@ -69,12 +72,13 @@ function renderAuth() {
 
 function renderAuthActions() {
   shell.classList.remove('signed-out');
-  const label = hasProAccess() ? 'PRO' : 'ACCOUNT';
-  authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>${label}</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
+  const role = workspaceContext?.role ? String(workspaceContext.role).toUpperCase() : (hasProAccess() ? 'PRO' : 'ACCOUNT');
+  authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>${esc(role)}</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
   document.querySelector('#signOutBtn').addEventListener('click', () => signOut().catch(showError));
 }
 
 async function startCheckout(billing) {
+  if (!workspaceContext?.isOwner) return showError(new Error('Only the workspace owner can manage the subscription.'));
   const button = app.querySelector(`[data-checkout="${billing}"]`);
   if (button) { button.disabled = true; button.textContent = 'Opening secure checkout…'; }
   try {
@@ -95,6 +99,7 @@ function renderPaywall() {
   topInvoice.hidden = true;
   document.querySelectorAll('.nav-item').forEach((button) => { button.disabled = true; });
   pageTitle.textContent = 'Upgrade to Pro';
+  const ownerNote = workspaceContext && !workspaceContext.isOwner ? '<div class="paywall-notice">This workspace does not currently have Pro access. Ask the workspace owner to manage billing.</div>' : '';
   const params = new URLSearchParams(window.location.search);
   const checkoutState = params.get('checkout');
   const notice = checkoutState === 'success'
@@ -102,7 +107,7 @@ function renderPaywall() {
     : checkoutState === 'cancelled'
       ? '<div class="paywall-notice">Checkout was cancelled. Nothing was charged.</div>'
       : '';
-  app.innerHTML = `<div class="paywall-wrap"><section class="paywall-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Run your business from one simple workspace.</h2><p class="paywall-lead">Customers, CRM follow-up, invoices and revenue tracking are part of SoloBizKit Pro. There is no permanent free CRM tier.</p>${notice}<div class="paywall-features"><span>✓ Customer CRM</span><span>✓ Synced invoices</span><span>✓ Revenue & outstanding dashboard</span><span>✓ Secure account storage</span></div><div class="paywall-plans"><button class="paywall-plan" data-checkout="monthly"><small>MONTHLY</small><strong>Start Pro monthly</strong><span>Cancel anytime</span></button><button class="paywall-plan featured" data-checkout="annual"><small>ANNUAL</small><strong>Start Pro annually</strong><span>Best value</span></button></div><button class="mini-btn refresh-access" id="refreshAccess">Refresh access</button><p class="paywall-foot">Payments are handled securely by Stripe. Your business data remains tied to your own account.</p></section></div>`;
+  app.innerHTML = `<div class="paywall-wrap"><section class="paywall-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Run your business from one simple workspace.</h2><p class="paywall-lead">Customers, CRM follow-up, invoices and revenue tracking are part of SoloBizKit Pro. There is no permanent free CRM tier.</p>${ownerNote}${notice}<div class="paywall-features"><span>✓ Customer CRM</span><span>✓ Synced invoices</span><span>✓ Revenue & outstanding dashboard</span><span>✓ Secure account storage</span></div>${workspaceContext?.isOwner !== false ? '<div class="paywall-plans"><button class="paywall-plan" data-checkout="monthly"><small>MONTHLY</small><strong>Start Pro monthly</strong><span>Cancel anytime</span></button><button class="paywall-plan featured" data-checkout="annual"><small>ANNUAL</small><strong>Start Pro annually</strong><span>Best value</span></button></div>' : ''}<button class="mini-btn refresh-access" id="refreshAccess">Refresh access</button><p class="paywall-foot">Payments are handled securely by Stripe. Workspace access follows the owner subscription.</p></section></div>`;
   app.querySelectorAll('[data-checkout]').forEach((button) => button.addEventListener('click', () => startCheckout(button.dataset.checkout)));
   app.querySelector('#refreshAccess').addEventListener('click', () => hydrate().catch(showError));
 }
@@ -111,8 +116,8 @@ function render() {
   if (!session) return renderAuth();
   if (!hasProAccess()) return renderPaywall();
   shell.classList.remove('paywalled');
-  topCustomer.hidden = false;
-  topInvoice.hidden = false;
+  topCustomer.hidden = !canWrite();
+  topInvoice.hidden = !canWrite();
   document.querySelectorAll('.nav-item').forEach((button) => { button.disabled = false; button.classList.toggle('active', button.dataset.view === currentView); });
   pageTitle.textContent = { dashboard: 'Dashboard', customers: 'Customers', invoices: 'Invoices' }[currentView];
   if (currentView === 'customers') renderCustomers();
@@ -132,29 +137,29 @@ function renderDashboard() {
 }
 
 function renderCustomers() {
-  app.innerHTML = `<section class="card"><div class="toolbar"><input class="input search" id="customerSearch" type="search" placeholder="Search customers…"><select class="select" id="customerStatus" style="max-width:160px"><option value="">All statuses</option><option value="lead">Lead</option><option value="active">Active</option><option value="client">Client</option></select><button class="btn primary" id="newCustomer">+ Customer</button></div><div id="customerResults"></div></section>`;
+  app.innerHTML = `<section class="card"><div class="toolbar"><input class="input search" id="customerSearch" type="search" placeholder="Search customers…"><select class="select" id="customerStatus" style="max-width:160px"><option value="">All statuses</option><option value="lead">Lead</option><option value="active">Active</option><option value="client">Client</option></select>${canWrite() ? '<button class="btn primary" id="newCustomer">+ Customer</button>' : ''}</div><div id="customerResults"></div></section>`;
   const search = app.querySelector('#customerSearch');
   const status = app.querySelector('#customerStatus');
   const results = app.querySelector('#customerResults');
   const update = () => {
     const q = search.value.trim().toLowerCase();
     const items = state.customers.filter((customer) => !status.value || customer.status === status.value).filter((customer) => [customer.name, customer.company, customer.email, customer.phone].some((value) => String(value || '').toLowerCase().includes(q)));
-    results.innerHTML = items.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Customer</th><th>Contact</th><th>Status</th><th>Outstanding</th><th></th></tr></thead><tbody>${items.map((customer) => `<tr><td><strong>${esc(customer.name)}</strong><br><span class="muted">${esc(customer.company || '—')}</span></td><td>${esc(customer.email || '—')}<br><span class="muted">${esc(customer.phone || '')}</span></td><td><span class="status ${esc(customer.status)}">${esc(customer.status)}</span></td><td>${money(customerOutstanding(customer.id, state.invoices), state.settings.currency)}</td><td><button class="mini-btn" data-edit-customer="${customer.id}">Edit</button> <button class="mini-btn" data-invoice-customer="${customer.id}">Invoice</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No customers found.</div>';
+    results.innerHTML = items.length ? `<div class="table-wrap"><table class="table"><thead><tr><th>Customer</th><th>Contact</th><th>Status</th><th>Outstanding</th><th></th></tr></thead><tbody>${items.map((customer) => `<tr><td><strong>${esc(customer.name)}</strong><br><span class="muted">${esc(customer.company || '—')}</span></td><td>${esc(customer.email || '—')}<br><span class="muted">${esc(customer.phone || '')}</span></td><td><span class="status ${esc(customer.status)}">${esc(customer.status)}</span></td><td>${money(customerOutstanding(customer.id, state.invoices), state.settings.currency)}</td><td>${canWrite() ? `<button class="mini-btn" data-edit-customer="${customer.id}">Edit</button> <button class="mini-btn" data-invoice-customer="${customer.id}">Invoice</button>` : '<span class="muted">Read only</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No customers found.</div>';
     results.querySelectorAll('[data-edit-customer]').forEach((button) => button.onclick = () => openCustomerModal(button.dataset.editCustomer));
     results.querySelectorAll('[data-invoice-customer]').forEach((button) => button.onclick = () => openInvoiceModal(null, button.dataset.invoiceCustomer));
   };
   search.oninput = update;
   status.onchange = update;
-  app.querySelector('#newCustomer').onclick = () => openCustomerModal();
+  app.querySelector('#newCustomer')?.addEventListener('click', () => openCustomerModal());
   update();
 }
 
 function invoiceTable(items, compact = false) {
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>${items.map((invoice) => { const total = calculateInvoice(invoice).total; const status = normalizeInvoiceStatus(invoice); return `<tr><td><strong>${esc(invoice.number)}</strong><br><span class="muted">${esc(invoice.issueDate || '')}</span></td><td>${esc(customerName(invoice.customerId))}</td><td>${esc(invoice.dueDate || '—')}</td><td><span class="status ${status}">${status}</span></td><td>${money(total, invoice.currency || state.settings.currency)}</td><td>${compact ? '' : `<button class="mini-btn" data-edit-invoice="${invoice.id}">Edit</button> <button class="mini-btn" data-print-invoice="${invoice.id}">Print</button>${status !== 'paid' ? ` <button class="mini-btn" data-paid-invoice="${invoice.id}">Paid</button>` : ''}`}</td></tr>`; }).join('')}</tbody></table></div>`;
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>${items.map((invoice) => { const total = calculateInvoice(invoice).total; const status = normalizeInvoiceStatus(invoice); const writeActions = canWrite() ? `<button class="mini-btn" data-edit-invoice="${invoice.id}">Edit</button>${status !== 'paid' ? ` <button class="mini-btn" data-paid-invoice="${invoice.id}">Paid</button>` : ''}` : ''; return `<tr><td><strong>${esc(invoice.number)}</strong><br><span class="muted">${esc(invoice.issueDate || '')}</span></td><td>${esc(customerName(invoice.customerId))}</td><td>${esc(invoice.dueDate || '—')}</td><td><span class="status ${status}">${status}</span></td><td>${money(total, invoice.currency || state.settings.currency)}</td><td>${compact ? '' : `${writeActions}${writeActions ? ' ' : ''}<button class="mini-btn" data-print-invoice="${invoice.id}">Print</button>`}</td></tr>`; }).join('')}</tbody></table></div>`;
 }
 
 function renderInvoices() {
-  app.innerHTML = `<section class="card"><div class="toolbar"><input class="input search" id="invoiceSearch" type="search" placeholder="Search invoice or customer…"><select class="select" id="invoiceStatus" style="max-width:160px"><option value="">All statuses</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select><button class="btn primary" id="newInvoice">+ Invoice</button></div><div id="invoiceResults"></div></section>`;
+  app.innerHTML = `<section class="card"><div class="toolbar"><input class="input search" id="invoiceSearch" type="search" placeholder="Search invoice or customer…"><select class="select" id="invoiceStatus" style="max-width:160px"><option value="">All statuses</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select>${canWrite() ? '<button class="btn primary" id="newInvoice">+ Invoice</button>' : ''}</div><div id="invoiceResults"></div></section>`;
   const search = app.querySelector('#invoiceSearch');
   const status = app.querySelector('#invoiceStatus');
   const results = app.querySelector('#invoiceResults');
@@ -166,12 +171,13 @@ function renderInvoices() {
   };
   search.oninput = update;
   status.onchange = update;
-  app.querySelector('#newInvoice').onclick = () => openInvoiceModal();
+  app.querySelector('#newInvoice')?.addEventListener('click', () => openInvoiceModal());
   update();
 }
 
 function openCustomerModal(customerId = null) {
   if (!hasProAccess()) return renderPaywall();
+  if (!canWrite()) return showError(new Error('This workspace role is read only.'));
   const existing = state.customers.find((customer) => customer.id === customerId);
   modalTitle.textContent = existing ? 'Edit customer' : 'New customer';
   modalBody.innerHTML = `<div class="form-grid"><div class="field"><label>Name *</label><input class="input" name="name" required value="${esc(existing?.name || '')}"></div><div class="field"><label>Company</label><input class="input" name="company" value="${esc(existing?.company || '')}"></div><div class="field"><label>Email</label><input class="input" name="email" type="email" value="${esc(existing?.email || '')}"></div><div class="field"><label>Phone</label><input class="input" name="phone" value="${esc(existing?.phone || '')}"></div><div class="field"><label>Status</label><select class="select" name="status">${['lead', 'active', 'client'].map((status) => `<option value="${status}" ${existing?.status === status ? 'selected' : ''}>${status[0].toUpperCase() + status.slice(1)}</option>`).join('')}</select></div><div class="field full"><label>Notes</label><textarea class="textarea" name="notes">${esc(existing?.notes || '')}</textarea></div></div>`;
@@ -194,6 +200,7 @@ function invoiceLineMarkup(line = { description: '', qty: 1, rate: 0 }) {
 
 function openInvoiceModal(invoiceId = null, presetCustomerId = null) {
   if (!hasProAccess()) return renderPaywall();
+  if (!canWrite()) return showError(new Error('This workspace role is read only.'));
   const existing = state.invoices.find((invoice) => invoice.id === invoiceId);
   if (!state.customers.length) { openCustomerModal(); return; }
   const invoice = existing || { customerId: presetCustomerId || state.customers[0].id, number: nextInvoiceNumber(state.invoices), issueDate: todayISO(), dueDate: plusDaysISO(14), status: 'draft', currency: state.settings.currency, taxRate: 0, lines: [{ description: '', qty: 1, rate: 0 }], notes: '' };
@@ -233,6 +240,7 @@ function openInvoiceModal(invoiceId = null, presetCustomerId = null) {
 function bindInvoiceActions(root = app) {
   root.querySelectorAll('[data-edit-invoice]').forEach((button) => button.onclick = () => openInvoiceModal(button.dataset.editInvoice));
   root.querySelectorAll('[data-paid-invoice]').forEach((button) => button.onclick = async () => {
+    if (!canWrite()) return showError(new Error('This workspace role is read only.'));
     try {
       await markInvoicePaid(session.user.id, button.dataset.paidInvoice);
       state.invoices = state.invoices.map((invoice) => invoice.id === button.dataset.paidInvoice ? { ...invoice, status: 'paid' } : invoice);
@@ -254,14 +262,16 @@ function printInvoice(invoiceId) {
 }
 
 document.querySelectorAll('.nav-item').forEach((button) => button.onclick = () => { if (!session || !hasProAccess()) return; currentView = button.dataset.view; render(); });
-topCustomer.onclick = () => session && hasProAccess() && openCustomerModal();
-topInvoice.onclick = () => session && hasProAccess() && openInvoiceModal();
+topCustomer.onclick = () => session && hasProAccess() && canWrite() && openCustomerModal();
+topInvoice.onclick = () => session && hasProAccess() && canWrite() && openInvoiceModal();
 modalForm.addEventListener('submit', async (event) => {
   if (event.submitter?.value === 'cancel') return;
   event.preventDefault();
   try { const ok = await modalAction?.(); if (ok) modal.close(); }
   catch (error) { showError(error); }
 });
+
+window.addEventListener('solobizkit:workspace-updated', () => { if (session) hydrate().catch(showError); });
 
 onAuthChange(async (_event, nextSession) => {
   session = nextSession;
@@ -270,6 +280,7 @@ onAuthChange(async (_event, nextSession) => {
   } else {
     profile = null;
     subscription = null;
+    workspaceContext = null;
     state = { customers: [], invoices: [], settings: { currency: 'USD', taxRate: 0 } };
     renderAuth();
   }
