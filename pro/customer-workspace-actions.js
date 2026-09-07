@@ -1,15 +1,21 @@
-import { supabase } from './backend.js';
+import { getWorkspaceContext, supabase } from './backend.js';
+
+let workspace = null;
+async function canWrite() {
+  workspace = workspace || await getWorkspaceContext();
+  return Boolean(workspace?.canWrite);
+}
 
 const observer = new MutationObserver(() => enhanceCustomerActions());
 observer.observe(document.body, { childList: true, subtree: true });
 enhanceCustomerActions();
 
-function enhanceCustomerActions() {
+async function enhanceCustomerActions() {
+  if (!(await canWrite().catch(() => false))) return;
   document.querySelectorAll('[data-edit-customer]').forEach((editButton) => {
     const customerId = editButton.dataset.editCustomer;
     const cell = editButton.parentElement;
     if (!customerId || !cell || cell.querySelector(`[data-workspace-customer="${customerId}"]`)) return;
-
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'mini-btn';
@@ -25,18 +31,13 @@ async function copyCustomerPortal(button, customerId) {
   button.disabled = true;
   button.textContent = 'Creating…';
   try {
-    const { data, error } = await supabase.functions.invoke('create-customer-workspace-link', {
-      body: { customerId },
-    });
+    if (!(await canWrite())) throw new Error('Editor access is required to create customer portal links.');
+    const { data, error } = await supabase.functions.invoke('create-customer-workspace-link', { body: { customerId } });
     if (error) throw error;
     if (!data?.url) throw new Error(data?.error || 'Could not create customer portal link.');
-
     await navigator.clipboard.writeText(data.url);
     button.textContent = 'Copied ✓';
-    window.setTimeout(() => {
-      button.textContent = original;
-      button.disabled = false;
-    }, 1800);
+    window.setTimeout(() => { button.textContent = original; button.disabled = false; }, 1800);
   } catch (error) {
     console.error(error);
     button.textContent = 'Try again';
@@ -44,3 +45,5 @@ async function copyCustomerPortal(button, customerId) {
     window.alert(error?.message || 'Could not create the customer portal link.');
   }
 }
+
+window.addEventListener('solobizkit:workspace-updated', () => { workspace = null; enhanceCustomerActions(); });
