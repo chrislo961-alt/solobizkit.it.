@@ -11,7 +11,9 @@ const forbid=(file,text,label=text)=>{ if(src[file]?.includes(text)) errors.push
 
 for (const token of ['getWorkspaceContext','getDataOwnerId','setActiveWorkspace','get_current_workspace']) need('backend.js',token);
 for (const role of ['owner','admin','member','accountant']) need('team-access.js',role,`role ${role}`);
-for (const token of ['workspace-invite','workspace-invite-accept','team_invite']) need(token==='workspace-invite-accept'?'workspace-ui.js':'team-access.js',token);
+need('team-access.js','workspace-invite');
+need('workspace-ui.js','workspace-invite-accept');
+need('workspace-ui.js','team_invite');
 for (const file of ['payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js']) {
   need(file,'getDataOwnerId');
   forbid(file,".eq('user_id', session.user.id)",'direct session.user.id data filter');
