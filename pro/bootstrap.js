@@ -43,7 +43,7 @@ async function safeImport(path) {
   }
 }
 
-const V = '20260907-9';
+const V = '20260907-10';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
@@ -88,4 +88,4 @@ if (!coreReady) {
   ]);
 }
 
-window.sbkProBoot = { version: 20, coreReady, bootedAt: new Date().toISOString() };
+window.sbkProBoot = { version: 21, coreReady, bootedAt: new Date().toISOString() };
