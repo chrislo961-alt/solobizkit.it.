@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Test VAT promoted route
+        run: node --test tests/vat-calculator.test.mjs
       - name: Test calculator logic
         run: node --test tests/*.test.mjs
       - name: Audit public static site
