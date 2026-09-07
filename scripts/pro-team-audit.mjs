@@ -91,12 +91,16 @@ if(!pipeline.includes("supabase.from('crm_deals')")) errors.push('pipeline.js: m
 if(!pipeline.includes("supabase.from('crm_tasks')")) errors.push('pipeline.js: missing task integration');
 if(!pipeline.includes("context?.canWrite")) errors.push('pipeline.js: missing write-role gate');
 if(!pipeline.includes("dragstart") || !pipeline.includes("drop")) errors.push('pipeline.js: missing drag-and-drop pipeline');
-if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-14')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
+if(!pipeline.includes("lead_score")) errors.push('pipeline.js: missing lead scoring');
+if(!pipeline.includes("sync_crm_automation")) errors.push('pipeline.js: missing CRM automation sync');
+if(!pipeline.includes("engagement_count")) errors.push('pipeline.js: missing estimate engagement signal');
+if(!pipelineHtml.includes('/pro/pipeline/pipeline.js?v=20260907-15')) errors.push('pipeline/index.html: missing current pipeline entrypoint');
 need('today-center.js',"supabase.from('crm_tasks')",'Today task data');
-need('today-center.js','Overdue','Today overdue handling');
+need('today-center.js',"sync_crm_automation",'Today automation sync');
+need('today-center.js','Hot opportunities','Today hot lead handling');
 need('today-center.js','Open pipeline','Today pipeline handoff');
-need('bootstrap.js',"20260907-14",'current cache version');
-need('bootstrap.js','version: 25','boot version 25');
+need('bootstrap.js',"20260907-15",'current cache version');
+need('bootstrap.js','version: 26','boot version 26');
 need('bootstrap.js','today-center.js','Today center bootstrap');
 
 if(errors.length){
@@ -104,4 +108,4 @@ if(errors.length){
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, native CRM/document anchors, canonical PDFs, atomic saves, Pipeline and Today actions are enforced.');
+console.log('Pro team/workspace audit passed: workspace roles, canonical documents, atomic saves, Pipeline, Today, lead scoring and CRM automation are enforced.');
