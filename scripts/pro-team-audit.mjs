@@ -2,10 +2,12 @@ import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 
 const files = await Promise.all([
-  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','bootstrap.js'
+  'backend.js','team-access.js','workspace-ui.js','payment-actions.js','reminder-actions.js','customer-history.js','document-attachments.js','activity-feed.js','spreadsheet-transfer-workspace.js','email-actions-v2.js','pro-app.js','customer-portal-actions.js','customer-workspace-actions.js','document-print-v2.js','document-options-v2.js','document-ux-v2.js','crm-ux-v3.js','deep-links.js','bootstrap.js'
 ].map(async (name) => [name, await readFile(new URL(`../pro/${name}`, import.meta.url), 'utf8')]));
 const src = Object.fromEntries(files);
 const estimates = await readFile(new URL('../pro/estimates/estimates.js', import.meta.url), 'utf8');
+const estimateDeepLinks = await readFile(new URL('../pro/estimates/new-deeplink.js', import.meta.url), 'utf8');
+const leads = await readFile(new URL('../pro/leads/leads.js', import.meta.url), 'utf8');
 const errors=[];
 const need=(file,text,label=text)=>{ if(!src[file]?.includes(text)) errors.push(`${file}: missing ${label}`); };
 const forbid=(file,text,label=text)=>{ if(src[file]?.includes(text)) errors.push(`${file}: still contains ${label}`); };
@@ -21,6 +23,8 @@ for (const file of ['payment-actions.js','reminder-actions.js','customer-history
 }
 need('customer-history.js','data-customer-actions','neutral customer history anchor');
 need('customer-history.js','currencySummary','currency-safe customer history totals');
+need('customer-history.js','Open exact document','exact customer history document links');
+need('customer-history.js','invoice=${encodeURIComponent(invoice.id)}','invoice deep link from history');
 need('crm-ux-v3.js','data-customer-actions','neutral CRM customer action anchor');
 need('crm-ux-v3.js','data.workspace?.canWrite','CRM write-role gate');
 need('crm-ux-v3.js','Read only workspace access','CRM read-only state');
@@ -44,14 +48,22 @@ need('pro-app.js','workspaceContext?.canWrite','workspace write gate');
 need('pro-app.js','workspaceContext?.isOwner','owner billing gate');
 need('customer-portal-actions.js','getWorkspaceContext','portal role gate');
 need('customer-workspace-actions.js','getWorkspaceContext','customer workspace role gate');
+need('deep-links.js','requestedCustomer','customer CRM deep link');
+need('deep-links.js','wantsNew','new invoice deep link');
+need('deep-links.js','sbk-deeplink-target','viewer-safe deep link highlight');
 if(!estimates.includes('workspaceContext?.canWrite')) errors.push('estimates.js: missing workspace write gate');
 if(!estimates.includes('workspaceContext?.isOwner')) errors.push('estimates.js: missing owner billing gate');
-need('bootstrap.js',"20260907-10",'current cache version');
-need('bootstrap.js','version: 21','boot version 21');
+if(!estimateDeepLinks.includes('presetCustomer')) errors.push('new-deeplink.js: missing estimate customer preset');
+if(!estimateDeepLinks.includes('requestedEstimate')) errors.push('new-deeplink.js: missing exact estimate deep link');
+if(!leads.includes('matchedCustomer')) errors.push('leads.js: missing submission-to-CRM matching');
+if(!leads.includes('Create estimate')) errors.push('leads.js: missing lead-to-estimate action');
+if(!leads.includes('customer=${encodeURIComponent(customer.id)}')) errors.push('leads.js: missing exact CRM customer handoff');
+need('bootstrap.js',"20260907-11",'current cache version');
+need('bootstrap.js','version: 22','boot version 22');
 
 if(errors.length){
   console.error('\nPro team/workspace audit failed:');
   errors.forEach((error)=>console.error(`- ${error}`));
   process.exit(1);
 }
-console.log('Pro team/workspace audit passed: workspace roles, canonical documents, read-only CRM/history/attachments/options, write-only duplicate/reuse actions and business data paths are workspace-aware.');
+console.log('Pro team/workspace audit passed: workspace roles, canonical documents, read-only CRM controls and lead → customer → estimate/invoice deep links are workspace-aware.');
