@@ -12,6 +12,7 @@ const modalBody = document.querySelector('#modalBody');
 
 let session = null;
 let subscription = null;
+let workspaceContext = null;
 let state = { customers: [], invoices: [], estimates: [] };
 let modalAction = null;
 
@@ -19,6 +20,7 @@ function esc(value = '') { return String(value).replace(/[&<>'"]/g, (char) => ({
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function plusDaysISO(days) { const date = new Date(); date.setDate(date.getDate() + days); return date.toISOString().slice(0, 10); }
 function hasProAccess() { return ['active', 'trialing'].includes(String(subscription?.status || '').toLowerCase()) && String(subscription?.plan || '').toLowerCase() === 'pro'; }
+function canWrite() { return Boolean(workspaceContext?.canWrite); }
 function customerName(id) { return state.customers.find((customer) => customer.id === id)?.name || 'Unknown customer'; }
 function nextEstimateNumber() {
   const used = state.estimates.map((estimate) => Number(String(estimate.number || '').match(/(\d+)$/)?.[1] || 0));
@@ -37,13 +39,14 @@ async function hydrate() {
     estimates: workspace.estimates.map((item) => ({ ...item, persisted: true })),
   };
   subscription = workspace.subscription;
+  workspaceContext = workspace.workspace || null;
   renderAccount();
   render();
 }
 
 function renderAccount() {
-  const label = hasProAccess() ? 'PRO' : 'ACCOUNT';
-  authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>${label}</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
+  const label = workspaceContext?.role ? String(workspaceContext.role).toUpperCase() : (hasProAccess() ? 'PRO' : 'ACCOUNT');
+  authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>${esc(label)}</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
   authActions.querySelector('#signOutBtn').onclick = () => signOut().catch(showError);
 }
 
@@ -63,6 +66,7 @@ function renderAuth() {
 }
 
 async function startCheckout(billing) {
+  if (!workspaceContext?.isOwner) return showError(new Error('Only the workspace owner can manage the subscription.'));
   try {
     const { data, error } = await supabase.functions.invoke('create-solobizkit-checkout', { body: { billing } });
     if (error) throw error;
@@ -75,7 +79,8 @@ async function startCheckout(billing) {
 function renderPaywall() {
   shell.classList.add('paywalled');
   newEstimateButton.hidden = true;
-  app.innerHTML = `<div class="paywall-wrap"><section class="paywall-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Estimates are part of Pro.</h2><p class="paywall-lead">Create quotes, track acceptance and convert accepted work into invoices without retyping anything.</p><div class="paywall-features"><span>✓ Estimates and quotes</span><span>✓ Draft / Sent / Accepted tracking</span><span>✓ One-click invoice conversion</span><span>✓ Shared customer history</span></div><div class="paywall-plans"><button class="paywall-plan" data-checkout="monthly"><small>MONTHLY</small><strong>Start Pro monthly</strong></button><button class="paywall-plan featured" data-checkout="annual"><small>ANNUAL</small><strong>Start Pro annually</strong></button></div></section></div>`;
+  const ownerNote = workspaceContext && !workspaceContext.isOwner ? '<div class="paywall-notice">Ask the workspace owner to manage billing for this workspace.</div>' : '';
+  app.innerHTML = `<div class="paywall-wrap"><section class="paywall-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Estimates are part of Pro.</h2><p class="paywall-lead">Create quotes, track acceptance and convert accepted work into invoices without retyping anything.</p>${ownerNote}<div class="paywall-features"><span>✓ Estimates and quotes</span><span>✓ Draft / Sent / Accepted tracking</span><span>✓ One-click invoice conversion</span><span>✓ Shared customer history</span></div>${workspaceContext?.isOwner !== false ? '<div class="paywall-plans"><button class="paywall-plan" data-checkout="monthly"><small>MONTHLY</small><strong>Start Pro monthly</strong></button><button class="paywall-plan featured" data-checkout="annual"><small>ANNUAL</small><strong>Start Pro annually</strong></button></div>' : ''}</section></div>`;
   app.querySelectorAll('[data-checkout]').forEach((button) => button.onclick = () => startCheckout(button.dataset.checkout));
 }
 
@@ -83,9 +88,9 @@ function render() {
   if (!session) return renderAuth();
   if (!hasProAccess()) return renderPaywall();
   shell.classList.remove('signed-out', 'paywalled');
-  newEstimateButton.hidden = false;
+  newEstimateButton.hidden = !canWrite();
   const estimates = [...state.estimates].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
-  app.innerHTML = `<section class="card"><div class="toolbar"><input class="input search" id="estimateSearch" type="search" placeholder="Search estimate or customer…"><select class="select" id="estimateStatus" style="max-width:170px"><option value="">All statuses</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="accepted">Accepted</option><option value="declined">Declined</option><option value="converted">Converted</option></select><button class="btn primary" id="newEstimateInner">+ Estimate</button></div><div id="estimateResults"></div></section>`;
+  app.innerHTML = `<section class="card"><div class="toolbar"><input class="input search" id="estimateSearch" type="search" placeholder="Search estimate or customer…"><select class="select" id="estimateStatus" style="max-width:170px"><option value="">All statuses</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="accepted">Accepted</option><option value="declined">Declined</option><option value="converted">Converted</option></select>${canWrite() ? '<button class="btn primary" id="newEstimateInner">+ Estimate</button>' : ''}</div><div id="estimateResults"></div></section>`;
   const search = app.querySelector('#estimateSearch');
   const status = app.querySelector('#estimateStatus');
   const results = app.querySelector('#estimateResults');
@@ -97,19 +102,23 @@ function render() {
   };
   search.oninput = update;
   status.onchange = update;
-  app.querySelector('#newEstimateInner').onclick = () => openEstimateModal();
+  app.querySelector('#newEstimateInner')?.addEventListener('click', () => openEstimateModal());
   update();
 }
 
 function estimateRow(estimate) {
   const total = calculateInvoice({ lines: estimate.lines, taxRate: estimate.taxRate }).total;
   const converted = estimate.status === 'converted' || estimate.convertedInvoiceId;
-  return `<tr><td><strong>${esc(estimate.number)}</strong><br><span class="muted">${esc(estimate.issueDate || '')}</span></td><td>${esc(customerName(estimate.customerId))}</td><td>${esc(estimate.validUntil || '—')}</td><td><span class="estimate-status ${esc(estimate.status)}">${esc(estimate.status)}</span></td><td>${money(total, estimate.currency)}</td><td><div class="estimate-actions"><button class="mini-btn" data-edit="${estimate.id}" ${converted ? 'disabled' : ''}>Edit</button>${converted ? '<span class="converted-note">Invoice created</span>' : `<button class="mini-btn" data-convert="${estimate.id}">Convert to invoice</button>`}</div></td></tr>`;
+  const actions = canWrite()
+    ? `<button class="mini-btn" data-edit="${estimate.id}" ${converted ? 'disabled' : ''}>Edit</button>${converted ? '<span class="converted-note">Invoice created</span>' : `<button class="mini-btn" data-convert="${estimate.id}">Convert to invoice</button>`}`
+    : '<span class="muted">Read only</span>';
+  return `<tr><td><strong>${esc(estimate.number)}</strong><br><span class="muted">${esc(estimate.issueDate || '')}</span></td><td>${esc(customerName(estimate.customerId))}</td><td>${esc(estimate.validUntil || '—')}</td><td><span class="estimate-status ${esc(estimate.status)}">${esc(estimate.status)}</span></td><td>${money(total, estimate.currency)}</td><td><div class="estimate-actions">${actions}</div></td></tr>`;
 }
 
 function bindActions(root) {
   root.querySelectorAll('[data-edit]').forEach((button) => button.onclick = () => openEstimateModal(button.dataset.edit));
   root.querySelectorAll('[data-convert]').forEach((button) => button.onclick = async () => {
+    if (!canWrite()) return showError(new Error('This workspace role is read only.'));
     const estimate = state.estimates.find((item) => item.id === button.dataset.convert);
     if (!estimate) return;
     button.disabled = true;
@@ -128,6 +137,7 @@ function lineMarkup(line = { description: '', qty: 1, rate: 0 }) {
 }
 
 function openEstimateModal(estimateId = null) {
+  if (!canWrite()) return showError(new Error('This workspace role is read only.'));
   if (!state.customers.length) { alert('Add a customer first from the Pro dashboard.'); return; }
   const existing = state.estimates.find((estimate) => estimate.id === estimateId);
   const estimate = existing || { customerId: state.customers[0].id, number: nextEstimateNumber(), issueDate: todayISO(), validUntil: plusDaysISO(30), status: 'draft', currency: 'USD', taxRate: 0, lines: [{ description: '', qty: 1, rate: 0 }], notes: '' };
@@ -164,17 +174,18 @@ function openEstimateModal(estimateId = null) {
   modal.showModal();
 }
 
-newEstimateButton.onclick = () => hasProAccess() && openEstimateModal();
+newEstimateButton.onclick = () => hasProAccess() && canWrite() && openEstimateModal();
 modalForm.addEventListener('submit', async (event) => {
   if (event.submitter?.value === 'cancel') return;
   event.preventDefault();
   try { const ok = await modalAction?.(); if (ok) modal.close(); } catch (error) { showError(error); }
 });
+window.addEventListener('solobizkit:workspace-updated', () => { if (session) hydrate().catch(showError); });
 
 onAuthChange(async (_event, nextSession) => {
   session = nextSession;
   if (session) { try { await hydrate(); } catch (error) { showError(error); } }
-  else { subscription = null; state = { customers: [], invoices: [], estimates: [] }; renderAuth(); }
+  else { subscription = null; workspaceContext = null; state = { customers: [], invoices: [], estimates: [] }; renderAuth(); }
 });
 
 (async () => {
