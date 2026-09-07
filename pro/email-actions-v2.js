@@ -40,18 +40,7 @@ function dialog(type, number, to, subject, body, { invoice = false, hasExistingP
   const d = document.createElement('dialog');
   d.id = 'sendDocumentDialog';
   d.className = 'modal';
-  d.innerHTML = `<div class="modal-card email-send-card">
-    <div class="modal-head"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Send ${esc(type)} ${esc(number)}</h2></div><button class="icon-btn" type="button" data-close>×</button></div>
-    <div class="email-send-body">
-      <label class="field"><span>Recipient</span><input class="input" type="email" id="sendRecipient" value="${esc(to || '')}" autocomplete="email"></label>
-      <label class="field"><span>Subject</span><input class="input" id="sendSubject" value="${esc(subject)}"></label>
-      <label class="field"><span>Message</span><textarea class="textarea" id="sendBody" rows="7">${esc(body)}</textarea></label>
-      ${invoice ? `<div class="payment-choice"><div><strong>How should the customer pay?</strong><span>Bank/KID/IBAN from your invoice is always available. Stripe is optional.</span></div><label class="stripe-choice"><input type="checkbox" id="includeStripeLink" ${hasExistingPayLink ? 'checked' : ''}><span>Add a Stripe “Pay invoice” button</span></label></div>` : ''}
-      <div class="send-trust"><span>✓ Exact PDF attached</span><span>✓ Reply-to uses your business email</span>${invoice ? '<span>✓ Sent status + reminders sync automatically</span>' : '<span>✓ Customer response link included</span>'}</div>
-      <p class="auth-message" id="sendMessage"></p>
-    </div>
-    <div class="modal-actions"><button class="btn secondary" type="button" data-own>Use my email</button><button class="btn primary" type="button" data-secure>Send with SoloBizKit + PDF</button></div>
-  </div>`;
+  d.innerHTML = `<div class="modal-card email-send-card"><div class="modal-head"><div><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Send ${esc(type)} ${esc(number)}</h2></div><button class="icon-btn" type="button" data-close>×</button></div><div class="email-send-body"><label class="field"><span>Recipient</span><input class="input" type="email" id="sendRecipient" value="${esc(to || '')}" autocomplete="email"></label><label class="field"><span>Subject</span><input class="input" id="sendSubject" value="${esc(subject)}"></label><label class="field"><span>Message</span><textarea class="textarea" id="sendBody" rows="7">${esc(body)}</textarea></label>${invoice ? `<div class="payment-choice"><div><strong>How should the customer pay?</strong><span>Bank/KID/IBAN from your invoice is always available. Stripe is optional.</span></div><label class="stripe-choice"><input type="checkbox" id="includeStripeLink" ${hasExistingPayLink ? 'checked' : ''}><span>Add a Stripe “Pay invoice” button</span></label></div>` : ''}<div class="send-trust"><span>✓ Exact PDF attached</span><span>✓ Reply-to uses your business email</span>${invoice ? '<span>✓ Sent status + reminders sync automatically</span>' : '<span>✓ Customer response link included</span>'}</div><p class="auth-message" id="sendMessage"></p></div><div class="modal-actions"><button class="btn secondary" type="button" data-own>Use my email</button><button class="btn primary" type="button" data-secure>Send with SoloBizKit + PDF</button></div></div>`;
   document.body.appendChild(d);
   d.querySelector('[data-close]').onclick = () => d.close();
   d.addEventListener('close', () => d.remove(), { once:true });
@@ -61,9 +50,11 @@ function dialog(type, number, to, subject, body, { invoice = false, hasExistingP
 
 function invoiceTemplate(doc, customer) {
   const company = settings?.companyName || 'our business';
-  const subject = `Invoice ${doc.invoice_number} from ${company}`;
-  const body = `Hello ${customer?.name || 'there'},\n\nPlease find invoice ${doc.invoice_number} attached.\n\nTotal: ${money(doc.total, doc.currency)}\nDue: ${doc.due_date || '—'}\n\nPayment instructions are included on the invoice.\n\nIf you have any questions, simply reply to this email.\n\nBest regards,\n${company}`;
-  return { subject, body, paymentUrl:doc.payment_url || '' };
+  return {
+    subject: `Invoice ${doc.invoice_number} from ${company}`,
+    body: `Hello ${customer?.name || 'there'},\n\nPlease find invoice ${doc.invoice_number} attached.\n\nTotal: ${money(doc.total, doc.currency)}\nDue: ${doc.due_date || '—'}\n\nPayment instructions are included on the invoice.\n\nIf you have any questions, simply reply to this email.\n\nBest regards,\n${company}`,
+    paymentUrl: doc.payment_url || '',
+  };
 }
 
 async function selectedPaymentUrl(d, doc, existingUrl) {
@@ -82,7 +73,6 @@ async function sendInvoice(id) {
   const template = invoiceTemplate(doc, customer);
   const d = dialog('invoice', doc.invoice_number, customer?.email, template.subject, template.body, { invoice:true, hasExistingPayLink:Boolean(template.paymentUrl) });
   const msg = d.querySelector('#sendMessage');
-
   d.querySelector('[data-own]').onclick = async () => {
     const recipient = d.querySelector('#sendRecipient').value.trim();
     if (recipient && !isEmail(recipient)) { msg.textContent = 'Enter a valid recipient email.'; return; }
@@ -95,7 +85,6 @@ async function sendInvoice(id) {
       msg.textContent = error?.message || 'Could not create Stripe payment link. You can still send the invoice without Stripe.';
     }
   };
-
   d.querySelector('[data-secure]').onclick = async (event) => {
     const button = event.currentTarget;
     button.disabled = true;
@@ -112,10 +101,7 @@ async function sendInvoice(id) {
       const { data, error } = await supabase.functions.invoke('send-invoice-message', { body:{ invoiceId:id, kind:'invoice', recipient, subject, html, product:'solobizkit' } });
       if (error) throw error;
       if (!data?.sent) throw new Error(data?.error || 'Could not send invoice.');
-
-      msg.textContent = data.lifecycleSynced === false
-        ? `Invoice sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Status sync is still catching up; refresh shortly.`
-        : `Sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Status and reminders are synced. Replies go to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
+      msg.textContent = data.lifecycleSynced === false ? `Invoice sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Status sync is still catching up; refresh shortly.` : `Sent with PDF${paymentUrl ? ' and optional Stripe link' : ''}. Status and reminders are synced. Replies go to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
       window.sbkTrack?.('pro_invoice_sent', { stripe_link:Boolean(paymentUrl), lifecycle_synced:data.lifecycleSynced !== false });
       setTimeout(() => { d.close(); location.reload(); }, 900);
     } catch (error) {
@@ -130,6 +116,8 @@ async function sendEstimate(id) {
   await ctx();
   if (!workspace?.canWrite) throw new Error('Editor access is required to send estimates.');
   const { doc, customer } = await fetchDoc('estimates', id);
+  const currentStatus = String(doc.status || 'draft').toLowerCase();
+  if (!['draft','sent'].includes(currentStatus)) throw new Error('This estimate can no longer be sent.');
   const company = settings?.companyName || 'our business';
   const subject = `Estimate ${doc.estimate_number} from ${company}`;
   const body = `Hello ${customer?.name || 'there'},\n\nPlease find estimate ${doc.estimate_number}.\n\nTotal: ${money(doc.total, doc.currency)}\nValid until: ${doc.valid_until || '—'}\n\nYou can review, accept or decline the estimate online.\n\nBest regards,\n${company}`;
@@ -153,15 +141,8 @@ async function sendEstimate(id) {
       const { data, error } = await supabase.functions.invoke('send-estimate-email', { body:{ estimateId:id, recipient, subject:customSubject, message:customMessage, product:'solobizkit' } });
       if (error) throw error;
       if (!data?.sent) throw new Error(data?.error || 'Could not send estimate.');
-
-      const currentStatus = String(doc.status || 'draft').toLowerCase();
-      if (!['accepted','declined','converted'].includes(currentStatus)) {
-        const { error:updateError } = await supabase.from('estimates').update({ status:'sent', updated_at:new Date().toISOString() }).eq('id', id).eq('user_id', dataOwner);
-        if (updateError) console.warn('Estimate email sent but status sync failed', updateError);
-      }
-
-      msg.textContent = `Sent. The customer can accept or decline online and reply to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
-      window.sbkTrack?.('pro_estimate_sent', { previous_status:currentStatus });
+      msg.textContent = data.lifecycleSynced === false ? 'Estimate sent. Status sync is still catching up; refresh shortly.' : `Sent. The customer can accept or decline online and reply to ${data.replyTo || settings?.companyEmail || 'your business email'}.`;
+      window.sbkTrack?.('pro_estimate_sent', { previous_status:currentStatus, lifecycle_synced:data.lifecycleSynced !== false });
       setTimeout(() => { d.close(); location.reload(); }, 900);
     } catch (error) {
       console.error(error);
@@ -174,23 +155,24 @@ async function sendEstimate(id) {
 async function inject(root = document) {
   try { await ctx(); } catch { return; }
   if (!workspace?.canWrite) return;
-  root.querySelectorAll('[data-edit-invoice]').forEach((edit) => {
-    const id = edit.dataset.editInvoice;
-    const cell = edit.parentElement;
-    if (!cell || cell.querySelector(`[data-send-invoice="${id}"]`)) return;
-    const row = edit.closest('tr');
+  root.querySelectorAll('[data-invoice-actions][data-invoice-id]').forEach((cell) => {
+    const id = cell.dataset.invoiceId;
+    if (!id || cell.querySelector(`[data-send-invoice="${CSS.escape(id)}"]`)) return;
+    const row = cell.closest('tr');
     const status = row?.querySelector('.status')?.textContent?.trim().toLowerCase() || '';
     if (['paid','void'].includes(status)) return;
     const button = document.createElement('button');
     button.type = 'button'; button.className = 'mini-btn'; button.dataset.sendInvoice = id; button.textContent = status === 'draft' ? 'Send invoice' : 'Send again';
-    cell.insertBefore(button, edit.nextSibling);
+    cell.append(' ', button);
   });
-  root.querySelectorAll('.estimate-actions').forEach((actions) => {
-    const id = actions.querySelector('[data-edit]')?.dataset.edit;
-    if (!id || actions.querySelector(`[data-send-estimate="${id}"]`)) return;
+  root.querySelectorAll('.estimate-actions[data-estimate-id]').forEach((actions) => {
+    const id = actions.dataset.estimateId;
+    if (!id || actions.querySelector(`[data-send-estimate="${CSS.escape(id)}"]`)) return;
+    const status = actions.closest('tr')?.querySelector('.estimate-status')?.textContent?.trim().toLowerCase() || '';
+    if (!['draft','sent'].includes(status)) return;
     const button = document.createElement('button');
-    button.type = 'button'; button.className = 'mini-btn'; button.dataset.sendEstimate = id; button.textContent = 'Send';
-    actions.appendChild(button);
+    button.type = 'button'; button.className = 'mini-btn'; button.dataset.sendEstimate = id; button.textContent = status === 'sent' ? 'Send again' : 'Send';
+    actions.append(' ', button);
   });
 }
 
