@@ -8,9 +8,7 @@
   const locale=(()=>{
     const p=location.pathname.split('/').filter(Boolean)[0];
     if(['no','sv','de','es','fr'].includes(p))return p;
-    try{const saved=localStorage.getItem('sbk_language');if(['en','no','sv','de','es','fr'].includes(saved))return saved}catch(_){}
-    const html=(document.documentElement.lang||'en').toLowerCase().split('-')[0];
-    return ['en','no','sv','de','es','fr'].includes(html)?html:'en';
+    return 'en';
   })();
 
   const text={
@@ -31,21 +29,21 @@
   const style=document.createElement('style');
   style.id='sbkWindowsInterestStyle';
   style.textContent=`
-    #sbkWindowsInterest{position:relative;z-index:9990;width:100%;min-height:36px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 16px;background:#f4faf8;border-bottom:1px solid #d8e8e2;color:#17211f;font:600 13px/1.25 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:center}
-    #sbkWindowsInterest .sbk-win-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#d9f1ea;color:#086b61;font-size:11px;font-weight:850;letter-spacing:.05em;white-space:nowrap}
+    #sbkWindowsInterest{position:relative;z-index:9990;width:100%;min-height:36px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 16px;background:#eff6ff;border-bottom:1px solid #dbeafe;color:#0f172a;font:600 13px/1.25 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:center}
+    #sbkWindowsInterest .sbk-win-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:850;letter-spacing:.05em;white-space:nowrap}
     #sbkWindowsInterest .sbk-win-product{font-weight:650}
-    #sbkWindowsInterest .sbk-win-cta{border:0;background:transparent;padding:2px 0;color:#087a70;font:800 13px/1.2 inherit;cursor:pointer;white-space:nowrap}
+    #sbkWindowsInterest .sbk-win-cta{border:0;background:transparent;padding:2px 0;color:#2563eb;font:800 13px/1.2 inherit;cursor:pointer;white-space:nowrap}
     #sbkWindowsInterest .sbk-win-cta:hover{text-decoration:underline}
-    #sbkWindowsInterest .sbk-win-cta[disabled]{cursor:default;color:#4a746e;text-decoration:none}
-    #sbkWindowsInterestDialog{width:min(520px,calc(100vw - 28px));border:0;border-radius:18px;padding:0;background:#fff;color:#16211f;box-shadow:0 24px 80px rgba(13,32,29,.24);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    #sbkWindowsInterestDialog::backdrop{background:rgba(8,18,16,.42);backdrop-filter:blur(2px)}
+    #sbkWindowsInterest .sbk-win-cta[disabled]{cursor:default;color:#64748b;text-decoration:none}
+    #sbkWindowsInterestDialog{width:min(520px,calc(100vw - 28px));border:0;border-radius:18px;padding:0;background:#fff;color:#0f172a;box-shadow:0 24px 80px rgba(15,23,42,.24);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    #sbkWindowsInterestDialog::backdrop{background:rgba(15,23,42,.42);backdrop-filter:blur(2px)}
     #sbkWindowsInterestDialog .sbk-win-dialog{padding:24px}
     #sbkWindowsInterestDialog h2{margin:0 0 9px;font-size:23px;line-height:1.18}
-    #sbkWindowsInterestDialog p{margin:0;color:#5f706c;font-size:14px;line-height:1.55}
+    #sbkWindowsInterestDialog p{margin:0;color:#64748b;font-size:14px;line-height:1.55}
     #sbkWindowsInterestDialog .sbk-win-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
     #sbkWindowsInterestDialog button{border-radius:10px;padding:10px 14px;font:750 13px/1 system-ui;cursor:pointer}
-    #sbkWindowsInterestDialog .sbk-win-no{border:1px solid #d7e2de;background:#fff;color:#344541}
-    #sbkWindowsInterestDialog .sbk-win-yes{border:1px solid #087a70;background:#087a70;color:#fff}
+    #sbkWindowsInterestDialog .sbk-win-no{border:1px solid #cbd5e1;background:#fff;color:#334155}
+    #sbkWindowsInterestDialog .sbk-win-yes{border:1px solid #2563eb;background:#2563eb;color:#fff}
     #sbkWindowsInterestDialog .sbk-win-thanks{padding:28px 24px;text-align:center}
     #sbkWindowsInterestDialog .sbk-win-thanks strong{display:block;margin-bottom:14px;font-size:18px}
     @media(max-width:620px){#sbkWindowsInterest{gap:7px;padding:7px 10px;font-size:12px;flex-wrap:wrap}#sbkWindowsInterest .sbk-win-product{flex:1 1 auto}#sbkWindowsInterestDialog .sbk-win-dialog-actions{flex-direction:column-reverse}#sbkWindowsInterestDialog button{width:100%}}
