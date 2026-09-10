@@ -15,6 +15,9 @@
   const localizedInvoiceRoutes=new Set([
     '/no/fakturagenerator/','/sv/fakturagenerator/','/de/rechnungsgenerator/','/es/generador-facturas/','/fr/generateur-factures/'
   ]);
+  const LEGACY_STORAGE_KEY='sbk_language';
+  function clearLegacyLanguagePreference(){try{localStorage.removeItem(LEGACY_STORAGE_KEY)}catch(_){}}
+  clearLegacyLanguagePreference();
   if(parityRoutes.has(location.pathname))document.documentElement.classList.add('sbk-parity-loading');
 
   function loadScript(src,marker){
@@ -24,7 +27,9 @@
 
   const bootPromise=(async()=>{
     await loadScript('/public-i18n-extra.js?v=20260905-1','data-sbk-public-i18n-extra');
+    clearLegacyLanguagePreference();
     await loadScript('/public-i18n.js?v=20260905-4','data-sbk-public-i18n');
+    clearLegacyLanguagePreference();
     await loadScript('/site-parity.js?v=20260905-2','data-sbk-site-parity');
     if(homeRoutes.has(location.pathname))await loadScript('/home-positioning.js?v=20260906-1','data-sbk-home-positioning');
     if(localizedInvoiceRoutes.has(location.pathname))await loadScript('/invoice-payment-details.js?v=20260905-1','data-sbk-invoice-payment-details');
@@ -108,6 +113,7 @@
     const target=pathFor(code);
     event.preventDefault();
     close();
+    clearLegacyLanguagePreference();
     if(target!==location.pathname)location.assign(target);
   }));
   document.addEventListener('click',(event)=>{if(!wrap.contains(event.target))close()});
@@ -120,5 +126,5 @@
     requestAnimationFrame(()=>{relocalizeQueued=false;localizeKnownLinks(activeLanguage());clarifyPaymentOptions()});
   });
   observer.observe(document.body,{childList:true,subtree:true});
-  bootPromise.then(()=>{window.sbkPublicI18n?.apply?.();window.sbkRelocalizeLinks?.();clarifyPaymentOptions()});
+  bootPromise.then(()=>{clearLegacyLanguagePreference();window.sbkPublicI18n?.apply?.();window.sbkRelocalizeLinks?.();clarifyPaymentOptions()});
 })();
