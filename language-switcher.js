@@ -8,7 +8,7 @@
     '/no/','/no/kalkulatorer/','/no/fortjenestemargin-kalkulator/','/no/nullpunkt-kalkulator/','/no/timepris-kalkulator/','/no/fakturagenerator/',
     '/sv/','/sv/kalkylatorer/','/sv/vinstmarginal-kalkylator/','/sv/nollpunkts-kalkylator/','/sv/timpris-kalkylator/','/sv/fakturagenerator/',
     '/de/','/de/rechner/','/de/gewinnmargen-rechner/','/de/break-even-rechner/','/de/stundensatz-rechner/','/de/rechnungsgenerator/',
-    '/es/','/es/calculadoras/','/es/calculadora-margen-beneficio/','/es/calculadora-punto-equilibrio/','/es/calculadora-tarifa-hora/','/es/generador-facturas/',
+    '/es/','/es/calculadoras/','/es/calculadora-margen-beneficio/','/es/calculadora-punto-equilibrio/','/es/tarifa-hora/','/es/generador-facturas/',
     '/fr/','/fr/calculateurs/','/fr/calculateur-marge-beneficiaire/','/fr/calculateur-seuil-rentabilite/','/fr/calculateur-taux-horaire/','/fr/generateur-factures/'
   ]);
   const homeRoutes=new Set(['/','/no/','/sv/','/de/','/es/','/fr/']);
@@ -33,7 +33,6 @@
   const nav=document.querySelector('.sbk-global-nav');
   if(!nav||nav.querySelector('.sbk-language-switcher'))return;
 
-  const STORAGE_KEY='sbk_language';
   const languages={
     en:{name:'English',short:'EN',root:'/'},
     no:{name:'Norsk',short:'NO',root:'/no/'},
@@ -53,11 +52,17 @@
   for(const map of Object.values(maps))for(const [en,local] of Object.entries(map))reverse[local]=en;
 
   function urlLanguage(){const match=location.pathname.match(/^\/(no|sv|de|es|fr)(?:\/|$)/);return match?match[1]:null}
-  function savedLanguage(){try{const v=localStorage.getItem(STORAGE_KEY);return languages[v]?v:null}catch(_){return null}}
-  function activeLanguage(){return urlLanguage()||savedLanguage()||'en'}
-  function englishEquivalent(){return reverse[location.pathname]||location.pathname||'/'}
-  function pathFor(code){const english=englishEquivalent();if(code==='en')return english;return maps[code]?.[english]||location.pathname}
-  function save(code){try{localStorage.setItem(STORAGE_KEY,code)}catch(_){}}
+  function activeLanguage(){return urlLanguage()||'en'}
+  function englishEquivalent(){
+    if(reverse[location.pathname])return reverse[location.pathname];
+    if(urlLanguage())return '/';
+    return location.pathname||'/';
+  }
+  function pathFor(code){
+    const english=englishEquivalent();
+    if(code==='en')return english;
+    return maps[code]?.[english]||languages[code].root;
+  }
   function localizeKnownLinks(code){
     if(code==='en'||!maps[code])return;
     document.querySelectorAll('a[href]').forEach((link)=>{
@@ -89,7 +94,6 @@
   window.sbkRelocalizeLinks=function(){localizeKnownLinks(activeLanguage());clarifyPaymentOptions()};
 
   const active=activeLanguage();
-  if(urlLanguage())save(active);
   localizeKnownLinks(active);
   const wrap=document.createElement('div');
   wrap.className='sbk-language-switcher';
@@ -98,7 +102,7 @@
   const button=wrap.querySelector('button');
   function close(){wrap.classList.remove('is-open');button.setAttribute('aria-expanded','false')}
   button.addEventListener('click',()=>{const open=!wrap.classList.contains('is-open');wrap.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open))});
-  wrap.querySelectorAll('[data-language]').forEach(link=>link.addEventListener('click',(event)=>{const code=link.dataset.language;save(code);const target=link.getAttribute('href')||location.pathname;if(target===location.pathname){event.preventDefault();location.reload()}}));
+  wrap.querySelectorAll('[data-language]').forEach(link=>link.addEventListener('click',(event)=>{const target=link.getAttribute('href')||location.pathname;if(target===location.pathname){event.preventDefault();close()}}));
   document.addEventListener('click',(event)=>{if(!wrap.contains(event.target))close()});
   document.addEventListener('keydown',(event)=>{if(event.key==='Escape')close()});
 
