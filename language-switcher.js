@@ -8,7 +8,7 @@
     '/no/','/no/kalkulatorer/','/no/fortjenestemargin-kalkulator/','/no/nullpunkt-kalkulator/','/no/timepris-kalkulator/','/no/fakturagenerator/',
     '/sv/','/sv/kalkylatorer/','/sv/vinstmarginal-kalkylator/','/sv/nollpunkts-kalkylator/','/sv/timpris-kalkylator/','/sv/fakturagenerator/',
     '/de/','/de/rechner/','/de/gewinnmargen-rechner/','/de/break-even-rechner/','/de/stundensatz-rechner/','/de/rechnungsgenerator/',
-    '/es/','/es/calculadoras/','/es/calculadora-margen-beneficio/','/es/calculadora-punto-equilibrio/','/es/tarifa-hora/','/es/generador-facturas/',
+    '/es/','/es/calculadoras/','/es/calculadora-margen-beneficio/','/es/calculadora-punto-equilibrio/','/es/calculadora-tarifa-hora/','/es/generador-facturas/',
     '/fr/','/fr/calculateurs/','/fr/calculateur-marge-beneficiaire/','/fr/calculateur-seuil-rentabilite/','/fr/calculateur-taux-horaire/','/fr/generateur-factures/'
   ]);
   const homeRoutes=new Set(['/','/no/','/sv/','/de/','/es/','/fr/']);
@@ -66,6 +66,7 @@
   function localizeKnownLinks(code){
     if(code==='en'||!maps[code])return;
     document.querySelectorAll('a[href]').forEach((link)=>{
+      if(link.closest('.sbk-language-switcher')||link.hasAttribute('data-language'))return;
       const raw=link.getAttribute('href');if(!raw||!raw.startsWith('/'))return;
       const mapped=maps[code][raw];if(mapped&&mapped!==raw)link.setAttribute('href',mapped);
     });
@@ -102,7 +103,13 @@
   const button=wrap.querySelector('button');
   function close(){wrap.classList.remove('is-open');button.setAttribute('aria-expanded','false')}
   button.addEventListener('click',()=>{const open=!wrap.classList.contains('is-open');wrap.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open))});
-  wrap.querySelectorAll('[data-language]').forEach(link=>link.addEventListener('click',(event)=>{const target=link.getAttribute('href')||location.pathname;if(target===location.pathname){event.preventDefault();close()}}));
+  wrap.querySelectorAll('[data-language]').forEach(link=>link.addEventListener('click',(event)=>{
+    const code=link.dataset.language;
+    const target=pathFor(code);
+    event.preventDefault();
+    close();
+    if(target!==location.pathname)location.assign(target);
+  }));
   document.addEventListener('click',(event)=>{if(!wrap.contains(event.target))close()});
   document.addEventListener('keydown',(event)=>{if(event.key==='Escape')close()});
 
