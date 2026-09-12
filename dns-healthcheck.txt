@@ -1,0 +1,5 @@
+SoloBizKit DNS/AdSense diagnostic branch created 2026-09-12.
+
+Purpose: verify site availability for AdSense review without changing production behavior.
+
+Current finding from external checks: solobizkit.it.com is not resolving from at least one external environment, while the repository CNAME remains solobizkit.it.com and GitHub Pages is enabled.
