@@ -1,0 +1,86 @@
+name: SoloBizKit live diagnostics
+
+on:
+  push:
+    branches: [adsense-dns-diagnostics-20260912]
+    paths:
+      - '.github/workflows/live-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  live-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check public DNS, HTTPS and crawler files
+        shell: bash
+        run: |
+          set +e
+          mkdir -p diagnostics
+          {
+            echo "SoloBizKit live diagnostics"
+            echo "UTC: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+            echo
+            echo "== DNS via system resolver =="
+            getent ahosts solobizkit.it.com || true
+            echo
+            echo "== Python DNS =="
+            python - <<'PY'
+          import socket
+          host = 'solobizkit.it.com'
+          try:
+              for item in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM):
+                  print(item[0], item[4][0])
+          except Exception as exc:
+              print(type(exc).__name__ + ': ' + str(exc))
+          PY
+            echo
+            echo "== HTTPS HEAD normal UA =="
+            curl -sSIL --max-time 20 -o /dev/null -w 'http_code=%{http_code}\nurl=%{url_effective}\nremote_ip=%{remote_ip}\nssl_verify=%{ssl_verify_result}\n' https://solobizkit.it.com/ || true
+            echo
+            echo "== HTTPS HEAD Googlebot UA =="
+            curl -sSIL --max-time 20 -A 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' -o /dev/null -w 'http_code=%{http_code}\nurl=%{url_effective}\nremote_ip=%{remote_ip}\nssl_verify=%{ssl_verify_result}\n' https://solobizkit.it.com/ || true
+            echo
+            echo "== robots.txt =="
+            curl -sS --max-time 20 -w '\nhttp_code=%{http_code}\n' https://solobizkit.it.com/robots.txt | head -40 || true
+            echo
+            echo "== ads.txt =="
+            curl -sS --max-time 20 -w '\nhttp_code=%{http_code}\n' https://solobizkit.it.com/ads.txt | head -20 || true
+            echo
+            echo "== sitemap.xml =="
+            curl -sS --max-time 20 -w '\nhttp_code=%{http_code}\n' https://solobizkit.it.com/sitemap.xml | head -20 || true
+            echo
+            echo "== TLS certificate =="
+            python - <<'PY'
+          import socket, ssl
+          host = 'solobizkit.it.com'
+          try:
+              ctx = ssl.create_default_context()
+              with socket.create_connection((host, 443), timeout=15) as sock:
+                  with ctx.wrap_socket(sock, server_hostname=host) as ssock:
+                      cert = ssock.getpeercert()
+                      print('version:', ssock.version())
+                      print('subject:', cert.get('subject'))
+                      print('issuer:', cert.get('issuer'))
+                      print('notBefore:', cert.get('notBefore'))
+                      print('notAfter:', cert.get('notAfter'))
+                      print('SAN:', cert.get('subjectAltName'))
+          except Exception as exc:
+              print(type(exc).__name__ + ': ' + str(exc))
+          PY
+          } > diagnostics/live-check.txt 2>&1
+          cat diagnostics/live-check.txt
+
+      - name: Save diagnostic report on diagnostic branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/live-check.txt
+          git commit -m 'Save live availability diagnostic report' || exit 0
+          git push
