@@ -1,0 +1,112 @@
+SoloBizKit live diagnostics
+UTC: 2026-09-12T07:57:34Z
+
+== DNS via system resolver ==
+172.67.154.36   STREAM solobizkit.it.com
+172.67.154.36   DGRAM  
+172.67.154.36   RAW    
+104.21.4.146    STREAM 
+104.21.4.146    DGRAM  
+104.21.4.146    RAW    
+2606:4700:3031::ac43:9a24 STREAM 
+2606:4700:3031::ac43:9a24 DGRAM  
+2606:4700:3031::ac43:9a24 RAW    
+2606:4700:3030::6815:492 STREAM 
+2606:4700:3030::6815:492 DGRAM  
+2606:4700:3030::6815:492 RAW    
+
+== Python DNS ==
+2 104.21.4.146
+2 172.67.154.36
+10 2606:4700:3031::ac43:9a24
+10 2606:4700:3030::6815:492
+
+== HTTPS HEAD normal UA ==
+http_code=200
+url=https://solobizkit.it.com/
+remote_ip=172.67.154.36
+ssl_verify=0
+
+== HTTPS HEAD Googlebot UA ==
+http_code=200
+url=https://solobizkit.it.com/
+remote_ip=172.67.154.36
+ssl_verify=0
+
+== robots.txt ==
+# As a condition of accessing this website, you agree to abide by the following
+# content signals:
+
+# (a)  If a Content-Signal = yes, you may collect content for the corresponding
+#      use.
+# (b)  If a Content-Signal = no, you may not collect content for the
+#      corresponding use.
+# (c)  If the website operator does not include a Content-Signal for a
+#      corresponding use, the website operator neither grants nor restricts
+#      permission via Content-Signal with respect to the corresponding use.
+
+# The content signals and their meanings are:
+
+# search:   building a search index and providing search results (e.g., returning
+#           hyperlinks and short excerpts from your website's contents). Search does not
+#           include providing AI-generated search summaries.
+# ai-input: inputting content into one or more AI models (e.g., retrieval
+#           augmented generation, grounding, or other real-time taking of content for
+#           generative AI search answers).
+# ai-train: training or fine-tuning AI models.
+# use:      how AI systems may consume the content (immediate, reference, or full).
+
+# ANY RESTRICTIONS EXPRESSED VIA CONTENT SIGNALS ARE EXPRESS RESERVATIONS OF
+# RIGHTS UNDER ARTICLE 4 OF THE EUROPEAN UNION DIRECTIVE 2019/790 ON COPYRIGHT
+# AND RELATED RIGHTS IN THE DIGITAL SINGLE MARKET.
+
+# BEGIN Cloudflare Managed content
+
+User-agent: *
+Content-Signal: search=yes,ai-train=no,use=reference
+Allow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+== ads.txt ==
+google.com, pub-9212084765206199, DIRECT, f08c47fec0942fa0
+
+http_code=200
+
+== sitemap.xml ==
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://solobizkit.it.com/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://solobizkit.it.com/no/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://solobizkit.it.com/tools/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/business-calculators/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/no/kalkulatorer/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/small-business-toolkit/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/freelancer-toolkit/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/pdf-tools/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/guides/</loc><lastmod>2026-09-05</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://solobizkit.it.com/about/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://solobizkit.it.com/biweekly-paycheck-calculator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/break-even-calculator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/business-loan-calculator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/business-name-generator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/cash-flow-calculator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/cleaning-business-name-generator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/cleaning-business-profit-calculator/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://solobizkit.it.com/compress-pdf/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+curl: (23) Failure writing output to destination
+
+== TLS certificate ==
+version: TLSv1.3
+subject: ((('commonName', 'solobizkit.it.com'),),)
+issuer: ((('countryName', 'US'),), (('organizationName', 'Google Trust Services'),), (('commonName', 'WE1'),))
+notBefore: Aug 17 09:26:31 2026 GMT
+notAfter: Nov 15 10:26:28 2026 GMT
+SAN: (('DNS', 'solobizkit.it.com'), ('DNS', '*.solobizkit.it.com'))
