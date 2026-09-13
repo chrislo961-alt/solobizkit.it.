@@ -4,6 +4,8 @@
   const PRIORITY = [
     ['/profit-margin-calculator/', 'Profit Margin Calculator', 'Pricing, margin and markup'],
     ['/break-even-calculator/', 'Break-Even Calculator', 'Units and revenue needed to cover costs'],
+    ['/cash-flow-calculator/', 'Cash Flow Calculator', 'Monthly cash movement and runway'],
+    ['/roi-calculator/', 'ROI Calculator', 'Return on investment and net profit'],
     ['/business-loan-calculator/', 'Business Loan Calculator', 'Payments, interest and payoff time'],
     ['/hourly-rate-calculator/', 'Hourly Rate Calculator', 'Sustainable freelance and consulting rates'],
     ['/invoice-generator/', 'Free Invoice Generator', 'Create, review and save a client invoice'],
@@ -30,6 +32,22 @@
       note: 'The lowest break-even revenue does not automatically mean the best price. Demand, capacity, competition and customer value still matter.',
       href: '/profit-margin-calculator/', label: 'Next: compare the margin at your planned price →'
     },
+    '/cash-flow-calculator/': {
+      title: 'Cash-flow scenarios with the same opening balance',
+      intro: 'Start with 25,000 in cash and compare three repeated monthly scenarios over 12 months.',
+      columns: ['Monthly revenue', 'Monthly expenses', 'Net cash / month', '12-month closing cash', 'Runway'],
+      rows: [['18,000','15,000','+3,000','61,000','Not depleting'],['15,000','17,000','-2,000','1,000','12.5 months'],['14,000','19,000','-5,000','-35,000','5.0 months']],
+      note: 'Runway is opening cash divided by the repeated monthly deficit. Real timing, seasonality and one-off payments can make actual cash run out sooner or later.',
+      href: '/business-loan-calculator/', label: 'Next: test whether a loan payment fits your monthly cash flow →'
+    },
+    '/roi-calculator/': {
+      title: 'ROI examples for the same 10,000 investment',
+      intro: 'ROI compares the net gain with the original investment cost. These examples keep the cost fixed and change the total return.',
+      columns: ['Investment cost', 'Total return', 'Net profit', 'ROI'],
+      rows: [['10,000','11,000','1,000','10%'],['10,000','13,500','3,500','35%'],['10,000','16,000','6,000','60%']],
+      note: 'A higher ROI is not automatically the better decision. Compare risk, timing, financing costs and how reliable the expected return is.',
+      href: '/cash-flow-calculator/', label: 'Next: check how the investment affects your cash position →'
+    },
     '/business-loan-calculator/': {
       title: 'Compare the same business loan at different interest rates',
       intro: 'Example: a 50,000 fixed-rate loan repaid over five years with no extra payments or fees.',
@@ -47,6 +65,15 @@
       href: '/invoice-generator/', label: 'Next: turn an agreed rate into a client invoice →'
     }
   };
+
+  const CALCULATOR_CHOICES = [
+    ['/profit-margin-calculator/','Am I making enough profit?','Use profit margin to compare revenue, cost and the percentage left after cost.'],
+    ['/break-even-calculator/','How many sales cover my costs?','Use break-even to find the units and revenue needed to cover fixed and variable costs.'],
+    ['/cash-flow-calculator/','How long will my cash last?','Use cash flow to test monthly cash movement, closing balance and runway.'],
+    ['/roi-calculator/','Is this investment worth it?','Use ROI to compare investment cost, total return and net profit.'],
+    ['/business-loan-calculator/','Can I afford this business loan?','Estimate monthly payment, interest and the effect of extra payments.'],
+    ['/hourly-rate-calculator/','What should I charge per hour?','Build a sustainable rate from income goals, costs, time off and billable capacity.']
+  ];
 
   function addStyles() {
     if (!document.getElementById('sbk-seo-trust-style')) {
@@ -70,7 +97,8 @@
   function makeTrustSection(){const section=document.createElement('section');section.className='sbk-seo-trust';section.id='trust-and-methodology';section.innerHTML=`<div class="sbk-seo-trust-inner"><span class="sbk-eyebrow">Transparent by design</span><h2>Why you can trust this SoloBizKit tool</h2><p class="sbk-lead">We document what the tool does, the assumptions or technical limits that matter, and where a simple browser tool should not be treated as professional advice.</p><div class="sbk-trust-grid"><div class="sbk-trust-card"><strong>Method is visible</strong><span>Business calculators use deterministic formulas and explain the assumptions behind them.</span></div><div class="sbk-trust-card"><strong>Privacy boundaries are stated</strong><span>Calculator values stay in the browser, and local-processing tools describe how files are handled.</span></div><div class="sbk-trust-card"><strong>Corrections are welcome</strong><span>Broken behavior and reproducible errors can be reported for review.</span></div></div><div class="sbk-trust-links"><a href="/methodology/">Calculator methodology →</a><a href="/guides/">Small business guides →</a><a href="/about/">How SoloBizKit works →</a><a href="/privacy/">Privacy policy →</a><a href="/security/">Security & data processing →</a><a href="/contact/">Report a problem →</a></div><p class="sbk-reviewed">Trust and landing-page review updated ${REVIEWED}.</p></div>`;return section}
   function relatedForCurrent(path){const items=PRIORITY.filter(item=>item[0]!==path).slice(0,6),section=document.createElement('section');section.className='sbk-seo-trust';section.setAttribute('aria-label','Related priority tools');section.innerHTML=`<div class="sbk-seo-trust-inner"><span class="sbk-eyebrow">Continue the workflow</span><h2>Related free business tools</h2><div class="sbk-priority-grid">${items.map(([href,name,description])=>`<a href="${href}">${name}<span>${description}</span></a>`).join('')}</div></div>`;return section}
   function scenarioSection(path){const s=SCENARIOS[path];if(!s)return null;const section=document.createElement('section');section.className='scenario-examples';section.id='worked-scenarios';section.innerHTML=`<div class="scenario-wrap"><h2>${s.title}</h2><p>${s.intro}</p><div class="scenario-table-wrap"><table class="scenario-table"><thead><tr>${s.columns.map(x=>`<th scope="col">${x}</th>`).join('')}</tr></thead><tbody>${s.rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="scenario-note">${s.note}</p><a class="scenario-next" href="${s.href}">${s.label}</a></div>`;return section}
+  function calculatorChooser(){const section=document.createElement('section');section.className='sbk-seo-trust';section.id='calculator-choice-guide';section.innerHTML=`<div class="sbk-seo-trust-inner"><span class="sbk-eyebrow">Choose by business question</span><h2>Which business calculator should I use?</h2><p class="sbk-lead">Start with the decision you need to make. Each calculator below answers a different business question and links directly to the relevant formula and tool.</p><div class="sbk-priority-grid">${CALCULATOR_CHOICES.map(([href,q,a])=>`<a href="${href}">${q}<span>${a}</span></a>`).join('')}</div><p class="sbk-reviewed">Calculator guide reviewed ${REVIEWED}.</p></div>`;return section}
   function installFooterTrust(){const footer=document.querySelector('.sbk-global-footer');if(!footer||footer.querySelector('.sbk-footer-trust'))return;const inner=footer.querySelector('.sbk-global-footer-inner')||footer,nav=document.createElement('nav');nav.className='sbk-footer-trust';nav.setAttribute('aria-label','Trust and site information');nav.innerHTML='<a href="/guides/">Guides</a><a href="/about/">About</a><a href="/methodology/">Methodology</a><a href="/security/">Security</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/contact/">Contact</a>';inner.appendChild(nav)}
-  function install(){addStyles();installFooterTrust();const path=location.pathname,main=document.querySelector('main');if(!main)return;if((path==='/'||path==='/tools/')&&!document.getElementById('priority-tools'))main.appendChild(makePrioritySection(path==='/'?'home':'tools'));if(SCENARIOS[path]&&!document.getElementById('worked-scenarios')){const trust=document.getElementById('trust-and-methodology');const scenario=scenarioSection(path);if(trust)main.insertBefore(scenario,trust);else main.appendChild(scenario)}if(priorityPaths.has(path)&&!document.getElementById('trust-and-methodology')){main.appendChild(makeTrustSection());main.appendChild(relatedForCurrent(path))}}
+  function install(){addStyles();installFooterTrust();const path=location.pathname,main=document.querySelector('main');if(!main)return;if((path==='/'||path==='/tools/')&&!document.getElementById('priority-tools'))main.appendChild(makePrioritySection(path==='/'?'home':'tools'));if(path==='/business-calculators/'&&!document.getElementById('calculator-choice-guide')){const firstContent=main.querySelector('.bc-section,.bc-content');const chooser=calculatorChooser();if(firstContent)main.insertBefore(chooser,firstContent);else main.appendChild(chooser)}if(SCENARIOS[path]&&!document.getElementById('worked-scenarios')){const trust=document.getElementById('trust-and-methodology');const scenario=scenarioSection(path);if(trust)main.insertBefore(scenario,trust);else main.appendChild(scenario)}if(priorityPaths.has(path)&&!document.getElementById('trust-and-methodology')){main.appendChild(makeTrustSection());main.appendChild(relatedForCurrent(path))}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
