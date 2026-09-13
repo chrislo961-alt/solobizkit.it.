@@ -2,7 +2,10 @@
 (function(){
   const path=location.pathname.replace(/\/+$/,'/')||'/';
   const isHome=['/','/no/','/sv/','/de/','/es/','/fr/'].includes(path);
-  const isHighIntent=isHome||path.includes('/invoice-generator/')||path.startsWith('/pro-pricing/')||path.startsWith('/pro/');
+  // Keep this demand test on the homepage and Pro surfaces only. Putting it above
+  // the H1 on focused landing pages (for example the invoice generator) dilutes
+  // search intent and makes crawlers treat the Windows teaser as primary content.
+  const isHighIntent=isHome||path.startsWith('/pro-pricing/')||path.startsWith('/pro/');
   if(!isHighIntent||document.getElementById('sbkWindowsInterest'))return;
 
   const locale=(()=>{
