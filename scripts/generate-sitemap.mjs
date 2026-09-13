@@ -5,6 +5,7 @@ const root = process.cwd();
 const site = 'https://solobizkit.it.com';
 const lastModified = '2026-09-05';
 const leading = ['/', '/no/', '/tools/', '/business-calculators/', '/no/kalkulatorer/', '/small-business-toolkit/', '/freelancer-toolkit/', '/pdf-tools/', '/guides/'];
+const redirectedRoutes = new Set(['/free-invoice-generator/']);
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -26,7 +27,8 @@ const routes = walk(root)
   .map((file) => {
     const relative = path.relative(root, file);
     return relative === 'index.html' ? '/' : `/${path.dirname(relative).split(path.sep).join('/')}/`;
-  });
+  })
+  .filter((route) => !redirectedRoutes.has(route));
 
 routes.sort((a, b) => {
   const ai = leading.indexOf(a);
