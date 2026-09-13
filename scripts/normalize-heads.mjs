@@ -72,6 +72,14 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
   let html=fs.readFileSync(file,'utf8');
   const route=routeForFile(file);
 
+  // Keep the retired duplicate invoice URL out of the index and make every
+  // internal reference point straight to the functional canonical route.
+  html=html.replaceAll('href="/free-invoice-generator/"','href="/invoice-generator/"').replaceAll("href='/free-invoice-generator/'","href='/invoice-generator/'");
+  if(route==='/free-invoice-generator/'){
+    html=html.replace(/<meta[^>]+name=["']robots["'][^>]*>/i,'<meta name="robots" content="noindex,follow">');
+    html=html.replaceAll(`${SITE}/free-invoice-generator/`,`${SITE}/invoice-generator/`);
+  }
+
   if(route.startsWith('/pro/')){
     if(!/<script[^>]+src=["']\/pro\/leads-nav\.js(?:\?[^"']*)?["']/i.test(html))html=html.replace('</body>','<script src="/pro/leads-nav.js" defer></script></body>');
     if(!/<link[^>]+href=["']\/pro\/pro-i18n\.css(?:\?[^"']*)?["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/pro/pro-i18n.css"></head>');
