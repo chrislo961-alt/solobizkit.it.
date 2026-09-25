@@ -25,6 +25,7 @@ jobs:
           node scripts/repair-vat-i18n.mjs
           node scripts/repair-vat-parity.mjs
           node scripts/normalize-heads.mjs
+          node scripts/apply-index-focus.mjs
           node scripts/generate-sitemap.mjs
       - name: Commit normalized public files
         run: |
