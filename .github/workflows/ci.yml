@@ -33,6 +33,12 @@ jobs:
         run: node --test tests/public-i18n-coverage.test.mjs
       - name: Test Pro product flows
         run: node --test tests/pro-activation.test.mjs tests/pro-crm.test.mjs
+      - name: Apply SEO index focus
+        run: |
+          node scripts/apply-index-focus.mjs
+          node scripts/generate-sitemap.mjs
+      - name: Audit focused SEO surface
+        run: node scripts/seo-index-focus-audit.mjs
       - name: Audit public static site
         run: node scripts/site-audit.mjs
       - name: Audit accessibility
