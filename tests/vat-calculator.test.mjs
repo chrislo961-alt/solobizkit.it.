@@ -22,7 +22,7 @@ test('VAT arithmetic implements add and remove formulas', () => {
 
 test('VAT calculator remains discoverable from both public hubs and sitemap', () => {
   assert.match(calculators, /href="\/vat-calculator\/"/);
-  assert.match(calculators, /32 focused calculators/);
+  assert.match(calculators, /42 focused calculators/);
   assert.match(tools, /href="\/vat-calculator\/"/);
   assert.match(sitemap, /https:\/\/solobizkit\.it\.com\/vat-calculator\//);
 });
