@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const site = 'https://solobizkit.it.com';
 const lastModified = '2026-10-01';
-const leading = ['/', '/no/', '/tools/', '/business-calculators/', '/no/kalkulatorer/', '/small-business-toolkit/', '/freelancer-toolkit/', '/consultant-toolkit/', '/agency-toolkit/', '/ecommerce-toolkit/', '/self-employed-toolkit/', '/pdf-tools/', '/guides/'];
+const leading = ['/', '/no/', '/tools/', '/business-calculators/', '/invoice-tools/', '/no/kalkulatorer/', '/small-business-toolkit/', '/freelancer-toolkit/', '/consultant-toolkit/', '/agency-toolkit/', '/ecommerce-toolkit/', '/self-employed-toolkit/', '/pdf-tools/', '/guides/'];
 const redirectedRoutes = new Set(['/free-invoice-generator/']);
 
 function walk(directory) {
