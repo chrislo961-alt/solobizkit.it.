@@ -43,7 +43,7 @@
 <div class="wrap">
 <span class="pill">FREE · NO SIGN UP</span>
 <h1>Create a QR code with your logo</h1>
-<p>Start with a website QR code, then open the full SoloBizKit QR generator to place your logo in the center and export the finished code.</p>
+<p>Start with the destination, then add a small logo in the full generator and scan-test the exported code before you print it.</p>
 </div>
 </section>
 <section class="wrap app">
@@ -118,3 +118,5 @@
 <script>const $=x=>document.getElementById(x);function payload(){return $("value").value.trim()}async function make(){const p=payload();if(!p){$("status").textContent="Add a website URL first.";$("download").disabled=true;return}if(typeof QRCode==="undefined"){$("status").textContent="The local QR component did not load. Check your connection and reload.";return}await QRCode.toCanvas($("qr"),p,{width:520,margin:2,errorCorrectionLevel:"H",color:{dark:"#14213d",light:"#ffffff"}});$("download").disabled=false;$("status").textContent="Basic QR ready · open the full generator to add your logo.";window.sbkComplete?.('qr_logo_landing',{type:'url'})}$("make").addEventListener("click",make);$("download").addEventListener("click",()=>{const a=document.createElement("a");a.href=$("qr").toDataURL("image/png");a.download="qr-code.png";a.click()});window.addEventListener("DOMContentLoaded",make,{once:true});</script>
 </body>
 </html>
+
+<!-- reviewed October 7, 2026 -->
