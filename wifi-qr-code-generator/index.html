@@ -43,7 +43,7 @@
 <div class="wrap">
 <span class="pill">FREE · NO SIGN UP</span>
 <h1>Free WiFi QR Code Generator</h1>
-<p>Create a QR code guests can scan to connect to your Wi-Fi network without manually typing the network name and password.</p>
+<p>Enter the network name, password and security type so guests can scan instead of typing Wi-Fi credentials manually.</p>
 </div>
 </section>
 <section class="wrap app">
@@ -122,3 +122,5 @@
 <script>const $=x=>document.getElementById(x);function esc(v){return v.replace(/([\\;,:"'])/g,"\\\\$1")}function payload(){const ssid=$("value").value.trim(),pass=$("password").value,sec=$("security").value;if(!ssid)return "";return `WIFI:T:${sec};S:${esc(ssid)};P:${sec==="nopass"?"":esc(pass)};;`;}async function make(){const p=payload();if(!p){$("status").textContent="Add the Wi-Fi name first.";$("download").disabled=true;return}if(typeof QRCode==="undefined"){$("status").textContent="The local QR component did not load. Check your connection and reload.";$("download").disabled=true;return}try{await QRCode.toCanvas($("qr"),p,{width:520,margin:2,errorCorrectionLevel:"M",color:{dark:"#14213d",light:"#ffffff"}});$("status").textContent="Ready · generated locally. Scan-test before publishing.";$("download").disabled=false;window.sbkComplete?.('wifi_qr_code',{security:$("security").value})}catch(error){console.error(error);$("status").textContent="Could not create the QR code. Check the details and try again.";$("download").disabled=true}}$("make").addEventListener("click",make);$("download").addEventListener("click",()=>{const link=document.createElement("a");link.href=$("qr").toDataURL("image/png");link.download="wifi-qr-code.png";link.click();window.sbkComplete?.('wifi_qr_download')});window.addEventListener("DOMContentLoaded",make,{once:true});</script>
 </body>
 </html>
+
+<!-- reviewed October 7, 2026 -->

@@ -125,7 +125,7 @@ for (const required of ['favicon.svg', 'favicon.ico', 'favicon-192.png', 'favico
 const socialImage = path.join(ROOT, 'assets/images/solobizkit-social-preview.png');
 if (!fs.existsSync(socialImage)) errors.push('missing social preview image'); else if (fs.statSync(socialImage).size > 250_000) errors.push('social preview image exceeds 250 KB');
 const allHtml = files.map((file) => fs.readFileSync(file, 'utf8')).join('\n');
-for (const route of ['/cash-flow-calculator/','/business-loan-calculator/','/hourly-rate-calculator/','/roi-calculator/','/invoice-tools/','/invoice-generator/','/invoice-due-date-calculator/','/invoice-number-generator/','/late-invoice-fee-calculator/','/invoice-reminder-templates/','/pdf-tools/','/pdf-to-word/','/compress-pdf/','/merge-pdf/','/split-pdf/','/jpg-to-pdf/','/pdf-to-jpg/']) {
+for (const route of ['/cash-flow-calculator/','/business-loan-calculator/','/hourly-rate-calculator/','/roi-calculator/','/invoice-tools/','/invoice-generator/','/invoice-due-date-calculator/','/invoice-number-generator/','/late-invoice-fee-calculator/','/invoice-reminder-templates/','/pdf-tools/','/pdf-to-word/','/compress-pdf/','/merge-pdf/','/split-pdf/','/jpg-to-pdf/','/pdf-to-jpg/','/qr-code-generator/','/qr-code-guide/','/url-qr-code-generator/','/wifi-qr-code-generator/','/qr-code-for-business-card/','/qr-code-for-menu/','/qr-code-with-logo/']) {
   const page = pages.find((item)=>item.route===route);
   if (!page) errors.push(`${route}: missing core calculator page`);
   else if (!/reviewed October 7, 2026/i.test(page.html)) errors.push(`${route}: core calculator review date is stale`);

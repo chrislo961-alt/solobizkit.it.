@@ -43,7 +43,7 @@
 <div class="wrap">
 <span class="pill">FREE · NO SIGN UP</span>
 <h1>Create a QR code for your menu</h1>
-<p>Link customers to a restaurant, café, bar or event menu using a simple scannable QR code.</p>
+<p>Link customers straight to a mobile-friendly menu page or PDF, then test the code at the same size and placement you plan to print.</p>
 </div>
 </section>
 <section class="wrap app">
@@ -115,3 +115,5 @@
 <script>const $=x=>document.getElementById(x);function payload(){return $("value").value.trim()}async function make(){const p=payload();if(!p){$("status").textContent="Add a menu URL first.";$("download").disabled=true;return}if(typeof QRCode==="undefined"){$("status").textContent="The local QR component did not load. Check your connection and reload.";return}await QRCode.toCanvas($("qr"),p,{width:520,margin:2,errorCorrectionLevel:"M",color:{dark:"#14213d",light:"#ffffff"}});$("download").disabled=false;$("status").textContent="Ready · generated locally. Test at the final print size.";window.sbkComplete?.('menu_qr_code',{type:'url'})}$("make").addEventListener("click",make);$("download").addEventListener("click",()=>{const a=document.createElement("a");a.href=$("qr").toDataURL("image/png");a.download="menu-qr-code.png";a.click()});window.addEventListener("DOMContentLoaded",make,{once:true});</script>
 </body>
 </html>
+
+<!-- reviewed October 7, 2026 -->
