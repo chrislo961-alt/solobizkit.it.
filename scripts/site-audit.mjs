@@ -125,6 +125,11 @@ for (const required of ['favicon.svg', 'favicon.ico', 'favicon-192.png', 'favico
 const socialImage = path.join(ROOT, 'assets/images/solobizkit-social-preview.png');
 if (!fs.existsSync(socialImage)) errors.push('missing social preview image'); else if (fs.statSync(socialImage).size > 250_000) errors.push('social preview image exceeds 250 KB');
 const allHtml = files.map((file) => fs.readFileSync(file, 'utf8')).join('\n');
+for (const route of ['/cash-flow-calculator/','/business-loan-calculator/','/hourly-rate-calculator/','/roi-calculator/']) {
+  const page = pages.find((item)=>item.route===route);
+  if (!page) errors.push(`${route}: missing core calculator page`);
+  else if (!/reviewed October 7, 2026/i.test(page.html)) errors.push(`${route}: core calculator review date is stale`);
+}
 if (/analytics-consent\.js/.test(allHtml)) errors.push('obsolete analytics-consent.js reference remains');
 if (/href=["']\/#tools/.test(allHtml)) errors.push('obsolete /#tools link remains');
 if (/api\.qrserver\.com/i.test(allHtml)) errors.push('QR payloads must not be sent to a remote image endpoint');
