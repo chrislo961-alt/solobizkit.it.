@@ -3,8 +3,6 @@ import path from 'node:path';
 
 const root = process.cwd();
 const site = 'https://solobizkit.it.com';
-const now = new Date();
-const lastModified = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
 const leading = ['/', '/no/', '/tools/', '/business-calculators/', '/invoice-tools/', '/no/kalkulatorer/', '/small-business-toolkit/', '/freelancer-toolkit/', '/consultant-toolkit/', '/agency-toolkit/', '/ecommerce-toolkit/', '/self-employed-toolkit/', '/pdf-tools/', '/guides/'];
 const redirectedRoutes = new Set(['/free-invoice-generator/']);
 
@@ -47,7 +45,9 @@ function priority(route) {
 }
 
 function xmlFor(list) {
-  const urls = list.map((route) => `  <url><loc>${site}${route}</loc><lastmod>${lastModified}</lastmod><changefreq>${route === '/' || route === '/no/' || leading.includes(route) ? 'weekly' : 'monthly'}</changefreq><priority>${priority(route)}</priority></url>`);
+  // Build time is not a page modification date. Omit optional lastmod until
+  // a reliable per-page content-change date is available.
+  const urls = list.map((route) => `  <url><loc>${site}${route}</loc><changefreq>${route === '/' || route === '/no/' || leading.includes(route) ? 'weekly' : 'monthly'}</changefreq><priority>${priority(route)}</priority></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }
 

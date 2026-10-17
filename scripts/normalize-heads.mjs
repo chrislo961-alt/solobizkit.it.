@@ -5,6 +5,14 @@ const ROOT = process.cwd();
 const SITE = 'https://solobizkit.it.com';
 const SOCIAL_IMAGE = `${SITE}/assets/images/solobizkit-social-preview.png`;
 const ROOT_LANGUAGE_ROUTES = { en: '/', no: '/no/', sv: '/sv/', de: '/de/', es: '/es/', fr: '/fr/' };
+const HOME_LANGUAGE_COPY = {
+  en: { name: 'English', heading: 'Choose your language' },
+  no: { name: 'Norsk', heading: 'Velg språk' },
+  sv: { name: 'Svenska', heading: 'Välj språk' },
+  de: { name: 'Deutsch', heading: 'Sprache wählen' },
+  es: { name: 'Español', heading: 'Elige tu idioma' },
+  fr: { name: 'Français', heading: 'Choisissez votre langue' }
+};
 const LANGUAGE_GROUPS = [
   { en:'/business-calculators/', no:'/no/kalkulatorer/', sv:'/sv/kalkylatorer/', de:'/de/rechner/', es:'/es/calculadoras/', fr:'/fr/calculateurs/' },
   { en:'/profit-margin-calculator/', no:'/no/fortjenestemargin-kalkulator/', sv:'/sv/vinstmarginal-kalkylator/', de:'/de/gewinnmargen-rechner/', es:'/es/calculadora-margen-beneficio/', fr:'/fr/calculateur-marge-beneficiaire/' },
@@ -68,6 +76,21 @@ function injectLanguageAlternates(html, route) {
   return html.replace('</head>',`${alternates}</head>`);
 }
 
+function injectHomeLanguageLinks(html, route) {
+  if (!Object.values(ROOT_LANGUAGE_ROUTES).includes(route)) return html;
+  const heading = HOME_LANGUAGE_COPY[routeLanguage(route)].heading;
+  const links = Object.entries(ROOT_LANGUAGE_ROUTES).map(([code, href]) =>
+    `<a href="${href}" lang="${code}" hreflang="${code}" data-language="${code}"${route === href ? ' aria-current="page"' : ''}>${HOME_LANGUAGE_COPY[code].name}</a>`
+  ).join('');
+  const section = `<section class="sbk-home-languages" aria-labelledby="sbk-home-languages-title"><div class="sbk-home-languages-inner"><h2 id="sbk-home-languages-title">${heading}</h2><nav aria-labelledby="sbk-home-languages-title">${links}</nav></div></section>`;
+  const existing = /<section\b[^>]*class=["']sbk-home-languages["'][^>]*>[\s\S]*?<\/section>/i;
+  if (existing.test(html)) return html.replace(existing, section);
+  // Localized home parity replaces both main and footer, so keep this section
+  // between them. data-language also preserves the explicit language roots.
+  if (!/<\/main>/i.test(html)) throw new Error(`Missing homepage main: ${route}`);
+  return html.replace(/<\/main>/i, `$&\n${section}`);
+}
+
 for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')||name.endsWith(`${path.sep}index.html`))) {
   let html=fs.readFileSync(file,'utf8');
   const route=routeForFile(file);
@@ -116,6 +139,7 @@ for (const file of walk(ROOT).filter((name)=>name===path.join(ROOT,'index.html')
     if(!/<link[^>]+href=["']\/language-switcher\.css["']/i.test(html))html=html.replace('</head>','<link rel="stylesheet" href="/language-switcher.css"></head>');
     if(!/<script[^>]+src=["']\/language-switcher\.js["']/i.test(html))html=html.replace('</head>','<script src="/language-switcher.js" defer></script></head>');
     html=injectLanguageAlternates(html,route);
+    html=injectHomeLanguageLinks(html,route);
   }
   if(route.startsWith('/guides/')&&route!=='/guides/'&&!/<script[^>]+src=["']\/guides\/guide-interactions\.js["']/i.test(html))html=html.replace('</body>','<script src="/guides/guide-interactions.js" defer></script></body>');
   if(!isPrivate(html)){
