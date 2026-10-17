@@ -37,7 +37,7 @@ const pages = files.map((file) => {
   const html = fs.readFileSync(file, 'utf8');
   const relative = path.relative(ROOT, file);
   const route = relative === 'index.html' ? '/' : `/${path.dirname(relative).split(path.sep).join('/')}/`;
-  const structural = html.replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(/<style\b[\s\S]*?<\/style>/gi, '').replace(/<textarea\b[\s\S]*?<\/textarea>/gi, '').replace(/<template\b[\s\S]*?<\/template>/gi, '');
+  const structural = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(/<style\b[\s\S]*?<\/style>/gi, '').replace(/<textarea\b[\s\S]*?<\/textarea>/gi, '').replace(/<template\b[\s\S]*?<\/template>/gi, '');
   const robots = match(html, /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i);
   return {file,html,structural,route,robots,privateApp:/(?:^|,)\s*noindex\b/i.test(robots),title:match(html,/<title>([^<]+)<\/title>/i),description:match(html,/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i),canonical:match(html,/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i),links:[...structural.matchAll(/<a\b[^>]*href=["']([^"'#?]+)[^"']*["']/gi)].map((item)=>item[1])};
 });
@@ -113,6 +113,28 @@ if (new Set(sitemapRoutes).size !== sitemapRoutes.length) errors.push('sitemap c
 for (const route of publicRoutes) if (!sitemapRoutes.includes(route)) errors.push(`${route}: missing from sitemap`);
 for (const route of sitemapRoutes) if (!publicRoutes.has(route)) errors.push(`${route}: sitemap URL has no public HTML route`);
 
+// Inbound counts can pass for isolated language clusters, self-links and links
+// from noindex tools. Require a path through indexable, initial HTML instead.
+const publicGraph = new Map(publicPages.map((page) => [page.route, page.links.flatMap((href) => {
+  try {
+    const target = new URL(href, `${SITE}${page.route}`);
+    return target.origin === SITE && publicRoutes.has(target.pathname) ? [target.pathname] : [];
+  } catch { return []; }
+})]));
+const depths = new Map([['/', 0]]);
+const queue = ['/'];
+for (let index = 0; index < queue.length; index += 1) {
+  const route = queue[index];
+  for (const target of publicGraph.get(route) || []) {
+    if (!depths.has(target)) {
+      depths.set(target, depths.get(route) + 1);
+      queue.push(target);
+    }
+  }
+}
+const unreachable = sitemapRoutes.filter((route) => !depths.has(route));
+if (unreachable.length) errors.push(`${unreachable.length} sitemap routes unreachable from / through initial HTML links: ${unreachable.join(', ')}`);
+
 if (fs.existsSync(path.join(ROOT, 'sitemap-no.xml'))) {
   const noSitemap = fs.readFileSync(path.join(ROOT, 'sitemap-no.xml'), 'utf8');
   const noRoutes = [...noSitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) => new URL(item[1]).pathname);
@@ -141,4 +163,4 @@ if (!/google\.com\s*,\s*pub-9212084765206199\s*,\s*DIRECT\s*,\s*f08c47fec0942fa0
 for (const manifest of ['site.webmanifest', 'manifest.webmanifest']) try { JSON.parse(fs.readFileSync(path.join(ROOT, manifest), 'utf8')); } catch { errors.push(`${manifest} is not valid JSON`); }
 
 if (errors.length) {console.error(errors.map((error) => `- ${error}`).join('\n'));process.exit(1);}
-console.log(`Verified ${publicPages.length} public routes, ${pages.length-publicPages.length} private app routes, ${sitemapRoutes.length} sitemap URLs, six-language navigation/hreflang, metadata, structured data, local assets and internal links.`);
+console.log(`Verified ${publicPages.length} public routes, ${pages.length-publicPages.length} noindex routes, ${sitemapRoutes.length} sitemap URLs, six-language navigation/hreflang, metadata, structured data, local assets and internal links. All sitemap routes are reachable from / within ${Math.max(...depths.values())} initial HTML links.`);
