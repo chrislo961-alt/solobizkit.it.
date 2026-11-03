@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const site = 'https://solobizkit.it.com';
 const leading = ['/', '/no/', '/tools/', '/business-calculators/', '/invoice-tools/', '/no/kalkulatorer/', '/small-business-toolkit/', '/freelancer-toolkit/', '/consultant-toolkit/', '/agency-toolkit/', '/ecommerce-toolkit/', '/self-employed-toolkit/', '/pdf-tools/', '/guides/'];
-const redirectedRoutes = new Set(['/free-invoice-generator/']);
+const redirectedRoutes = new Set(['/free-invoice-generator/', '/freelance-hourly-rate-calculator/']);
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
