@@ -4,6 +4,7 @@ import path from 'node:path';
 const ROOT = process.cwd();
 
 const SUPPORT_UTILITY_ROUTES = new Set([
+  '/freelance-hourly-rate-calculator/',
   '/biweekly-paycheck-calculator/',
   '/hourly-paycheck-calculator/',
   '/monthly-paycheck-calculator/',
