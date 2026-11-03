@@ -22,6 +22,29 @@ const CORE_ROUTES = [
 ];
 
 
+const HERO_ROUTES = [
+  '/profit-margin-calculator/',
+  '/break-even-calculator/',
+  '/cash-flow-calculator/',
+  '/business-loan-calculator/',
+  '/hourly-rate-calculator/',
+  '/invoice-generator/',
+  '/business-calculators/',
+  '/invoice-tools/',
+  '/freelancer-toolkit/',
+  '/small-business-toolkit/',
+  '/customer-acquisition-cost-calculator/',
+  '/roas-calculator/',
+];
+
+const AUTHORITY_HUBS = [
+  '/',
+  '/business-calculators/',
+  '/invoice-tools/',
+  '/freelancer-toolkit/',
+  '/small-business-toolkit/',
+];
+
 const RETIRED_INTERNAL_ROUTES = [
   '/freelance-hourly-rate-calculator/',
   '/free-invoice-generator/',
@@ -73,6 +96,13 @@ for (const route of CORE_ROUTES) {
 for (const route of SUPPORT_UTILITY_ROUTES) {
   const url = `https://solobizkit.it.com${route}`;
   if (sitemap.includes(`<loc>${url}</loc>`)) failures.push(`${route} must not be in sitemap`);
+}
+
+for (const route of HERO_ROUTES) {
+  const url = `https://solobizkit.it.com${route}`;
+  if (!sitemap.includes(`<loc>${url}</loc>`)) failures.push(`Hero route missing from sitemap: ${route}`);
+  const linkedFromAuthorityHub = AUTHORITY_HUBS.some((hub) => html(hub).includes(`href="${route}"`) || html(hub).includes(`href='${route}'`));
+  if (!linkedFromAuthorityHub) failures.push(`Hero route has no authority-hub link: ${route}`);
 }
 
 for (const file of walkHtml(ROOT)) {
