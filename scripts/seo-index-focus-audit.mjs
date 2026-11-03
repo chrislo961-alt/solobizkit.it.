@@ -21,7 +21,23 @@ const CORE_ROUTES = [
   '/fr/',
 ];
 
+
+const RETIRED_INTERNAL_ROUTES = [
+  '/freelance-hourly-rate-calculator/',
+  '/free-invoice-generator/',
+];
+
+function walkHtml(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (['.git', 'node_modules'].includes(entry.name)) return [];
+    const full = path.join(directory, entry.name);
+    return entry.isDirectory() ? walkHtml(full) : entry.name === 'index.html' ? [full] : [];
+  });
+}
+
 const SUPPORT_UTILITY_ROUTES = [
+  '/freelance-hourly-rate-calculator/',
+  '/free-invoice-generator/',
   '/compress-pdf/',
   '/merge-pdf/',
   '/split-pdf/',
@@ -57,6 +73,16 @@ for (const route of CORE_ROUTES) {
 for (const route of SUPPORT_UTILITY_ROUTES) {
   const url = `https://solobizkit.it.com${route}`;
   if (sitemap.includes(`<loc>${url}</loc>`)) failures.push(`${route} must not be in sitemap`);
+}
+
+for (const file of walkHtml(ROOT)) {
+  const markup = fs.readFileSync(file, 'utf8');
+  const relative = path.relative(ROOT, file);
+  for (const retired of RETIRED_INTERNAL_ROUTES) {
+    if (markup.includes(`href="${retired}"`) || markup.includes(`href='${retired}'`)) {
+      failures.push(`${relative} still links to retired route ${retired}`);
+    }
+  }
 }
 
 if (failures.length) {
