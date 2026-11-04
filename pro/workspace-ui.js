@@ -1,3 +1,4 @@
+import './account-plan-sidebar.js?v=20261104-4';
 import { getSession, getWorkspaceContext, setActiveWorkspace, supabase } from './backend.js';
 
 const lang=(()=>{try{return localStorage.getItem('sbk_language')||'en'}catch{return'en'}})();

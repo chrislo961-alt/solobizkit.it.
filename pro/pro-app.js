@@ -88,9 +88,7 @@ function renderAuth() {
 function renderAuthActions() {
   shell.classList.remove('signed-out');
   if (topEyebrow) topEyebrow.textContent = 'SOLOBIZKIT PRO';
-  const role = workspaceContext?.role ? String(workspaceContext.role).toUpperCase() : (hasProAccess() ? 'PRO' : 'ACCOUNT');
-  authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>${esc(role)}</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
-  document.querySelector('#signOutBtn').addEventListener('click', () => signOut().catch(showError));
+  authActions.innerHTML = '';
 }
 
 async function startCheckout(billing) {
