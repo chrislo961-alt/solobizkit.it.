@@ -16,3 +16,31 @@
 .sidebar-account-plan .sap-action.secondary{background:transparent;color:#b9c7df;border:1px solid rgba(185,199,223,.22)}
 .sidebar-account-plan .sap-message{font-size:9px;line-height:1.35;color:#fdb022;min-height:0}
 @media(max-width:900px){.sidebar-account-plan{display:none}}
+
+/* SoloCalcKit-like compact desktop workspace */
+@media(min-width:901px){
+  .app-shell{grid-template-columns:204px minmax(0,1fr)}
+  .sidebar{position:sticky;top:0;height:100vh;overflow:hidden;padding:15px 12px 12px;gap:14px}
+  .brand{gap:9px}.brand-mark{width:32px;height:32px;border-radius:9px}
+  .brand strong{font-size:13px}.brand small{font-size:8px}
+  .nav{gap:2px}.nav-item{padding:7px 9px;border-radius:8px;font-size:12px}
+  .main{min-width:0}
+  .topbar,.content{width:min(100%,1460px);margin-left:auto;margin-right:auto}
+  .topbar{padding:16px 22px 12px}
+  .topbar h1{font-size:22px}.eyebrow{font-size:9px;margin-bottom:3px}
+  .content{padding:0 22px 26px}
+  .top-actions{gap:6px}.btn{padding:7px 10px;border-radius:8px;font-size:11px}.mini-btn{padding:5px 7px;font-size:10px}
+  .account-chip{max-width:190px;padding:4px 7px}.account-chip strong{font-size:9px}.account-chip small{font-size:7px}
+  .stats{gap:10px;margin-bottom:11px}.stat{padding:12px 14px;border-radius:13px;min-height:84px}
+  .stat .label{font-size:9px;margin-bottom:5px}.stat .value{font-size:20px}
+  .dashboard-grid{gap:10px}.card{padding:13px 14px;border-radius:13px}.card-head{margin-bottom:8px}.card h2{font-size:13px}
+  .table th,.table td{padding:8px 10px;font-size:11px}.table th{font-size:8px}
+  .activity{gap:6px}.activity-item{padding:9px;border-radius:9px}.activity-item strong{font-size:11px}.activity-item span{font-size:10px}
+  .toolbar{gap:7px;margin-bottom:9px}.input,.select,.textarea{padding:7px 8px;font-size:11px;border-radius:8px}
+  .empty{padding:14px;font-size:11px}
+  .business-activity-card{margin-top:10px}
+  .sidebar-footer{display:none}
+  .sidebar-account-plan{margin-top:auto;padding:9px;gap:6px;border-radius:10px}
+  .sidebar-account-plan .sap-title{font-size:10px}.sidebar-account-plan .sap-email{font-size:9px}
+  .sidebar-account-plan .sap-action{padding:6px 7px;font-size:9px}
+}

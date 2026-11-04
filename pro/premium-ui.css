@@ -26,3 +26,12 @@ body{background:linear-gradient(180deg,#f7f9fc 0,#f3f6fb 100%)}
 @keyframes sbkSpin{to{transform:rotate(360deg)}}@keyframes sbkShimmer{to{background-position:-220% 0}}@keyframes sbkToastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(max-width:900px){.topbar{padding:17px 18px 13px}}
 @media(max-width:700px){.paywall-card{padding:26px}.paywall-trust{grid-template-columns:1fr}.sbk-toast-stack{right:15px;bottom:15px}.topbar{position:static}.topbar h1{font-size:25px}}
+
+/* Compact Pro shell override */
+@media(min-width:901px){
+  .topbar{padding:16px 22px 12px}
+  .topbar h1{font-size:22px}
+  .top-actions{gap:6px}.top-actions .btn{padding:7px 10px}
+  .account-chip{max-width:190px;padding:4px 7px}
+  .content>.stats:first-child{margin-top:0}
+}
