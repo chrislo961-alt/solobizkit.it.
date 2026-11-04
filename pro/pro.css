@@ -44,3 +44,27 @@
   .sidebar-account-plan .sap-title{font-size:10px}.sidebar-account-plan .sap-email{font-size:9px}
   .sidebar-account-plan .sap-action{padding:6px 7px;font-size:9px}
 }
+
+/* Readable compact desktop standard */
+@media(min-width:901px){
+  .app-shell{grid-template-columns:216px minmax(0,1fr)}
+  .sidebar{padding:17px 13px 13px;gap:16px}
+  .brand-mark{width:34px;height:34px}.brand strong{font-size:14px}.brand small{font-size:9px}
+  .nav{gap:3px}.nav-item{padding:8px 10px;font-size:13px;line-height:1.25}
+  .topbar,.content{width:min(100%,1480px)}
+  .topbar{padding:18px 24px 14px}.topbar h1{font-size:24px}.eyebrow{font-size:10px}
+  .content{padding:0 24px 30px;font-size:13px}
+  .top-actions{gap:7px}.btn{padding:8px 11px;font-size:12px}.mini-btn{padding:6px 8px;font-size:11px}
+  .account-chip strong{font-size:11px}.account-chip small{font-size:8px}
+  .stats{gap:12px;margin-bottom:12px}.stat{padding:14px 15px;min-height:92px}
+  .stat .label{font-size:11px}.stat .value{font-size:22px}
+  .dashboard-grid{gap:12px}.card{padding:14px 15px}.card h2{font-size:14px}
+  .table th,.table td{padding:9px 11px;font-size:12px}.table th{font-size:10px}
+  .activity-item{padding:10px}.activity-item strong{font-size:12px}.activity-item span{font-size:11px}
+  .toolbar{gap:8px}.input,.select,.textarea{padding:8px 9px;font-size:12px}
+  .empty{font-size:12px}
+  .sidebar-account-plan{padding:10px;gap:7px}
+  .sidebar-account-plan .sap-title{font-size:11px}
+  .sidebar-account-plan .sap-email{font-size:10px}
+  .sidebar-account-plan .sap-action{padding:7px 8px;font-size:10px}
+}

@@ -17,3 +17,24 @@
   .crm-sort{font-size:9px}.crm-sort .select{padding:6px 8px;font-size:9px}
   .followup-strip{padding:7px 9px;font-size:9px}
 }
+
+/* Readable compact dashboard panels */
+@media(min-width:901px){
+  .dashboard-v2{gap:12px;margin-bottom:12px}
+  .insight-stats{gap:12px}
+  .insight-stat{min-height:90px}
+  .insight-stat small{margin-top:5px;font-size:10px;line-height:1.35}
+  .insight-stat .compact-value{font-size:19px}
+  .action-center{padding:14px 15px}
+  .action-subtitle{font-size:10px}
+  .action-badge{min-width:24px;height:24px;font-size:10px}
+  .next-actions{gap:6px}
+  .next-action{padding:9px 10px}
+  .next-action span strong{font-size:12px}
+  .next-action span small{font-size:10px}
+  .compact-empty{min-height:40px;font-size:12px}
+  .crm-v2{gap:8px;margin-bottom:10px}
+  .crm-chip{padding:6px 9px;font-size:10px}
+  .crm-sort{font-size:10px}.crm-sort .select{font-size:10px}
+  .followup-strip{padding:8px 10px;font-size:10px}
+}

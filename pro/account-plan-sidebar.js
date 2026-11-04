@@ -39,11 +39,20 @@ async function openPortal(button,message){
   }
 }
 
+let renderPromise=null;
 async function render(){
   const sidebar=document.querySelector('.sidebar');
-  if(!sidebar||sidebar.querySelector('[data-account-plan]'))return;
+  if(!sidebar)return;
+  const existing=[...sidebar.querySelectorAll('[data-account-plan]')];
+  if(existing.length){
+    existing.slice(1).forEach(node=>node.remove());
+    return;
+  }
+  if(renderPromise)return renderPromise;
+  sidebar.dataset.accountPlanLoading='1';
+  renderPromise=(async()=>{
   const summary=await loadSummary().catch(error=>{console.error('Account plan sidebar failed',error);return null});
-  if(!summary)return;
+  if(!summary){delete sidebar.dataset.accountPlanLoading;return;}
   const{session,workspace,sub}=summary;
   const status=String(sub.status||'').toLowerCase();
   const pro=['active','trialing'].includes(status)&&String(sub.plan||'').toLowerCase()==='pro';
@@ -55,6 +64,9 @@ async function render(){
   const button=card.querySelector('[data-manage-subscription]');
   const message=card.querySelector('[data-account-plan-message]');
   if(button)button.addEventListener('click',()=>openPortal(button,message));
+  delete sidebar.dataset.accountPlanLoading;
+  })().finally(()=>{renderPromise=null;});
+  return renderPromise;
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>void render(),{once:true});else void render();

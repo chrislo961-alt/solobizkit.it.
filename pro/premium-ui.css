@@ -35,3 +35,13 @@ body{background:linear-gradient(180deg,#f7f9fc 0,#f3f6fb 100%)}
   .account-chip{max-width:190px;padding:4px 7px}
   .content>.stats:first-child{margin-top:0}
 }
+
+/* Readable compact controls */
+@media(min-width:901px){
+  .topbar{padding:18px 24px 14px}
+  .topbar h1{font-size:24px}
+  .top-actions .btn{padding:8px 11px;font-size:12px}
+  .account-chip{padding:5px 8px}
+  .account-chip strong{font-size:11px}
+  .account-chip small{font-size:8px}
+}
