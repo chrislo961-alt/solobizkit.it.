@@ -47,7 +47,9 @@ const V = '20260907-20';
 await import(`./auth-routing.js?v=${V}`);
 await import(`./runtime-guard.js?v=${V}`);
 await import(`./auth-recovery.js?v=${V}`);
+await import(`./oauth-return.js?v=${V}`);
 await import(`./pro-app.js?v=${V}`);
+await safeImport(`./google-auth.js?v=${V}`);
 await safeImport(`./workspace-ui.js?v=${V}`);
 
 const coreReady = await waitForCoreReady();

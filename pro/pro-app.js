@@ -8,6 +8,7 @@ const modalForm = document.querySelector('#modalForm');
 const modalTitle = document.querySelector('#modalTitle');
 const modalBody = document.querySelector('#modalBody');
 const authActions = document.querySelector('#authActions');
+const topEyebrow = document.querySelector('.topbar .eyebrow');
 const shell = document.querySelector('.app-shell');
 const topCustomer = document.querySelector('#newCustomerTop');
 const topInvoice = document.querySelector('#newInvoiceTop');
@@ -64,24 +65,29 @@ async function hydrate() {
 function renderAuth() {
   shell.classList.add('signed-out');
   shell.classList.remove('paywalled');
-  pageTitle.textContent = 'Pro workspace';
-  authActions.innerHTML = '';
+  pageTitle.textContent = 'SoloBizKit Account';
+  if (topEyebrow) topEyebrow.textContent = 'SOLOBIZKIT ACCOUNT';
+  authActions.innerHTML = '<a class="mini-btn" href="/">Free tools</a><a class="mini-btn" href="/pro-pricing/">See pricing</a>';
   topCustomer.hidden = true;
   topInvoice.hidden = true;
-  app.innerHTML = `<div class="auth-stage"><section class="auth-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>CRM and invoicing for your business.</h2><p class="muted auth-copy">Sign in to keep customers, invoices and revenue securely synced to your account.</p><form id="authForm" class="auth-form"><label>Email<input class="input" name="email" type="email" autocomplete="email" required></label><label>Password<input class="input" name="password" type="password" autocomplete="current-password" minlength="8" required></label><button class="btn primary" type="submit">Sign in</button><button class="btn secondary" type="button" id="createAccount">Create account</button><p class="auth-message" id="authMessage"></p></form></section></div>`;
+  app.innerHTML = `<div class="auth-stage"><section class="auth-card"><p class="eyebrow">SOLOBIZKIT ACCOUNT</p><h2>Sign in to your business workspace.</h2><p class="muted auth-copy">Continue with Google or use your email and password. Your customers, invoices and business data stay tied to your account.</p><form id="authForm" class="auth-form"><label>Email<input class="input" name="email" type="email" autocomplete="email" required></label><label>Password<input class="input" name="password" type="password" autocomplete="current-password" minlength="8" required></label><button class="btn primary" type="submit">Sign in</button><button class="btn secondary" type="button" id="createAccount">Create account</button><p class="auth-message" id="authMessage"></p></form></section></div>`;
   const form = app.querySelector('#authForm');
   const message = app.querySelector('#authMessage');
   form.addEventListener('submit', async (event) => { event.preventDefault(); message.textContent = 'Signing in…'; try { await signIn(form.email.value.trim(), form.password.value); } catch (error) { message.textContent = error.message; } });
   app.querySelector('#createAccount').addEventListener('click', async () => {
     if (!form.reportValidity()) return;
     message.textContent = 'Creating account…';
-    try { const data = await signUp(form.email.value.trim(), form.password.value); message.textContent = data.session ? 'Account created.' : 'Check your email to confirm your account, then sign in.'; }
+    try {
+      await signUp(form.email.value.trim(), form.password.value);
+      message.textContent = 'Check your email to continue. If you already have an account, sign in or use Forgot password.';
+    }
     catch (error) { message.textContent = error.message; }
   });
 }
 
 function renderAuthActions() {
   shell.classList.remove('signed-out');
+  if (topEyebrow) topEyebrow.textContent = 'SOLOBIZKIT PRO';
   const role = workspaceContext?.role ? String(workspaceContext.role).toUpperCase() : (hasProAccess() ? 'PRO' : 'ACCOUNT');
   authActions.innerHTML = `<span class="account-chip"><strong>${esc(session?.user?.email || 'Account')}</strong><small>${esc(role)}</small></span><button class="mini-btn" id="signOutBtn">Sign out</button>`;
   document.querySelector('#signOutBtn').addEventListener('click', () => signOut().catch(showError));

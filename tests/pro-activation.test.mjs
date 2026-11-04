@@ -58,3 +58,21 @@ test('billing UI handles trial, payment failures and cancellation', () => {
   assert.match(billing, /Cancellation scheduled/);
   assert.match(billing, /Cancel before then to avoid the first charge/);
 });
+
+
+test('signed-out Pro uses the clean account shell and neutral signup copy', () => {
+  const app = fs.readFileSync(new URL('../pro/pro-app.js', import.meta.url), 'utf8');
+  const authCss = fs.readFileSync(new URL('../pro/pro-auth.css', import.meta.url), 'utf8');
+  assert.match(app, /SoloBizKit Account/);
+  assert.match(app, /Check your email to continue\. If you already have an account, sign in or use Forgot password\./);
+  assert.doesNotMatch(app, /data\.session \? 'Account created\.'/);
+  assert.match(authCss, /\.signed-out \.sidebar/);
+  assert.match(authCss, /display:none!important/);
+});
+
+test('Google OAuth is loaded as part of the main Pro bootstrap', () => {
+  assert.match(bootstrap, /oauth-return\.js/);
+  assert.match(bootstrap, /google-auth\.js/);
+  assert.ok(bootstrap.indexOf('oauth-return.js') < bootstrap.indexOf('pro-app.js'));
+  assert.ok(bootstrap.indexOf('google-auth.js') > bootstrap.indexOf('pro-app.js'));
+});
