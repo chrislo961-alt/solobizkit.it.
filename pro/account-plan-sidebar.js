@@ -56,6 +56,19 @@ async function render(){
   const{session,workspace,sub}=summary;
   const status=String(sub.status||'').toLowerCase();
   const pro=['active','trialing'].includes(status)&&String(sub.plan||'').toLowerCase()==='pro';
+  let userCard=sidebar.querySelector('[data-sidebar-user]');
+  if(!userCard){
+    const workspaceName=workspace?.name||session.user.email||'SoloBizKit';
+    const initials=String(workspaceName).trim().split(/\s+/).slice(0,2).map(part=>part[0]||'').join('').toUpperCase()||'SB';
+    userCard=document.createElement('a');
+    userCard.href='/pro/settings/';
+    userCard.className='sidebar-user-card';
+    userCard.dataset.sidebarUser='1';
+    userCard.innerHTML=`<span class="sidebar-user-avatar">${esc(initials)}</span><span class="sidebar-user-copy"><strong>${esc(workspaceName)}</strong><small>${esc(workspace?.role||'Account')}</small></span><span class="sidebar-user-chevron">⌄</span>`;
+    const nav=sidebar.querySelector('.nav');
+    if(nav)sidebar.insertBefore(userCard,nav);else sidebar.appendChild(userCard);
+  }
+
   const card=document.createElement('div');
   card.className='sidebar-account-plan';
   card.dataset.accountPlan='1';
