@@ -67,7 +67,7 @@ function renderAuth() {
   shell.classList.remove('paywalled');
   pageTitle.textContent = 'SoloBizKit Account';
   if (topEyebrow) topEyebrow.textContent = 'SOLOBIZKIT ACCOUNT';
-  authActions.innerHTML = '<a class="mini-btn" href="/">Free tools</a><a class="mini-btn" href="/pro-pricing/">See pricing</a>';
+  authActions.innerHTML = '<a class="mini-btn" href="/">Free tools</a><a class="mini-btn" href="/pro/upgrade/">Upgrade to Pro</a>';
   topCustomer.hidden = true;
   topInvoice.hidden = true;
   app.innerHTML = `<div class="auth-stage"><section class="auth-card"><p class="eyebrow">SOLOBIZKIT ACCOUNT</p><h2>Sign in to your business workspace.</h2><p class="muted auth-copy">Continue with Google or use your email and password. Your customers, invoices and business data stay tied to your account.</p><form id="authForm" class="auth-form"><label>Email<input class="input" name="email" type="email" autocomplete="email" required></label><label>Password<input class="input" name="password" type="password" autocomplete="current-password" minlength="8" required></label><button class="btn primary" type="submit">Sign in</button><button class="btn secondary" type="button" id="createAccount">Create account</button><p class="auth-message" id="authMessage"></p></form></section></div>`;
