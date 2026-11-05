@@ -16,7 +16,7 @@ const esc=(v='')=>String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'
 
 function ensureOperationsNav(){
   const nav=document.querySelector('.sidebar .nav');
-  if(!nav||nav.querySelector('[data-operations-nav]'))return;
+  if(!nav||[...nav.querySelectorAll('a.nav-item')].some(node=>(node.getAttribute('href')||'').replace(/\/$/,'')==='/pro/operations'))return;
   const link=document.createElement('a');
   link.className='nav-item';
   link.href='/pro/operations/';
