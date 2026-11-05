@@ -72,7 +72,7 @@ async function render(){
   const card=document.createElement('div');
   card.className='sidebar-account-plan';
   card.dataset.accountPlan='1';
-  card.innerHTML=`<div class="sap-head"><span class="sap-title">${esc(t.title)}</span><span class="sap-plan">${pro?'PRO':'FREE'}</span></div><div class="sap-email">${esc(session.user.email||workspace?.name||'Account')}</div>${workspace?.isOwner?(pro?'<button class="sap-action" type="button" data-manage-subscription>'+esc(t.manage)+'</button>':'<a class="sap-action" href="/pro-pricing/">'+esc(t.upgrade)+'</a>'):''}<a class="sap-action secondary" href="/pro/settings/#billing">${esc(t.settings)}</a><button class="sap-action secondary" type="button" data-sidebar-signout>${esc(t.signout)}</button><div class="sap-message" data-account-plan-message></div>`;
+  card.innerHTML=`<div class="sap-head"><span class="sap-title">${esc(t.title)}</span><span class="sap-plan">${pro?'PRO':'FREE'}</span></div><div class="sap-email">${esc(session.user.email||workspace?.name||'Account')}</div>${workspace?.isOwner?(pro?'<button class="sap-action" type="button" data-manage-subscription>'+esc(t.manage)+'</button>':'<a class="sap-action" href="/pro/upgrade/">'+esc(t.upgrade)+'</a>'):''}<a class="sap-action secondary" href="/pro/settings/#billing">${esc(t.settings)}</a><button class="sap-action secondary" type="button" data-sidebar-signout>${esc(t.signout)}</button><div class="sap-message" data-account-plan-message></div>`;
   sidebar.appendChild(card);
   const button=card.querySelector('[data-manage-subscription]');
   const message=card.querySelector('[data-account-plan-message]');
