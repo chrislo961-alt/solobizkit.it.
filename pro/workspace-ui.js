@@ -13,6 +13,20 @@ const L={
 const t=L[lang]||L.en;
 const esc=(v='')=>String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
 
+
+function ensureOperationsNav(){
+  const nav=document.querySelector('.sidebar .nav');
+  if(!nav||nav.querySelector('[data-operations-nav]'))return;
+  const link=document.createElement('a');
+  link.className='nav-item';
+  link.href='/pro/operations/';
+  link.dataset.operationsNav='1';
+  link.textContent='Operations';
+  if(location.pathname.startsWith('/pro/operations/'))link.classList.add('active');
+  const settings=[...nav.querySelectorAll('a.nav-item')].find(node=>/\/pro\/settings\/?$/.test(node.getAttribute('href')||''));
+  if(settings)nav.insertBefore(link,settings);else nav.appendChild(link);
+}
+
 function toast(message,tone='success'){if(window.sbkToast)return window.sbkToast(message,tone);const el=document.createElement('div');el.className='workspace-toast';el.textContent=message;document.body.appendChild(el);setTimeout(()=>el.remove(),3200)}
 
 async function acceptInvite(){
@@ -49,5 +63,6 @@ const style=document.createElement('style');style.textContent='.workspace-switch
 
 await acceptStoredInvite();
 await acceptInvite();
-let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;renderSwitcher().catch(console.error)})}).observe(document.body,{childList:true,subtree:true});
+let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;ensureOperationsNav();renderSwitcher().catch(console.error)})}).observe(document.body,{childList:true,subtree:true});
+ensureOperationsNav();
 renderSwitcher().catch(console.error);
