@@ -200,6 +200,7 @@ editorForm.addEventListener('submit',async event=>{
 async function boot(){
   session=await getSession();
   if(!session){
+    addButton.hidden=true;
     shell.classList.add('signed-out');
     authActions.innerHTML='';
     app.innerHTML='<div class="auth-stage"><section class="auth-card"><p class="eyebrow">SOLOBIZKIT ACCOUNT</p><h2>Sign in to open Operations.</h2><a class="btn primary" href="/pro/?intent=login">Sign in</a></section></div>';
