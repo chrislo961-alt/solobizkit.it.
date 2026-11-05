@@ -33,6 +33,8 @@ jobs:
         run: node --test tests/public-i18n-coverage.test.mjs
       - name: Test Pro product flows
         run: node --test tests/pro-activation.test.mjs tests/pro-crm.test.mjs
+      - name: Test Pro app shell and Operations flows
+        run: node --test tests/pro-app-shell.test.mjs
       - name: Apply SEO index focus
         run: |
           node scripts/apply-index-focus.mjs
