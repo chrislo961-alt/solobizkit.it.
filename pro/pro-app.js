@@ -108,15 +108,18 @@ function renderPaywall() {
   shell.classList.add('paywalled');
   topCustomer.hidden = true;
   topInvoice.hidden = true;
-  document.querySelectorAll('.nav-item').forEach((button) => { button.disabled = true; });
-  pageTitle.textContent = 'Upgrade to Pro';
-  const ownerNote = workspaceContext && !workspaceContext.isOwner ? '<div class="paywall-notice">This workspace does not currently have Pro access. Ask the workspace owner to manage billing.</div>' : '';
-  const params = new URLSearchParams(window.location.search);
-  const checkoutState = params.get('checkout');
-  const notice = checkoutState === 'success' ? '<div class="paywall-notice success">Payment completed. If access is not active yet, refresh below while Stripe finishes the update.</div>' : checkoutState === 'cancelled' ? '<div class="paywall-notice">Checkout was cancelled. Nothing was charged.</div>' : '';
-  app.innerHTML = `<div class="paywall-wrap"><section class="paywall-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>Run your business from one simple workspace.</h2><p class="paywall-lead">Customers, CRM follow-up, invoices and revenue tracking are part of SoloBizKit Pro. There is no permanent free CRM tier.</p>${ownerNote}${notice}<div class="paywall-features"><span>✓ Customer CRM</span><span>✓ Synced invoices</span><span>✓ Revenue & outstanding dashboard</span><span>✓ Secure account storage</span></div>${workspaceContext?.isOwner !== false ? '<div class="paywall-plans"><button class="paywall-plan" data-checkout="monthly"><small>MONTHLY</small><strong>Start Pro monthly</strong><span>Cancel anytime</span></button><button class="paywall-plan featured" data-checkout="annual"><small>ANNUAL</small><strong>Start Pro annually</strong><span>Best value</span></button></div>' : ''}<button class="mini-btn refresh-access" id="refreshAccess">Refresh access</button><p class="paywall-foot">Payments are handled securely by Stripe. Workspace access follows the owner subscription.</p></section></div>`;
-  app.querySelectorAll('[data-checkout]').forEach((button) => button.addEventListener('click', () => startCheckout(button.dataset.checkout)));
-  app.querySelector('#refreshAccess').addEventListener('click', () => hydrate().catch(showError));
+  document.querySelectorAll('.nav-item').forEach((item) => {
+    item.disabled = false;
+    item.classList.toggle('active', item.dataset.view === currentView);
+  });
+  const viewLabels = { dashboard: 'Dashboard', customers: 'Customers', invoices: 'Invoices' };
+  const featureLabels = { dashboard: 'Business dashboard', customers: 'Customer CRM', invoices: 'Invoicing workspace' };
+  const feature = featureLabels[currentView] || 'SoloBizKit Pro';
+  pageTitle.textContent = viewLabels[currentView] || 'SoloBizKit Pro';
+  const ownerNote = workspaceContext && !workspaceContext.isOwner
+    ? '<div class="paywall-notice">This workspace does not currently have Pro access. Ask the workspace owner to manage billing.</div>'
+    : '';
+  app.innerHTML = `<div class="paywall-wrap"><section class="paywall-card"><p class="eyebrow">SOLOBIZKIT PRO</p><h2>${feature} is ready when you upgrade.</h2><p class="paywall-lead">You can move around the whole workspace on the Free plan. Pro sections stay inside the same app and unlock as soon as the workspace is upgraded.</p>${ownerNote}<div class="paywall-features"><span>✓ Customer CRM</span><span>✓ Estimates & invoices</span><span>✓ Recurring billing</span><span>✓ Business automation</span></div><div class="paywall-plans"><a class="paywall-plan featured" href="/pro/upgrade/"><small>UPGRADE</small><strong>Open Pro upgrade</strong><span>Choose monthly or annual inside the app</span></a></div></section></div>`;
 }
 
 function render() {
@@ -256,7 +259,7 @@ function bindInvoiceActions(root = app) {
   });
 }
 
-document.querySelectorAll('.nav-item').forEach((button) => button.onclick = () => { if (!session || !hasProAccess()) return; currentView = button.dataset.view; render(); });
+document.querySelectorAll('.nav-item').forEach((button) => button.onclick = () => { if (!session) return; currentView = button.dataset.view; render(); });
 topCustomer.onclick = () => session && hasProAccess() && canWrite() && openCustomerModal();
 topInvoice.onclick = () => session && hasProAccess() && canWrite() && openInvoiceModal();
 modalForm.addEventListener('submit', async (event) => { if (event.submitter?.value === 'cancel') return; event.preventDefault(); try { const ok = await modalAction?.(); if (ok) modal.close(); } catch (error) { showError(error); } });
