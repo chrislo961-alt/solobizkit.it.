@@ -20,14 +20,69 @@ function isPublicHtmlRoute(file) {
   return !/(?:^|,)\s*noindex\b/i.test(robots);
 }
 
-const routes = walk(root)
+const discoveredRoutes = new Set(walk(root)
   .filter((file) => file === path.join(root, 'index.html') || file.endsWith(`${path.sep}index.html`))
   .filter(isPublicHtmlRoute)
   .map((file) => {
     const relative = path.relative(root, file);
     return relative === 'index.html' ? '/' : `/${path.dirname(relative).split(path.sep).join('/')}/`;
   })
-  .filter((route) => !redirectedRoutes.has(route));
+  .filter((route) => !redirectedRoutes.has(route)));
+
+const priorityRoutes = [
+  "/",
+  "/tools/",
+  "/business-calculators/",
+  "/invoice-tools/",
+  "/pdf-tools/",
+  "/guides/",
+  "/small-business-toolkit/",
+  "/freelancer-toolkit/",
+  "/profit-margin-calculator/",
+  "/break-even-calculator/",
+  "/roi-calculator/",
+  "/business-loan-calculator/",
+  "/cash-flow-calculator/",
+  "/cash-runway-calculator/",
+  "/hourly-rate-calculator/",
+  "/markup-calculator/",
+  "/customer-acquisition-cost-calculator/",
+  "/customer-lifetime-value-calculator/",
+  "/roas-calculator/",
+  "/invoice-generator/",
+  "/invoice-due-date-calculator/",
+  "/invoice-number-generator/",
+  "/invoice-reminder-templates/",
+  "/late-invoice-fee-calculator/",
+  "/business-name-generator/",
+  "/qr-code-generator/",
+  "/wifi-qr-code-generator/",
+  "/compress-pdf/",
+  "/merge-pdf/",
+  "/pdf-to-word/",
+  "/guides/cash-flow-basics/",
+  "/guides/price-freelance-services/",
+  "/guides/late-paying-clients/",
+  "/guides/freelance-invoice-checklist/",
+  "/guides/start-small-business/",
+  "/no/",
+  "/no/kalkulatorer/",
+  "/no/fortjenestemargin-kalkulator/",
+  "/no/nullpunkt-kalkulator/",
+  "/no/timepris-kalkulator/",
+  "/no/fakturagenerator/",
+  "/sv/",
+  "/sv/kalkylatorer/",
+  "/sv/vinstmarginal-kalkylator/",
+  "/sv/nollpunkts-kalkylator/",
+  "/sv/timpris-kalkylator/",
+  "/sv/fakturagenerator/"
+];
+const routes = priorityRoutes.filter((route) => discoveredRoutes.has(route));
+const missingPriorityRoutes = priorityRoutes.filter((route) => !discoveredRoutes.has(route));
+if (missingPriorityRoutes.length) {
+  throw new Error(`Priority sitemap routes are missing or noindex: ${missingPriorityRoutes.join(', ')}`);
+}
 
 routes.sort((a, b) => {
   const ai = leading.indexOf(a);
@@ -54,4 +109,4 @@ function xmlFor(list) {
 fs.writeFileSync(path.join(root, 'sitemap.xml'), xmlFor(routes));
 const norwegianRoutes = routes.filter((route) => route === '/no/' || route.startsWith('/no/'));
 fs.writeFileSync(path.join(root, 'sitemap-no.xml'), xmlFor(norwegianRoutes));
-console.log(`Generated sitemap.xml with ${routes.length} public routes and sitemap-no.xml with ${norwegianRoutes.length} Norwegian routes.`);
+console.log(`Generated curated sitemap.xml with ${routes.length} priority routes and sitemap-no.xml with ${norwegianRoutes.length} Norwegian priority routes.`);
