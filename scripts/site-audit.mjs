@@ -110,8 +110,58 @@ for (const [route, count] of inbound) if (route !== '/' && count === 0 && !langu
 const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
 const sitemapRoutes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) => new URL(item[1]).pathname);
 if (new Set(sitemapRoutes).size !== sitemapRoutes.length) errors.push('sitemap contains duplicate URLs');
-for (const route of publicRoutes) if (!sitemapRoutes.includes(route)) errors.push(`${route}: missing from sitemap`);
 for (const route of sitemapRoutes) if (!publicRoutes.has(route)) errors.push(`${route}: sitemap URL has no public HTML route`);
+const prioritySitemapRoutes = [
+  "/",
+  "/tools/",
+  "/business-calculators/",
+  "/invoice-tools/",
+  "/pdf-tools/",
+  "/guides/",
+  "/small-business-toolkit/",
+  "/freelancer-toolkit/",
+  "/profit-margin-calculator/",
+  "/break-even-calculator/",
+  "/roi-calculator/",
+  "/business-loan-calculator/",
+  "/cash-flow-calculator/",
+  "/cash-runway-calculator/",
+  "/hourly-rate-calculator/",
+  "/markup-calculator/",
+  "/customer-acquisition-cost-calculator/",
+  "/customer-lifetime-value-calculator/",
+  "/roas-calculator/",
+  "/invoice-generator/",
+  "/invoice-due-date-calculator/",
+  "/invoice-number-generator/",
+  "/invoice-reminder-templates/",
+  "/late-invoice-fee-calculator/",
+  "/business-name-generator/",
+  "/qr-code-generator/",
+  "/wifi-qr-code-generator/",
+  "/compress-pdf/",
+  "/merge-pdf/",
+  "/pdf-to-word/",
+  "/guides/cash-flow-basics/",
+  "/guides/price-freelance-services/",
+  "/guides/late-paying-clients/",
+  "/guides/freelance-invoice-checklist/",
+  "/guides/start-small-business/",
+  "/no/",
+  "/no/kalkulatorer/",
+  "/no/fortjenestemargin-kalkulator/",
+  "/no/nullpunkt-kalkulator/",
+  "/no/timepris-kalkulator/",
+  "/no/fakturagenerator/",
+  "/sv/",
+  "/sv/kalkylatorer/",
+  "/sv/vinstmarginal-kalkylator/",
+  "/sv/nollpunkts-kalkylator/",
+  "/sv/timpris-kalkylator/",
+  "/sv/fakturagenerator/"
+];
+for (const route of prioritySitemapRoutes) if (!sitemapRoutes.includes(route)) errors.push(`${route}: priority route missing from sitemap`);
+for (const route of sitemapRoutes) if (!prioritySitemapRoutes.includes(route)) errors.push(`${route}: non-priority route leaked into sitemap`);
 
 // Inbound counts can pass for isolated language clusters, self-links and links
 // from noindex tools. Require a path through indexable, initial HTML instead.
@@ -138,7 +188,7 @@ if (unreachable.length) errors.push(`${unreachable.length} sitemap routes unreac
 if (fs.existsSync(path.join(ROOT, 'sitemap-no.xml'))) {
   const noSitemap = fs.readFileSync(path.join(ROOT, 'sitemap-no.xml'), 'utf8');
   const noRoutes = [...noSitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((item) => new URL(item[1]).pathname);
-  const expectedNoRoutes = [...publicRoutes].filter((route) => route === '/no/' || route.startsWith('/no/'));
+  const expectedNoRoutes = prioritySitemapRoutes.filter((route) => route === '/no/' || route.startsWith('/no/'));
   for (const route of expectedNoRoutes) if (!noRoutes.includes(route)) errors.push(`${route}: missing from sitemap-no.xml`);
   for (const route of noRoutes) if (!expectedNoRoutes.includes(route)) errors.push(`${route}: non-Norwegian URL in sitemap-no.xml`);
 }
